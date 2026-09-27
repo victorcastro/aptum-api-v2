@@ -10,6 +10,6 @@ Respond in English by default. Only respond in Spanish when I explicitly ask for
 
 Repository is currently empty — no code, build/test commands, or architecture to document yet. Update this file once the project has real structure (commands, stack, module layout).
 
-<!-- engly:start v1.3.0 -->
+<!-- engly:start v1.4.1 -->
 @.engly/engly.md
 <!-- engly:end -->
