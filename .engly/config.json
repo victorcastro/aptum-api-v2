@@ -1,0 +1,11 @@
+{
+  "version": "1.3.0",
+  "language": "auto",
+  "level": "auto",
+  "style": "light",
+  "reviewEnglish": true,
+  "enabled": true,
+  "tools": [
+    "claude"
+  ]
+}

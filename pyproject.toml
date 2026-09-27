@@ -1,0 +1,20 @@
+[project]
+name = "aptum-agent"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "Victor Castro", email = "victorcastro.io@icloud.com" }
+]
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi[standard]>=0.141.1",
+    "uvicorn[standard]>=0.54.0",
+]
+
+[tool.uv.build-backend]
+module-name = "aptum"
+
+[build-system]
+requires = ["uv_build>=0.12.13,<0.13.0"]
+build-backend = "uv_build"
