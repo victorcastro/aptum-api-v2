@@ -1,19 +1,28 @@
 from datetime import datetime, timedelta, timezone
 
+import bcrypt
 from jose import jwt
-from passlib.context import CryptContext
 
 from aptum.core.config import get_settings
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+# bcrypt only reads the first 72 bytes. Truncate explicitly (bcrypt>=5 raises otherwise) so
+# it behaves the same as before and stays compatible with hashes already stored.
+_BCRYPT_MAX_BYTES = 72
+
+
+def _encode(password: str) -> bytes:
+    return password.encode("utf-8")[:_BCRYPT_MAX_BYTES]
 
 
 def hash_password(password: str) -> str:
-    return pwd_context.hash(password)
+    return bcrypt.hashpw(_encode(password), bcrypt.gensalt()).decode("ascii")
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    return pwd_context.verify(plain_password, hashed_password)
+    try:
+        return bcrypt.checkpw(_encode(plain_password), hashed_password.encode("ascii"))
+    except ValueError:  # malformed stored hash
+        return False
 
 
 def create_access_token(subject: str, expires_delta: timedelta | None = None) -> str:
