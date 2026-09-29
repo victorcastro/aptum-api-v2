@@ -1,6 +1,12 @@
 from sqlalchemy.orm import Session
 
-from aptum.modules.profile.models import Education, Experience, Language, Profile
+from aptum.modules.profile.models import (
+    Education,
+    Experience,
+    ExperienceFunction,
+    Profile,
+    ProfileLanguage,
+)
 
 
 class ProfileRepository:
@@ -30,12 +36,30 @@ class ProfileRepository:
         self.db.refresh(profile)
         return profile
 
-    def add_experience(self, profile: Profile, **fields) -> Experience:
-        experience = Experience(profile_id=profile.id, **fields)
+    def add_experience(self, profile: Profile, functions: list[str], **fields) -> Experience:
+        experience = Experience(
+            profile_id=profile.id,
+            functions=[
+                ExperienceFunction(description=text, position=index)
+                for index, text in enumerate(functions)
+            ],
+            **fields,
+        )
         self.db.add(experience)
         self.db.commit()
         self.db.refresh(experience)
         return experience
+
+    def get_experience(self, profile: Profile, experience_id: int) -> Experience | None:
+        return (
+            self.db.query(Experience)
+            .filter(Experience.id == experience_id, Experience.profile_id == profile.id)
+            .first()
+        )
+
+    def delete_experience(self, experience: Experience) -> None:
+        self.db.delete(experience)
+        self.db.commit()
 
     def add_education(self, profile: Profile, **fields) -> Education:
         education = Education(profile_id=profile.id, **fields)
@@ -44,8 +68,18 @@ class ProfileRepository:
         self.db.refresh(education)
         return education
 
-    def add_language(self, profile: Profile, **fields) -> Language:
-        language = Language(profile_id=profile.id, **fields)
+    def get_language(self, profile: Profile, language_code: str) -> ProfileLanguage | None:
+        return (
+            self.db.query(ProfileLanguage)
+            .filter(
+                ProfileLanguage.profile_id == profile.id,
+                ProfileLanguage.language_code == language_code,
+            )
+            .first()
+        )
+
+    def add_language(self, profile: Profile, **fields) -> ProfileLanguage:
+        language = ProfileLanguage(profile_id=profile.id, **fields)
         self.db.add(language)
         self.db.commit()
         self.db.refresh(language)

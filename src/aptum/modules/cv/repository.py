@@ -1,20 +1,6 @@
-from pgvector.sqlalchemy import Vector
-from sqlalchemy import ForeignKey, String
-from sqlalchemy.orm import Mapped, Session, mapped_column
+from sqlalchemy.orm import Session
 
-from aptum.db.base import Base
-
-EMBEDDING_DIM = 1536
-
-
-class CVDocument(Base):
-    __tablename__ = "cv_documents"
-
-    id: Mapped[int] = mapped_column(primary_key=True)
-    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
-    filename: Mapped[str] = mapped_column(String(255))
-    raw_text: Mapped[str | None] = mapped_column(String, default=None)
-    embedding: Mapped[list[float] | None] = mapped_column(Vector(EMBEDDING_DIM), nullable=True)
+from aptum.modules.cv.models import CVDocument
 
 
 class CVRepository:

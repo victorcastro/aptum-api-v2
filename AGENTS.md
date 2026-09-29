@@ -6,9 +6,30 @@ This file provides guidance to AI coding agents (Claude Code, Codex, Cursor, etc
 
 Respond in English by default. Only respond in Spanish when I explicitly ask for it in that specific message.
 
-## Status
+## Stack
 
-Repository is currently empty — no code, build/test commands, or architecture to document yet. Update this file once the project has real structure (commands, stack, module layout).
+Python 3.12 + uv, FastAPI, SQLAlchemy 2.0 (typed `Mapped`, sync `Session`), Alembic, Postgres (psycopg3) + pgvector.
+
+## Commands
+
+- Run API: `uv run fastapi dev src/aptum/main.py`
+- Apply migrations: `uv run alembic upgrade head`
+- New migration after model changes: `uv run alembic revision --autogenerate -m "<message>"`, then review it (autogenerate does not create/drop extensions or native enum types).
+- Check models match migrations: `uv run alembic check`
+- Config comes from `.env` (see `.env.example`); `DATABASE_URL` in the environment overrides it.
+- There is no test suite yet, and no Docker/Postgres is provided: bring your own Postgres with the `vector` extension.
+
+## Layout
+
+One folder per feature under `src/aptum/modules/<x>/` with `models.py`, `repository.py`, `service.py`, `router.py`, `schemas.py`. The ORM model doubles as the entity. Shared code lives in `core/` (config, security, dependencies, exceptions), `common/` (enums, constants, types, utils) and `db/` (`Base`, `TimestampMixin`, constraint helpers, migrations).
+
+## CV data model
+
+- Ownership chain: `users` → `profiles` (1–1, created at registration) → CV tables (`experiences`, `educations`, `profile_languages`, `profile_skills`, `profile_links`, `certifications`, `projects`) → `experience_functions` / `experience_skills`. All `ON DELETE CASCADE`.
+- `companies`, `industries` and `skills` are shared catalogs with no owner. `created_by_user_id` is `SET NULL` on user delete.
+- Services always take the authenticated `user_id`, resolve that user's profile and filter by `profile_id`. Never accept `profile_id`/`user_id` from the client. Rows that belong to someone else return 404.
+- CV dates are month/year only: the API speaks `YYYY-MM` (`common/types.YearMonth`), the DB stores the first day of the month and enforces it with a CHECK.
+- Hiring through a consultancy: `experiences.employer_id` is who hires (NTT Data), `experiences.client_id` is where the work happens (Banco BCP). The client's industry is the relevant one for matching.
 
 <!-- engly:start v1.4.1 -->
 @.engly/engly.md

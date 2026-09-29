@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
 
-from aptum.modules.cv.repository import CVDocument
+from aptum.modules.cv.models import CVDocument
 from aptum.modules.profile.models import Profile
 
 

@@ -3,7 +3,8 @@ from io import BytesIO
 from pypdf import PdfReader
 from sqlalchemy.orm import Session
 
-from aptum.modules.cv.repository import CVDocument, CVRepository
+from aptum.modules.cv.models import CVDocument
+from aptum.modules.cv.repository import CVRepository
 
 
 class CVService:
