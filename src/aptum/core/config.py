@@ -7,6 +7,7 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
     environment: str = "development"
+    log_level: str = "INFO"
     database_url: str
     firebase_project_id: str
     firebase_client_email: str = ""

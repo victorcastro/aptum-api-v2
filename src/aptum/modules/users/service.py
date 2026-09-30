@@ -18,18 +18,17 @@ class UserService:
         if user is not None:
             return user
 
-        # Caller must have checked email_verified: linking by email is only safe for verified emails.
         existing = self.repository.get_by_email(email)
         if existing is not None:
             return self.repository.link_firebase_uid(existing, firebase_uid)
 
         try:
             user = self.repository.create(email, firebase_uid)
-        except IntegrityError:  # concurrent first requests raced on the unique constraints
+        except IntegrityError:
             self.db.rollback()
             user = self.repository.get_by_firebase_uid(firebase_uid)
             if user is None:
                 raise
             return user
-        self.profiles.create(user.id)  # every user owns exactly one (initially empty) CV profile
+        self.profiles.create(user.id)
         return user

@@ -10,7 +10,6 @@ def _ensure_initialized() -> None:
     settings = get_settings()
     options = {"projectId": settings.firebase_project_id}
     if settings.firebase_client_email and settings.firebase_private_key:
-        # Same service account variables as aptum-api; .env stores the key with literal "\n".
         cred = credentials.Certificate(
             {
                 "type": "service_account",
@@ -22,7 +21,7 @@ def _ensure_initialized() -> None:
         )
         firebase_admin.initialize_app(cred, options)
     else:
-        firebase_admin.initialize_app(options=options)  # falls back to GOOGLE_APPLICATION_CREDENTIALS
+        firebase_admin.initialize_app(options=options)
 
 
 def verify_id_token(token: str) -> dict:

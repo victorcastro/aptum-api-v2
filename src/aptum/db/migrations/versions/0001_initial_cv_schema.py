@@ -17,7 +17,6 @@ branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
 
-# Industry taxonomy modeled after LinkedIn's; extend with new migrations, never edit in place.
 INDUSTRIES = [
     "Accounting",
     "Airlines and Aviation",

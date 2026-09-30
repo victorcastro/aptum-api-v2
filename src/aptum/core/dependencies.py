@@ -1,3 +1,4 @@
+import logging
 from collections.abc import Generator
 
 from fastapi import Depends, HTTPException, status
@@ -11,8 +12,8 @@ from aptum.modules.matching.service import LLMClient, NullLLMClient
 from aptum.modules.users.models import User
 from aptum.modules.users.service import UserService
 
-# Login happens client-side with the Firebase SDK; the API only receives the ID token.
 bearer_scheme = HTTPBearer()
+logger = logging.getLogger(__name__)
 
 
 def get_db() -> Generator[Session, None, None]:
@@ -34,7 +35,8 @@ def get_current_user(
     )
     try:
         claims = verify_id_token(credentials.credentials)
-    except Exception as exc:  # firebase_admin raises several types (invalid, expired, revoked)
+    except Exception as exc:
+        logger.warning("Firebase token rejected: %s: %s", type(exc).__name__, exc)
         raise credentials_error from exc
 
     email = claims.get("email")

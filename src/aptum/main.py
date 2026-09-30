@@ -1,13 +1,26 @@
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 
+from aptum.core.config import get_settings
 from aptum.core.exceptions import register_exception_handlers
+from aptum.core.logging_config import configure_logging
 from aptum.modules.companies.router import router as companies_router
 from aptum.modules.cv.router import router as cv_router
 from aptum.modules.matching.router import router as matching_router
 from aptum.modules.profile.router import router as profile_router
 from aptum.modules.users.router import router as users_router
 
-app = FastAPI(title="Aptum Agent")
+
+
+@asynccontextmanager
+async def lifespan(_: FastAPI) -> AsyncIterator[None]:
+    configure_logging(get_settings().log_level)
+    yield
+
+
+app = FastAPI(title="Aptum Agent", lifespan=lifespan)
 
 register_exception_handlers(app)
 
