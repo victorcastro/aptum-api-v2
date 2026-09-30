@@ -42,7 +42,16 @@ def reset_cv_settings(
     CVService(db).reset_settings(current_user.id)
 
 
-@router.get("/export", response_class=Response, responses={200: {"content": {"application/pdf": {}}}})
+@router.get(
+    "/export",
+    response_class=Response,
+    responses={
+        200: {
+            "description": "CV as a PDF file",
+            "content": {"application/pdf": {"schema": {"type": "string", "format": "binary"}}},
+        }
+    },
+)
 def export_cv(
     template: str | None = Query(default=None, description="Template for this download only"),
     current_user: User = Depends(get_current_user),

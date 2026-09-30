@@ -2,6 +2,7 @@ from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
+from pydantic import BaseModel
 from scalar_fastapi import get_scalar_api_reference
 
 from aptum.core.config import get_settings
@@ -40,9 +41,13 @@ app.include_router(cv_router)
 app.include_router(matching_router)
 
 
+class HealthRead(BaseModel):
+    status: str
+
+
 @app.get("/health")
-def health():
-    return {"status": "ok"}
+def health() -> HealthRead:
+    return HealthRead(status="ok")
 
 
 if docs_enabled:
