@@ -20,7 +20,7 @@ async def lifespan(_: FastAPI) -> AsyncIterator[None]:
     yield
 
 
-app = FastAPI(title="Aptum Agent", lifespan=lifespan)
+app = FastAPI(title="Aptum API", lifespan=lifespan)
 
 register_exception_handlers(app)
 
