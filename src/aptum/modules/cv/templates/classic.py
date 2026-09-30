@@ -34,7 +34,9 @@ class ClassicTemplate:
 
         if doc.experiences:
             story.append(_p("Experience", section))
-            for exp in doc.experiences:
+            for index, exp in enumerate(doc.experiences):
+                if index:
+                    story.append(Spacer(1, 0.4 * cm))
                 story.append(_p(exp.title, item))
                 story.append(_p(exp.dates, muted))
                 if exp.description:

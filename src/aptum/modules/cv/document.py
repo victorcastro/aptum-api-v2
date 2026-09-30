@@ -114,7 +114,7 @@ def build_cv_data(profile: Profile) -> CVDocument:
         full_name=full_name or "Curriculum Vitae",
         headline=profile.headline or None,
         contact_line=contact or None,
-        links_line=" | ".join(link.label or link.url for link in profile.links) if profile.links else None,
+        links_line=" | ".join(link.url for link in profile.links) if profile.links else None,
         summary=profile.summary or None,
         experiences=experiences,
         educations=educations,
