@@ -13,9 +13,18 @@ class UserRepository:
     def get_by_email(self, email: str) -> User | None:
         return self.db.query(User).filter(User.email == email).first()
 
-    def create(self, email: str, hashed_password: str) -> User:
-        user = User(email=email, hashed_password=hashed_password)
+    def get_by_firebase_uid(self, firebase_uid: str) -> User | None:
+        return self.db.query(User).filter(User.firebase_uid == firebase_uid).first()
+
+    def create(self, email: str, firebase_uid: str) -> User:
+        user = User(email=email, firebase_uid=firebase_uid)
         self.db.add(user)
+        self.db.commit()
+        self.db.refresh(user)
+        return user
+
+    def link_firebase_uid(self, user: User, firebase_uid: str) -> User:
+        user.firebase_uid = firebase_uid
         self.db.commit()
         self.db.refresh(user)
         return user

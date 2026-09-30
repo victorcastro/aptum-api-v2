@@ -8,9 +8,10 @@ class Settings(BaseSettings):
 
     environment: str = "development"
     database_url: str
-    jwt_secret_key: str
-    jwt_algorithm: str = "HS256"
-    jwt_expire_minutes: int = 60
+    firebase_project_id: str
+    firebase_client_email: str = ""
+    firebase_private_key: str = ""
+    firebase_check_revoked: bool = False
     openai_api_key: str = ""
 
 

@@ -21,6 +21,3 @@ class EmbeddingsService:
 
     def embed_profile(self, profile_id: int, text: str) -> None:
         self.repository.set_profile_embedding(profile_id, self.client.embed(text))
-
-    def embed_cv(self, cv_id: int, text: str) -> None:
-        self.repository.set_cv_embedding(cv_id, self.client.embed(text))

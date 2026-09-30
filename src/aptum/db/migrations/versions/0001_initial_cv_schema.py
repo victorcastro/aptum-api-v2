@@ -82,13 +82,14 @@ def upgrade() -> None:
     op.create_table('users',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('email', sa.String(length=255), nullable=False),
-    sa.Column('hashed_password', sa.String(length=255), nullable=False),
+    sa.Column('firebase_uid', sa.String(length=128), nullable=True),
     sa.Column('is_active', sa.Boolean(), nullable=False),
     sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
     sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
     sa.PrimaryKeyConstraint('id', name=op.f('pk_users'))
     )
     op.create_index(op.f('ix_users_email'), 'users', ['email'], unique=True)
+    op.create_index(op.f('ix_users_firebase_uid'), 'users', ['firebase_uid'], unique=True)
     op.create_table('companies',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('name', sa.String(length=255), nullable=False),
@@ -108,18 +109,6 @@ def upgrade() -> None:
     sa.UniqueConstraint('normalized_name', name=op.f('uq_companies_normalized_name'))
     )
     op.create_index(op.f('ix_companies_industry_id'), 'companies', ['industry_id'], unique=False)
-    op.create_table('cv_documents',
-    sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('user_id', sa.Integer(), nullable=False),
-    sa.Column('filename', sa.String(length=255), nullable=False),
-    sa.Column('raw_text', sa.Text(), nullable=True),
-    sa.Column('embedding', pgvector.sqlalchemy.vector.VECTOR(dim=1536), nullable=True),
-    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
-    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
-    sa.ForeignKeyConstraint(['user_id'], ['users.id'], name=op.f('fk_cv_documents_user_id_users'), ondelete='CASCADE'),
-    sa.PrimaryKeyConstraint('id', name=op.f('pk_cv_documents'))
-    )
-    op.create_index(op.f('ix_cv_documents_user_id'), 'cv_documents', ['user_id'], unique=False)
     op.create_table('profiles',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('user_id', sa.Integer(), nullable=False),
@@ -306,10 +295,9 @@ def downgrade() -> None:
     op.drop_table('certifications')
     op.drop_table('skills')
     op.drop_table('profiles')
-    op.drop_index(op.f('ix_cv_documents_user_id'), table_name='cv_documents')
-    op.drop_table('cv_documents')
     op.drop_index(op.f('ix_companies_industry_id'), table_name='companies')
     op.drop_table('companies')
+    op.drop_index(op.f('ix_users_firebase_uid'), table_name='users')
     op.drop_index(op.f('ix_users_email'), table_name='users')
     op.drop_table('users')
     op.drop_table('industries')
