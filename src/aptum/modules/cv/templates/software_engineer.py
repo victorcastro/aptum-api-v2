@@ -1,11 +1,12 @@
 from io import BytesIO
-from xml.sax.saxutils import escape
+from xml.sax.saxutils import escape, quoteattr
 
 from reportlab.lib.colors import black
+from reportlab.lib.enums import TA_CENTER
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import ParagraphStyle
 from reportlab.lib.units import cm
-from reportlab.platypus import HRFlowable, KeepTogether, Paragraph, SimpleDocTemplate
+from reportlab.platypus import HRFlowable, KeepTogether, Paragraph, SimpleDocTemplate, Spacer
 
 from aptum.modules.cv.document import CVDocument
 from aptum.modules.cv.templates.common import NumberedCanvas, p
@@ -24,8 +25,13 @@ class SoftwareEngineerTemplate:
     def render(self, doc: CVDocument) -> bytes:
         body = ParagraphStyle("Body", fontName="Helvetica", fontSize=10, leading=13, spaceAfter=2)
         muted = ParagraphStyle("Muted", parent=body, fontSize=9, textColor=_GRAY)
-        name = ParagraphStyle("Name", parent=body, fontName="Helvetica-Bold", fontSize=18, leading=22)
-        headline = ParagraphStyle("Headline", parent=body, fontSize=11, leading=14)
+        name = ParagraphStyle(
+            "Name", parent=body, fontName="Helvetica-Bold", fontSize=26, leading=30, alignment=TA_CENTER, spaceAfter=4
+        )
+        contact = ParagraphStyle("Contact", parent=muted, fontSize=9.5, alignment=TA_CENTER, spaceAfter=4)
+        headline = ParagraphStyle(
+            "Headline", parent=body, fontName="Helvetica-Bold", fontSize=14, leading=17, alignment=TA_CENTER
+        )
         section = ParagraphStyle(
             "Section", parent=body, fontName="Helvetica-Bold", fontSize=10.5, spaceBefore=10, spaceAfter=1
         )
@@ -33,12 +39,13 @@ class SoftwareEngineerTemplate:
         bullet = ParagraphStyle("Bullet", parent=body, leftIndent=12, bulletIndent=0)
 
         story: list = [p(doc.full_name, name)]
+        contact_parts = [escape(x) for x in (doc.location, doc.phone, doc.email) if x]
+        contact_parts += [f"<link href={quoteattr(link.url)}>{escape(link.label)}</link>" for link in doc.links]
+        if contact_parts:
+            story.append(Paragraph(" | ".join(contact_parts), contact))
         if doc.headline:
             story.append(p(doc.headline, headline))
-        if doc.contact_line:
-            story.append(p(doc.contact_line, muted))
-        if doc.links_line:
-            story.append(p(doc.links_line, muted))
+        story.append(Spacer(1, 0.5 * cm))
 
         def heading(title: str) -> None:
             story.append(p(title.upper(), section))
@@ -55,7 +62,9 @@ class SoftwareEngineerTemplate:
 
         if doc.experiences:
             heading("Experience")
-            for exp in doc.experiences:
+            for index, exp in enumerate(doc.experiences):
+                if index:
+                    story.append(Spacer(1, 0.3 * cm))
                 story.append(KeepTogether([p(exp.title, item), p(exp.dates, muted)]))
                 if exp.description:
                     story.append(p(exp.description, body))
@@ -91,10 +100,10 @@ class SoftwareEngineerTemplate:
         SimpleDocTemplate(
             buffer,
             pagesize=A4,
-            leftMargin=1.8 * cm,
-            rightMargin=1.8 * cm,
-            topMargin=1.8 * cm,
-            bottomMargin=2 * cm,
+            leftMargin=1.5 * cm,
+            rightMargin=1.5 * cm,
+            topMargin=1 * cm,
+            bottomMargin=1 * cm,
             title=f"{doc.full_name} - CV",
             author=doc.full_name,
         ).build(story, canvasmaker=NumberedCanvas)

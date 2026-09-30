@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from datetime import date
 
+from aptum.common.enums import LinkKind
 from aptum.modules.profile.models import Profile
 
 
@@ -39,6 +40,12 @@ class SkillGroup:
 
 
 @dataclass(frozen=True)
+class LinkEntry:
+    label: str
+    url: str
+
+
+@dataclass(frozen=True)
 class CVDocument:
     """Presentation-ready CV: every value is already formatted, templates only lay it out."""
 
@@ -46,6 +53,10 @@ class CVDocument:
     headline: str | None
     contact_line: str | None
     links_line: str | None
+    location: str | None
+    phone: str | None
+    email: str | None
+    links: tuple[LinkEntry, ...]
     summary: str | None
     experiences: tuple[ExperienceEntry, ...]
     educations: tuple[EducationEntry, ...]
@@ -54,6 +65,14 @@ class CVDocument:
     languages_line: str | None
     certifications: tuple[CertificationEntry, ...]
     projects: tuple[ProjectEntry, ...]
+
+
+_LINK_LABELS = {
+    LinkKind.linkedin: "LinkedIn",
+    LinkKind.github: "GitHub",
+    LinkKind.portfolio: "Portfolio",
+    LinkKind.website: "Website",
+}
 
 
 def _month(value: date | None) -> str:
@@ -77,6 +96,10 @@ def _group_skills(profile: Profile) -> tuple[SkillGroup, ...]:
 def build_cv_data(profile: Profile) -> CVDocument:
     full_name = " ".join(part for part in (profile.first_name, profile.last_name) if part)
     location = ", ".join(x for x in (profile.city, profile.region, profile.country_code) if x)
+    links = tuple(
+        LinkEntry(_LINK_LABELS.get(link.kind) or link.label or "Link", link.url)
+        for link in sorted(profile.links, key=lambda link: link.kind != LinkKind.linkedin)
+    )
     contact = " | ".join(x for x in (profile.contact_email, profile.phone, location) if x)
 
     experiences = tuple(
@@ -115,6 +138,10 @@ def build_cv_data(profile: Profile) -> CVDocument:
         headline=profile.headline or None,
         contact_line=contact or None,
         links_line=" | ".join(link.url for link in profile.links) if profile.links else None,
+        location=", ".join(x for x in (profile.city, profile.country_code) if x) or None,
+        phone=profile.phone or None,
+        email=profile.contact_email or None,
+        links=links,
         summary=profile.summary or None,
         experiences=experiences,
         educations=educations,
