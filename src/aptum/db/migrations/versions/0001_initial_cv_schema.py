@@ -120,6 +120,7 @@ def upgrade() -> None:
     sa.Column('city', sa.String(length=120), nullable=True),
     sa.Column('region', sa.String(length=120), nullable=True),
     sa.Column('country_code', sa.String(length=2), nullable=True),
+    sa.Column('preferred_template', sa.String(length=40), nullable=True),
     sa.Column('embedding', pgvector.sqlalchemy.vector.VECTOR(dim=1536), nullable=True),
     sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
     sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
