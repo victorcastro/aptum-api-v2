@@ -46,6 +46,7 @@ class Profile(TimestampMixin, Base):
     city: Mapped[str | None] = mapped_column(String(120), default=None)
     region: Mapped[str | None] = mapped_column(String(120), default=None)
     country_code: Mapped[str | None] = mapped_column(String(2), default=None)
+    preferred_template: Mapped[str | None] = mapped_column(String(40), default=None)
     embedding: Mapped[list[float] | None] = mapped_column(Vector(EMBEDDING_DIM), nullable=True)
 
     links: Mapped[list["ProfileLink"]] = relationship(back_populates="profile", **_OWNED)

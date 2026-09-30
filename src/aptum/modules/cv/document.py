@@ -33,6 +33,12 @@ class ProjectEntry:
 
 
 @dataclass(frozen=True)
+class SkillGroup:
+    label: str
+    names: tuple[str, ...]
+
+
+@dataclass(frozen=True)
 class CVDocument:
     """Presentation-ready CV: every value is already formatted, templates only lay it out."""
 
@@ -44,6 +50,7 @@ class CVDocument:
     experiences: tuple[ExperienceEntry, ...]
     educations: tuple[EducationEntry, ...]
     skills_line: str | None
+    skill_groups: tuple[SkillGroup, ...]
     languages_line: str | None
     certifications: tuple[CertificationEntry, ...]
     projects: tuple[ProjectEntry, ...]
@@ -57,6 +64,14 @@ def _range(start: date | None, end: date | None, current: bool = False) -> str:
     if start is None and end is None:
         return ""
     return f"{_month(start)} - {'Present' if current else _month(end)}".strip(" -")
+
+
+def _group_skills(profile: Profile) -> tuple[SkillGroup, ...]:
+    """Group by Skill.category in order of first appearance; uncategorized skills go to "Other"."""
+    groups: dict[str, list[str]] = {}
+    for ps in profile.skills:
+        groups.setdefault(ps.skill.category or "Other", []).append(ps.skill.name)
+    return tuple(SkillGroup(label, tuple(names)) for label, names in groups.items())
 
 
 def build_cv_data(profile: Profile) -> CVDocument:
@@ -104,6 +119,7 @@ def build_cv_data(profile: Profile) -> CVDocument:
         experiences=experiences,
         educations=educations,
         skills_line=", ".join(ps.skill.name for ps in profile.skills) if profile.skills else None,
+        skill_groups=_group_skills(profile),
         languages_line=", ".join(
             f"{lang.language_code.upper()} ({lang.proficiency.value.replace('_', ' ')})"
             for lang in profile.languages
