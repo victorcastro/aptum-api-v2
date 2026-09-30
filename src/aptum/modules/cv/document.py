@@ -1,7 +1,8 @@
 from dataclasses import dataclass
 from datetime import date
 
-from aptum.common.enums import LinkKind
+from aptum.common.constants import LANGUAGE_NAMES
+from aptum.common.enums import LanguageProficiency, LinkKind
 from aptum.modules.profile.models import Profile
 
 
@@ -46,6 +47,12 @@ class LinkEntry:
 
 
 @dataclass(frozen=True)
+class LanguageEntry:
+    name: str
+    level: str
+
+
+@dataclass(frozen=True)
 class CVDocument:
     """Presentation-ready CV: every value is already formatted, templates only lay it out."""
 
@@ -62,10 +69,18 @@ class CVDocument:
     educations: tuple[EducationEntry, ...]
     skills_line: str | None
     skill_groups: tuple[SkillGroup, ...]
-    languages_line: str | None
+    languages: tuple[LanguageEntry, ...]
     certifications: tuple[CertificationEntry, ...]
     projects: tuple[ProjectEntry, ...]
 
+
+_PROFICIENCY_LABELS = {
+    LanguageProficiency.elementary: "Elementary proficiency",
+    LanguageProficiency.limited_working: "Limited working proficiency",
+    LanguageProficiency.professional_working: "Professional working proficiency",
+    LanguageProficiency.full_professional: "Full professional proficiency",
+    LanguageProficiency.native_or_bilingual: "Native or bilingual proficiency",
+}
 
 _LINK_LABELS = {
     LinkKind.linkedin: "LinkedIn",
@@ -147,12 +162,13 @@ def build_cv_data(profile: Profile) -> CVDocument:
         educations=educations,
         skills_line=", ".join(ps.skill.name for ps in profile.skills) if profile.skills else None,
         skill_groups=_group_skills(profile),
-        languages_line=", ".join(
-            f"{lang.language_code.upper()} ({lang.proficiency.value.replace('_', ' ')})"
+        languages=tuple(
+            LanguageEntry(
+                LANGUAGE_NAMES.get(lang.language_code.lower(), lang.language_code.upper()),
+                _PROFICIENCY_LABELS[lang.proficiency],
+            )
             for lang in profile.languages
-        )
-        if profile.languages
-        else None,
+        ),
         certifications=certifications,
         projects=projects,
     )

@@ -58,9 +58,10 @@ class ClassicTemplate:
             story.append(_p("Skills", section))
             story.append(_p(doc.skills_line, body))
 
-        if doc.languages_line:
+        if doc.languages:
             story.append(_p("Languages", section))
-            story.append(_p(doc.languages_line, body))
+            for lang in doc.languages:
+                story.append(_p(f"{lang.name} - {lang.level}", body))
 
         if doc.certifications:
             story.append(_p("Certifications", section))

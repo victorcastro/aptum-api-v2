@@ -33,7 +33,7 @@ class SoftwareEngineerTemplate:
             "Headline", parent=body, fontName="Helvetica-Bold", fontSize=14, leading=17, alignment=TA_CENTER
         )
         section = ParagraphStyle(
-            "Section", parent=body, fontName="Helvetica-Bold", fontSize=10.5, spaceBefore=10, spaceAfter=1
+            "Section", parent=body, fontName="Helvetica-Bold", fontSize=10.5, spaceBefore=18, spaceAfter=1
         )
         item = ParagraphStyle("Item", parent=body, fontName="Helvetica-Bold", spaceBefore=5, spaceAfter=0)
         bullet = ParagraphStyle("Bullet", parent=body, leftIndent=12, bulletIndent=0)
@@ -92,9 +92,10 @@ class SoftwareEngineerTemplate:
             for cert in doc.certifications:
                 story.append(KeepTogether([p(cert.title, item), p(cert.dates, muted)]))
 
-        if doc.languages_line:
+        if doc.languages:
             heading("Languages")
-            story.append(p(doc.languages_line, body))
+            for lang in doc.languages:
+                story.append(p(f"{lang.name} - {lang.level}", body))
 
         buffer = BytesIO()
         SimpleDocTemplate(

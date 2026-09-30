@@ -27,7 +27,7 @@ class NumberedCanvas(Canvas):
         for state in self._saved_pages:
             self.__dict__.update(state)
             self.setFont("Helvetica", 8)
-            self.setFillColor("#555555")
+            self.setFillColor("#999999")
             self.drawRightString(A4[0] - 2 * cm, 1 * cm, f"Page {self._pageNumber} of {total}")
             super().showPage()
         super().save()
