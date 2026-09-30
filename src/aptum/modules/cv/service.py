@@ -2,7 +2,7 @@ from sqlalchemy.orm import Session
 
 from aptum.core.exceptions import NotFoundError
 from aptum.modules.cv.document import build_cv_data
-from aptum.modules.cv.schemas import CVTemplateOut
+from aptum.modules.cv.schemas import CVSettingsRead, CVSettingsUpdate, CVTemplateOut
 from aptum.modules.cv.templates.registry import (
     DEFAULT_TEMPLATE,
     get_template,
@@ -31,12 +31,24 @@ class CVService:
             for t in list_templates()
         ]
 
-    def set_preferred_template(self, user_id: int, template_id: str | None) -> list[CVTemplateOut]:
+    def get_settings(self, user_id: int) -> CVSettingsRead:
+        profile = self.profiles.get_or_create(user_id)
+        return CVSettingsRead(template_id=self._effective_template(profile))
+
+    def update_settings(self, user_id: int, data: CVSettingsUpdate) -> CVSettingsRead:
+        fields = data.model_dump(exclude_unset=True)
+        template_id = fields.get("template_id")
         if template_id is not None and not has_template(template_id):
             raise NotFoundError(f"Template '{template_id}' not found")
         profile = self.profiles.get_or_create(user_id)
-        self.profiles.repository.update(profile, preferred_template=template_id)
-        return self.list_templates(user_id)
+        if "template_id" in fields:
+            profile = self.profiles.repository.update(profile, preferred_template=template_id)
+        return CVSettingsRead(template_id=self._effective_template(profile))
+
+    def reset_settings(self, user_id: int) -> None:
+        """Back to defaults for every CV setting."""
+        profile = self.profiles.get_or_create(user_id)
+        self.profiles.repository.update(profile, preferred_template=None)
 
     @staticmethod
     def _effective_template(profile: Profile) -> str:

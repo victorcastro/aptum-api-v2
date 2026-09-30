@@ -8,7 +8,13 @@ class CVTemplateOut(BaseModel):
     selected: bool
 
 
-class CVTemplateChoice(BaseModel):
-    """`template_id: null` clears the saved preference, so exports go back to the default."""
+class CVSettingsRead(BaseModel):
+    """`template_id` is the template `/cv/export` uses by default: the saved one, or `classic`."""
+
+    template_id: str
+
+
+class CVSettingsUpdate(BaseModel):
+    """Partial update: omitted fields keep their value, `null` clears the field back to its default."""
 
     template_id: str | None = None
