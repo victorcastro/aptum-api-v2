@@ -31,6 +31,6 @@ One folder per feature under `src/aptum/modules/<x>/` with `models.py`, `reposit
 - CV dates are month/year only: the API speaks `YYYY-MM` (`common/types.YearMonth`), the DB stores the first day of the month and enforces it with a CHECK.
 - Hiring through a consultancy: `experiences.employer_id` is who hires (NTT Data), `experiences.client_id` is where the work happens (Banco BCP). The client's industry is the relevant one for matching.
 
-<!-- engly:start v1.4.1 -->
+<!-- engly:start v1.5.0 -->
 @.engly/engly.md
 <!-- engly:end -->
