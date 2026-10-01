@@ -1,17 +1,47 @@
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from aptum.core.exceptions import AptumError, ConflictError, NotFoundError
+from aptum.db.base import Base
 from aptum.modules.companies.repository import CompanyRepository
-from aptum.modules.profile.models import Profile
-from aptum.modules.profile.repository import ProfileRepository
-from aptum.modules.profile.schemas import (
-    CertificationCreate,
-    CertificationUpdate,
-    EducationCreate,
-    ExperienceCreate,
-    LanguageCreate,
-    ProfileUpdate,
+from aptum.modules.profile.models import (
+    Certification,
+    Education,
+    Experience,
+    Profile,
+    ProfileLanguage,
+    ProfileLink,
+    ProfileSkill,
+    Project,
 )
+from aptum.modules.profile.repository import ProfileRepository
+from aptum.modules.profile.schemas import ExperienceCreate, ExperienceUpdate, ProfileUpdate
+from aptum.modules.skills.repository import SkillRepository
+
+_LABELS = {
+    Experience: "Experience",
+    Education: "Education",
+    Certification: "Certification",
+    Project: "Project",
+    ProfileLink: "Link",
+    ProfileLanguage: "Language",
+    ProfileSkill: "Skill",
+}
+
+_ORDER = {
+    Education: (Education.end_date.desc().nulls_first(), Education.id),
+    Certification: (Certification.issue_date.desc().nulls_last(), Certification.id),
+    Project: (Project.start_date.desc().nulls_last(), Project.id),
+    ProfileLink: (ProfileLink.id,),
+    ProfileLanguage: (ProfileLanguage.id,),
+    ProfileSkill: (ProfileSkill.position, ProfileSkill.id),
+}
+
+_DATE_RANGES = {
+    Education: ("start_date", "end_date"),
+    Project: ("start_date", "end_date"),
+    Certification: ("issue_date", "expiration_date"),
+}
 
 
 class ProfileService:
@@ -21,6 +51,7 @@ class ProfileService:
     def __init__(self, db: Session) -> None:
         self.repository = ProfileRepository(db)
         self.companies = CompanyRepository(db)
+        self.skills = SkillRepository(db)
 
     def get_or_create(self, user_id: int) -> Profile:
         profile = self.repository.get_by_user_id(user_id)
@@ -30,68 +61,84 @@ class ProfileService:
         profile = self._get_owned(user_id)
         return self.repository.update(profile, **data.model_dump(exclude_unset=True))
 
+    def list_experiences(self, user_id: int):
+        profile = self._get_owned(user_id)
+        return sorted(profile.experiences, key=lambda exp: (exp.start_date, exp.id), reverse=True)
+
     def add_experience(self, user_id: int, data: ExperienceCreate):
         profile = self._get_owned(user_id)
-        for company_id in {data.employer_id, data.client_id} - {None}:
-            if self.companies.get(company_id) is None:
-                raise NotFoundError("Company not found")
+        self._check_companies(data.employer_id, data.client_id)
         return self.repository.add_experience(
             profile,
             is_current=data.end_date is None,
             **data.model_dump(),
         )
 
-    def set_experience_active(self, user_id: int, experience_id: int, is_active: bool):
-        experience = self._get_owned_experience(user_id, experience_id)
-        return self.repository.set_experience_active(experience, is_active)
+    def update_experience(self, user_id: int, experience_id: int, data: ExperienceUpdate):
+        experience = self._get_owned_row(user_id, Experience, experience_id)
+        fields = data.model_dump(exclude_unset=True)
+        functions = fields.pop("functions", None)
+        self._check_range(experience, fields, "start_date", "end_date")
+        employer_id = fields.get("employer_id", experience.employer_id)
+        client_id = fields.get("client_id", experience.client_id)
+        if client_id is not None and client_id == employer_id:
+            raise AptumError("client_id must differ from employer_id")
+        self._check_companies(fields.get("employer_id"), fields.get("client_id"))
+        if "end_date" in fields:
+            fields["is_current"] = fields["end_date"] is None
+        return self.repository.update_experience(experience, functions, **fields)
 
     def delete_experience(self, user_id: int, experience_id: int) -> None:
-        experience = self._get_owned_experience(user_id, experience_id)
-        self.repository.delete_experience(experience)
+        self.delete_row(user_id, Experience, experience_id)
 
-    def add_education(self, user_id: int, data: EducationCreate):
+    def list_rows(self, user_id: int, model: type[Base]):
         profile = self._get_owned(user_id)
-        return self.repository.add_education(profile, **data.model_dump())
+        return self.repository.list_rows(model, profile, *_ORDER[model])
 
-    def add_language(self, user_id: int, data: LanguageCreate):
+    def add_row(self, user_id: int, model: type[Base], data: BaseModel):
         profile = self._get_owned(user_id)
-        if self.repository.get_language(profile, data.language_code) is not None:
+        fields = data.model_dump()
+        if model is ProfileLanguage and any(
+            language.language_code == fields["language_code"] for language in profile.languages
+        ):
             raise ConflictError("Language already added")
-        return self.repository.add_language(profile, **data.model_dump())
+        if model is ProfileSkill:
+            if self.skills.get(fields["skill_id"]) is None:
+                raise NotFoundError("Skill not found")
+            if any(skill.skill_id == fields["skill_id"] for skill in profile.skills):
+                raise ConflictError("Skill already added")
+            fields["position"] = self.repository.next_skill_position(profile)
+        return self.repository.add_row(model, profile, **fields)
 
-    def list_certifications(self, user_id: int):
-        return self.repository.list_certifications(self._get_owned(user_id))
-
-    def add_certification(self, user_id: int, data: CertificationCreate):
-        profile = self._get_owned(user_id)
-        return self.repository.add_certification(profile, **data.model_dump())
-
-    def update_certification(self, user_id: int, certification_id: int, data: CertificationUpdate):
-        certification = self._get_owned_certification(user_id, certification_id)
+    def update_row(self, user_id: int, model: type[Base], row_id: int, data: BaseModel):
+        row = self._get_owned_row(user_id, model, row_id)
         fields = data.model_dump(exclude_unset=True)
-        issue = fields.get("issue_date", certification.issue_date)
-        expiration = fields.get("expiration_date", certification.expiration_date)
-        if issue is not None and expiration is not None and expiration < issue:
-            raise AptumError("expiration_date must not be before issue_date")
-        return self.repository.update_certification(certification, **fields)
+        if model in _DATE_RANGES:
+            self._check_range(row, fields, *_DATE_RANGES[model])
+        return self.repository.update_row(row, **fields)
 
-    def delete_certification(self, user_id: int, certification_id: int) -> None:
-        certification = self._get_owned_certification(user_id, certification_id)
-        self.repository.delete_certification(certification)
+    def delete_row(self, user_id: int, model: type[Base], row_id: int) -> None:
+        row = self._get_owned_row(user_id, model, row_id)
+        self.repository.delete_row(row)
 
-    def _get_owned_certification(self, user_id: int, certification_id: int):
+    def _check_companies(self, *company_ids: int | None) -> None:
+        for company_id in set(company_ids) - {None}:
+            if self.companies.get(company_id) is None:
+                raise NotFoundError("Company not found")
+
+    @staticmethod
+    def _check_range(row, fields: dict, start_field: str, end_field: str) -> None:
+        start = fields.get(start_field, getattr(row, start_field))
+        end = fields.get(end_field, getattr(row, end_field))
+        if start is not None and end is not None and end < start:
+            raise AptumError(f"{end_field} must not be before {start_field}")
+
+    def _get_owned_row(self, user_id: int, model: type[Base], row_id: int):
         profile = self._get_owned(user_id)
-        certification = self.repository.get_certification(profile, certification_id)
-        if certification is None:
-            raise NotFoundError("Certification not found")
-        return certification
-
-    def _get_owned_experience(self, user_id: int, experience_id: int):
-        profile = self._get_owned(user_id)
-        experience = self.repository.get_experience(profile, experience_id)
-        if experience is None:
-            raise NotFoundError("Experience not found")
-        return experience
+        row = self.repository.get_row(model, profile, row_id)
+        if row is None:
+            raise NotFoundError(f"{_LABELS[model]} not found")
+        return row
 
     def _get_owned(self, user_id: int) -> Profile:
         profile = self.repository.get_by_user_id(user_id)

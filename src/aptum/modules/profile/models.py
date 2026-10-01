@@ -198,6 +198,7 @@ class Education(TimestampMixin, Base):
     start_date: Mapped[date | None] = mapped_column(Date, default=None)
     end_date: Mapped[date | None] = mapped_column(Date, default=None)
     grade: Mapped[str | None] = mapped_column(String(80), default=None)
+    is_active: Mapped[bool] = mapped_column(default=True, server_default=true())
     description: Mapped[str | None] = mapped_column(Text, default=None)
 
     profile: Mapped["Profile"] = relationship(back_populates="educations")
@@ -236,6 +237,7 @@ class Project(TimestampMixin, Base):
     name: Mapped[str] = mapped_column(String(255))
     description: Mapped[str | None] = mapped_column(Text, default=None)
     url: Mapped[str | None] = mapped_column(String(500), default=None)
+    is_active: Mapped[bool] = mapped_column(default=True, server_default=true())
     start_date: Mapped[date | None] = mapped_column(Date, default=None)
     end_date: Mapped[date | None] = mapped_column(Date, default=None)
 

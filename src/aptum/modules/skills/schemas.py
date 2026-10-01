@@ -1,4 +1,6 @@
-from pydantic import BaseModel, ConfigDict
+from typing import Annotated
+
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class SkillRead(BaseModel):
@@ -8,3 +10,8 @@ class SkillRead(BaseModel):
     name: str
     slug: str
     category: str | None
+
+
+class SkillCreate(BaseModel):
+    name: Annotated[str, Field(min_length=1, max_length=120)]
+    category: Annotated[str, Field(max_length=80)] | None = None

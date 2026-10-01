@@ -137,6 +137,7 @@ def build_cv_data(profile: Profile) -> CVDocument:
             description=edu.description or None,
         )
         for edu in profile.educations
+        if edu.is_active
     )
     certifications = tuple(
         CertificationEntry(
@@ -149,6 +150,7 @@ def build_cv_data(profile: Profile) -> CVDocument:
     projects = tuple(
         ProjectEntry(name=project.name, description=project.description or None)
         for project in profile.projects
+        if project.is_active
     )
 
     return CVDocument(

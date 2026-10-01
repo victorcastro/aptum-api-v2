@@ -1,4 +1,4 @@
-from typing import Annotated
+from typing import Annotated, ClassVar
 
 from pydantic import (
     AfterValidator,
@@ -92,8 +92,34 @@ class ExperienceRead(BaseModel):
     functions: list[ExperienceFunctionRead] = []
 
 
-class ExperienceStatusUpdate(BaseModel):
-    is_active: bool
+class PartialUpdate(BaseModel):
+    """Base for PATCH bodies: only the fields sent change, and `non_nullable` ones reject null."""
+
+    non_nullable: ClassVar[tuple[str, ...]] = ()
+
+    @model_validator(mode="after")
+    def _reject_null(self):
+        for field in self.non_nullable:
+            if field in self.model_fields_set and getattr(self, field) is None:
+                raise ValueError(f"{field} cannot be null")
+        return self
+
+
+class ExperienceUpdate(PartialUpdate):
+    non_nullable = ("position", "employer_id", "start_date", "is_active", "functions")
+
+    position: Annotated[str, Field(min_length=1, max_length=255)] | None = None
+    employer_id: int | None = None
+    client_id: int | None = None
+    employment_type: EmploymentType | None = None
+    work_mode: WorkMode | None = None
+    location_city: str | None = None
+    location_country_code: CountryCode | None = None
+    start_date: YearMonth | None = None
+    end_date: YearMonth | None = None
+    is_active: bool | None = None
+    description: str | None = None
+    functions: list[str] | None = None
 
 
 class EducationCreate(BaseModel):
@@ -103,12 +129,26 @@ class EducationCreate(BaseModel):
     start_date: YearMonth | None = None
     end_date: YearMonth | None = None
     grade: str | None = None
+    is_active: bool = True
     description: str | None = None
 
     @model_validator(mode="after")
     def _validate(self):
         _check_range(self.start_date, self.end_date)
         return self
+
+
+class EducationUpdate(PartialUpdate):
+    non_nullable = ("institution", "degree", "is_active")
+
+    institution: Annotated[str, Field(min_length=1, max_length=255)] | None = None
+    degree: Annotated[str, Field(min_length=1, max_length=255)] | None = None
+    field_of_study: str | None = None
+    start_date: YearMonth | None = None
+    end_date: YearMonth | None = None
+    grade: str | None = None
+    is_active: bool | None = None
+    description: str | None = None
 
 
 class EducationRead(EducationCreate):
@@ -122,10 +162,30 @@ class LanguageCreate(BaseModel):
     proficiency: LanguageProficiency
 
 
+class LanguageUpdate(PartialUpdate):
+    non_nullable = ("proficiency",)
+
+    proficiency: LanguageProficiency | None = None
+
+
 class LanguageRead(LanguageCreate):
     model_config = ConfigDict(from_attributes=True)
 
     id: int
+
+
+class ProfileLinkCreate(BaseModel):
+    kind: LinkKind
+    url: HttpUrlStr
+    label: Annotated[str, Field(max_length=120)] | None = None
+
+
+class ProfileLinkUpdate(PartialUpdate):
+    non_nullable = ("kind", "url")
+
+    kind: LinkKind | None = None
+    url: HttpUrlStr | None = None
+    label: Annotated[str, Field(max_length=120)] | None = None
 
 
 class ProfileLinkRead(BaseModel):
@@ -137,6 +197,20 @@ class ProfileLinkRead(BaseModel):
     label: str | None
 
 
+class ProfileSkillCreate(BaseModel):
+    skill_id: int
+    level: SkillLevel | None = None
+    years_experience: Annotated[int, Field(ge=0, le=80)] | None = None
+
+
+class ProfileSkillUpdate(PartialUpdate):
+    non_nullable = ("position",)
+
+    level: SkillLevel | None = None
+    years_experience: Annotated[int, Field(ge=0, le=80)] | None = None
+    position: Annotated[int, Field(ge=0)] | None = None
+
+
 class ProfileSkillRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -144,6 +218,7 @@ class ProfileSkillRead(BaseModel):
     skill: SkillRead
     level: SkillLevel | None
     years_experience: int | None
+    position: int
 
 
 class CertificationCreate(BaseModel):
@@ -161,9 +236,8 @@ class CertificationCreate(BaseModel):
         return self
 
 
-class CertificationUpdate(BaseModel):
-    """Partial update: only the fields sent are changed. `name`, `issuing_organization`
-    and `is_active` cannot be set to null."""
+class CertificationUpdate(PartialUpdate):
+    non_nullable = ("name", "issuing_organization", "is_active")
 
     name: Annotated[str, Field(min_length=1, max_length=255)] | None = None
     issuing_organization: Annotated[str, Field(min_length=1, max_length=255)] | None = None
@@ -172,13 +246,6 @@ class CertificationUpdate(BaseModel):
     credential_id: Annotated[str, Field(max_length=255)] | None = None
     credential_url: HttpUrlStr | None = None
     is_active: bool | None = None
-
-    @model_validator(mode="after")
-    def _validate(self):
-        for field in ("name", "issuing_organization", "is_active"):
-            if field in self.model_fields_set and getattr(self, field) is None:
-                raise ValueError(f"{field} cannot be null")
-        return self
 
 
 class CertificationRead(BaseModel):
@@ -194,6 +261,31 @@ class CertificationRead(BaseModel):
     is_active: bool
 
 
+class ProjectCreate(BaseModel):
+    name: Annotated[str, Field(min_length=1, max_length=255)]
+    description: str | None = None
+    url: HttpUrlStr | None = None
+    start_date: YearMonth | None = None
+    end_date: YearMonth | None = None
+    is_active: bool = True
+
+    @model_validator(mode="after")
+    def _validate(self):
+        _check_range(self.start_date, self.end_date)
+        return self
+
+
+class ProjectUpdate(PartialUpdate):
+    non_nullable = ("name", "is_active")
+
+    name: Annotated[str, Field(min_length=1, max_length=255)] | None = None
+    description: str | None = None
+    url: HttpUrlStr | None = None
+    start_date: YearMonth | None = None
+    end_date: YearMonth | None = None
+    is_active: bool | None = None
+
+
 class ProjectRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -203,6 +295,7 @@ class ProjectRead(BaseModel):
     url: str | None
     start_date: YearMonth | None
     end_date: YearMonth | None
+    is_active: bool
 
 
 class ProfileUpdate(BaseModel):
