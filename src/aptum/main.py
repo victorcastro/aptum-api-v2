@@ -8,6 +8,7 @@ from scalar_fastapi import get_scalar_api_reference
 from aptum.core.config import get_settings
 from aptum.core.exceptions import register_exception_handlers
 from aptum.core.logging_config import configure_logging
+from aptum.modules.commons.router import router as commons_router
 from aptum.modules.companies.router import router as companies_router
 from aptum.modules.cv.router import router as cv_router
 from aptum.modules.matching.router import router as matching_router
@@ -36,6 +37,7 @@ register_exception_handlers(app)
 
 app.include_router(users_router)
 app.include_router(profile_router)
+app.include_router(commons_router)
 app.include_router(companies_router)
 app.include_router(cv_router)
 app.include_router(matching_router)

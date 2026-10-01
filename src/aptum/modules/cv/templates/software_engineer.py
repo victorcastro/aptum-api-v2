@@ -9,7 +9,7 @@ from reportlab.lib.units import cm
 from reportlab.platypus import HRFlowable, KeepTogether, Paragraph, SimpleDocTemplate, Spacer
 
 from aptum.modules.cv.document import CVDocument
-from aptum.modules.cv.templates.common import NumberedCanvas, p
+from aptum.modules.cv.templates.common import p
 
 _GRAY = "#444444"
 
@@ -107,5 +107,5 @@ class SoftwareEngineerTemplate:
             bottomMargin=1 * cm,
             title=f"{doc.full_name} - CV",
             author=doc.full_name,
-        ).build(story, canvasmaker=NumberedCanvas)
+        ).build(story)
         return buffer.getvalue()

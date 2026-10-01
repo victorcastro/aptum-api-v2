@@ -7,6 +7,7 @@ from aptum.modules.profile.schemas import (
     EducationRead,
     ExperienceCreate,
     ExperienceRead,
+    ExperienceStatusUpdate,
     LanguageCreate,
     LanguageRead,
     ProfileRead,
@@ -42,6 +43,16 @@ def add_experience(
     db: Session = Depends(get_db),
 ):
     return ProfileService(db).add_experience(current_user.id, data)
+
+
+@router.patch("/me/experiences/{experience_id}", response_model=ExperienceRead)
+def set_experience_status(
+    experience_id: int,
+    data: ExperienceStatusUpdate,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    return ProfileService(db).set_experience_active(current_user.id, experience_id, data.is_active)
 
 
 @router.delete("/me/experiences/{experience_id}", status_code=204)

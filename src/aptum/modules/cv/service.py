@@ -1,3 +1,7 @@
+import re
+import unicodedata
+from datetime import UTC, datetime
+
 from sqlalchemy.orm import Session
 
 from aptum.core.exceptions import NotFoundError
@@ -17,12 +21,22 @@ class CVService:
     def __init__(self, db: Session) -> None:
         self.profiles = ProfileService(db)
 
-    def export_pdf(self, user_id: int, template_id: str | None = None) -> bytes:
+    def export_pdf(self, user_id: int, template_id: str | None = None) -> tuple[bytes, str]:
         """Render the authenticated user's own profile; the profile is always resolved by user_id.
-        An explicit template applies to this download only, without touching the saved preference."""
+        An explicit template applies to this download only, without touching the saved preference.
+        Returns the PDF bytes and the download filename."""
         profile = self.profiles.get_or_create(user_id)
         template = get_template(template_id or self._effective_template(profile))
-        return template.render(build_cv_data(profile))
+        doc = build_cv_data(profile)
+        return template.render(doc), self._filename(doc.full_name)
+
+    @staticmethod
+    def _filename(full_name: str) -> str:
+        """CV-YYYY.MM-First_Last-YYYYMMDDHHMMSS.pdf, ASCII only so it is safe in a header."""
+        now = datetime.now(UTC)
+        ascii_name = unicodedata.normalize("NFKD", full_name).encode("ascii", "ignore").decode()
+        name = "_".join(re.findall(r"[A-Za-z0-9]+", ascii_name)) or "CV"
+        return f"CV-{now:%Y.%m}-{name}-{now:%Y%m%d%H%M%S}.pdf"
 
     def list_templates(self, user_id: int) -> list[CVTemplateOut]:
         effective = self._effective_template(self.profiles.get_or_create(user_id))

@@ -57,6 +57,12 @@ class ProfileRepository:
             .first()
         )
 
+    def set_experience_active(self, experience: Experience, is_active: bool) -> Experience:
+        experience.is_active = is_active
+        self.db.commit()
+        self.db.refresh(experience)
+        return experience
+
     def delete_experience(self, experience: Experience) -> None:
         self.db.delete(experience)
         self.db.commit()

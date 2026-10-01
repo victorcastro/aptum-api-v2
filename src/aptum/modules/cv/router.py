@@ -57,9 +57,9 @@ def export_cv(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> Response:
-    pdf = CVService(db).export_pdf(current_user.id, template)
+    pdf, filename = CVService(db).export_pdf(current_user.id, template)
     return Response(
         content=pdf,
         media_type="application/pdf",
-        headers={"Content-Disposition": 'attachment; filename="cv.pdf"'},
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
     )

@@ -1,7 +1,9 @@
 from datetime import date
 from typing import Annotated
 
-from pydantic import BeforeValidator, Field, PlainSerializer, WithJsonSchema
+from pydantic import AfterValidator, BeforeValidator, Field, PlainSerializer, WithJsonSchema
+
+from aptum.common.countries import COUNTRIES
 
 
 def _parse_year_month(value: object) -> object:
@@ -22,5 +24,15 @@ YearMonth = Annotated[
     WithJsonSchema({"type": "string", "pattern": r"^\d{4}-(0[1-9]|1[0-2])$", "examples": ["2023-03"]}),
 ]
 
-CountryCode = Annotated[str, Field(pattern=r"^[A-Z]{2}$", description="ISO 3166-1 alpha-2")]
+def _check_country(value: str) -> str:
+    if value not in COUNTRIES:
+        raise ValueError("Unknown ISO 3166-1 alpha-2 country code")
+    return value
+
+
+CountryCode = Annotated[
+    str,
+    Field(pattern=r"^[A-Z]{2}$", description="ISO 3166-1 alpha-2"),
+    AfterValidator(_check_country),
+]
 LanguageCode = Annotated[str, Field(pattern=r"^[a-z]{2}$", description="ISO 639-1")]

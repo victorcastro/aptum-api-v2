@@ -11,6 +11,7 @@ from sqlalchemy import (
     String,
     Text,
     UniqueConstraint,
+    true,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -145,6 +146,7 @@ class Experience(TimestampMixin, Base):
     start_date: Mapped[date] = mapped_column(Date)
     end_date: Mapped[date | None] = mapped_column(Date, default=None)
     is_current: Mapped[bool] = mapped_column(default=False)
+    is_active: Mapped[bool] = mapped_column(default=True, server_default=true())
     description: Mapped[str | None] = mapped_column(Text, default=None)
 
     profile: Mapped["Profile"] = relationship(back_populates="experiences")

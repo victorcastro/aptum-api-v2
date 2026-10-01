@@ -7,7 +7,7 @@ from reportlab.lib.units import cm
 from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer
 
 from aptum.modules.cv.document import CVDocument
-from aptum.modules.cv.templates.common import NumberedCanvas, p as _p
+from aptum.modules.cv.templates.common import p as _p
 
 
 class ClassicTemplate:
@@ -80,5 +80,5 @@ class ClassicTemplate:
         buffer = BytesIO()
         SimpleDocTemplate(
             buffer, pagesize=A4, leftMargin=2 * cm, rightMargin=2 * cm, topMargin=2 * cm, bottomMargin=2 * cm
-        ).build(story, canvasmaker=NumberedCanvas)
+        ).build(story)
         return buffer.getvalue()

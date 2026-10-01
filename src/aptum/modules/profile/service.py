@@ -39,11 +39,12 @@ class ProfileService:
             **data.model_dump(),
         )
 
+    def set_experience_active(self, user_id: int, experience_id: int, is_active: bool):
+        experience = self._get_owned_experience(user_id, experience_id)
+        return self.repository.set_experience_active(experience, is_active)
+
     def delete_experience(self, user_id: int, experience_id: int) -> None:
-        profile = self._get_owned(user_id)
-        experience = self.repository.get_experience(profile, experience_id)
-        if experience is None:
-            raise NotFoundError("Experience not found")
+        experience = self._get_owned_experience(user_id, experience_id)
         self.repository.delete_experience(experience)
 
     def add_education(self, user_id: int, data: EducationCreate):
@@ -55,6 +56,13 @@ class ProfileService:
         if self.repository.get_language(profile, data.language_code) is not None:
             raise ConflictError("Language already added")
         return self.repository.add_language(profile, **data.model_dump())
+
+    def _get_owned_experience(self, user_id: int, experience_id: int):
+        profile = self._get_owned(user_id)
+        experience = self.repository.get_experience(profile, experience_id)
+        if experience is None:
+            raise NotFoundError("Experience not found")
+        return experience
 
     def _get_owned(self, user_id: int) -> Profile:
         profile = self.repository.get_by_user_id(user_id)

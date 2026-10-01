@@ -27,6 +27,7 @@ class ExperienceCreate(BaseModel):
     location_country_code: CountryCode | None = None
     start_date: YearMonth
     end_date: YearMonth | None = None
+    is_active: bool = True
     description: str | None = None
     functions: list[str] = Field(default_factory=list)
 
@@ -60,8 +61,13 @@ class ExperienceRead(BaseModel):
     start_date: YearMonth
     end_date: YearMonth | None
     is_current: bool
+    is_active: bool
     description: str | None
     functions: list[ExperienceFunctionRead] = []
+
+
+class ExperienceStatusUpdate(BaseModel):
+    is_active: bool
 
 
 class EducationCreate(BaseModel):
