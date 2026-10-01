@@ -1,6 +1,7 @@
 from sqlalchemy.orm import Session
 
 from aptum.modules.profile.models import (
+    Certification,
     Education,
     Experience,
     ExperienceFunction,
@@ -90,3 +91,38 @@ class ProfileRepository:
         self.db.commit()
         self.db.refresh(language)
         return language
+
+    def list_certifications(self, profile: Profile) -> list[Certification]:
+        return (
+            self.db.query(Certification)
+            .filter(Certification.profile_id == profile.id)
+            .order_by(Certification.issue_date.desc().nulls_last(), Certification.id)
+            .all()
+        )
+
+    def get_certification(self, profile: Profile, certification_id: int) -> Certification | None:
+        return (
+            self.db.query(Certification)
+            .filter(
+                Certification.id == certification_id, Certification.profile_id == profile.id
+            )
+            .first()
+        )
+
+    def add_certification(self, profile: Profile, **fields) -> Certification:
+        certification = Certification(profile_id=profile.id, **fields)
+        self.db.add(certification)
+        self.db.commit()
+        self.db.refresh(certification)
+        return certification
+
+    def update_certification(self, certification: Certification, **fields) -> Certification:
+        for key, value in fields.items():
+            setattr(certification, key, value)
+        self.db.commit()
+        self.db.refresh(certification)
+        return certification
+
+    def delete_certification(self, certification: Certification) -> None:
+        self.db.delete(certification)
+        self.db.commit()

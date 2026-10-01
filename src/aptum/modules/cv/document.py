@@ -144,6 +144,7 @@ def build_cv_data(profile: Profile) -> CVDocument:
             dates=_range(cert.issue_date, cert.expiration_date),
         )
         for cert in profile.certifications
+        if cert.is_active
     )
     projects = tuple(
         ProjectEntry(name=project.name, description=project.description or None)

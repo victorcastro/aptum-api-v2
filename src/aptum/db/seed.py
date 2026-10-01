@@ -1,8 +1,8 @@
 """Populate the local DB with a demo CV.
 
-    uv run python -m aptum.db.seed --firebase-uid <uid> [--email you@example.com] [--reset] [--pdf cv.pdf]
+    uv run python -m aptum.db.seed [--firebase-uid <uid>] [--email you@example.com] [--reset] [--pdf cv.pdf]
 
-Attaches the demo CV to the local user linked to that Firebase uid (created if missing), so logging
+Attaches the demo CV to the local user linked to that Firebase uid (default: the test user) (created if missing), so logging
 in with that Firebase user shows the data. Pass --email with the Firebase user's email to keep it in sync. Refuses to touch a profile that already has CV data
 unless --reset is passed. Local development only.
 """
@@ -40,7 +40,8 @@ from aptum.modules.users.models import User
 from aptum.modules.users.repository import UserRepository
 
 
-DEFAULT_EMAIL = "demo@aptum.local"
+DEFAULT_EMAIL = "victor@castro.com"
+DEFAULT_FIREBASE_UID = "Hez0o0kRJZbHuL5FBvYKD35RcK02"
 
 
 def _company(db: Session, name: str, industry: str | None, *, consultancy: bool = False) -> Company:
@@ -284,7 +285,7 @@ def seed(db: Session, firebase_uid: str, email: str | None, reset: bool) -> Prof
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("--firebase-uid", required=True)
+    parser.add_argument("--firebase-uid", default=DEFAULT_FIREBASE_UID, help=f"Firebase uid of the test user (default {DEFAULT_FIREBASE_UID})")
     parser.add_argument("--email", help=f"Email of the Firebase user; sets/updates the local user (default {DEFAULT_EMAIL} on create)")
     parser.add_argument("--reset", action="store_true", help="Replace existing CV data of that profile")
     parser.add_argument("--pdf", metavar="PATH", help="Also write the rendered CV to this file")

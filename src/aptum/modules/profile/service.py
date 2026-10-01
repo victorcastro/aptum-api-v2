@@ -1,10 +1,12 @@
 from sqlalchemy.orm import Session
 
-from aptum.core.exceptions import ConflictError, NotFoundError
+from aptum.core.exceptions import AptumError, ConflictError, NotFoundError
 from aptum.modules.companies.repository import CompanyRepository
 from aptum.modules.profile.models import Profile
 from aptum.modules.profile.repository import ProfileRepository
 from aptum.modules.profile.schemas import (
+    CertificationCreate,
+    CertificationUpdate,
     EducationCreate,
     ExperienceCreate,
     LanguageCreate,
@@ -56,6 +58,33 @@ class ProfileService:
         if self.repository.get_language(profile, data.language_code) is not None:
             raise ConflictError("Language already added")
         return self.repository.add_language(profile, **data.model_dump())
+
+    def list_certifications(self, user_id: int):
+        return self.repository.list_certifications(self._get_owned(user_id))
+
+    def add_certification(self, user_id: int, data: CertificationCreate):
+        profile = self._get_owned(user_id)
+        return self.repository.add_certification(profile, **data.model_dump())
+
+    def update_certification(self, user_id: int, certification_id: int, data: CertificationUpdate):
+        certification = self._get_owned_certification(user_id, certification_id)
+        fields = data.model_dump(exclude_unset=True)
+        issue = fields.get("issue_date", certification.issue_date)
+        expiration = fields.get("expiration_date", certification.expiration_date)
+        if issue is not None and expiration is not None and expiration < issue:
+            raise AptumError("expiration_date must not be before issue_date")
+        return self.repository.update_certification(certification, **fields)
+
+    def delete_certification(self, user_id: int, certification_id: int) -> None:
+        certification = self._get_owned_certification(user_id, certification_id)
+        self.repository.delete_certification(certification)
+
+    def _get_owned_certification(self, user_id: int, certification_id: int):
+        profile = self._get_owned(user_id)
+        certification = self.repository.get_certification(profile, certification_id)
+        if certification is None:
+            raise NotFoundError("Certification not found")
+        return certification
 
     def _get_owned_experience(self, user_id: int, experience_id: int):
         profile = self._get_owned(user_id)

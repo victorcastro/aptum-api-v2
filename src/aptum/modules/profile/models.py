@@ -220,6 +220,7 @@ class Certification(TimestampMixin, Base):
     expiration_date: Mapped[date | None] = mapped_column(Date, default=None)
     credential_id: Mapped[str | None] = mapped_column(String(255), default=None)
     credential_url: Mapped[str | None] = mapped_column(String(500), default=None)
+    is_active: Mapped[bool] = mapped_column(default=True, server_default=true())
 
     profile: Mapped["Profile"] = relationship(back_populates="certifications")
 

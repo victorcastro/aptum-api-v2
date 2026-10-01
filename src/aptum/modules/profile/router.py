@@ -3,6 +3,9 @@ from sqlalchemy.orm import Session
 
 from aptum.core.dependencies import get_current_user, get_db
 from aptum.modules.profile.schemas import (
+    CertificationCreate,
+    CertificationRead,
+    CertificationUpdate,
     EducationCreate,
     EducationRead,
     ExperienceCreate,
@@ -81,3 +84,40 @@ def add_language(
     db: Session = Depends(get_db),
 ):
     return ProfileService(db).add_language(current_user.id, data)
+
+
+@router.get("/me/certifications", response_model=list[CertificationRead])
+def list_certifications(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    return ProfileService(db).list_certifications(current_user.id)
+
+
+@router.post("/me/certifications", response_model=CertificationRead, status_code=201)
+def add_certification(
+    data: CertificationCreate,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    return ProfileService(db).add_certification(current_user.id, data)
+
+
+@router.patch("/me/certifications/{certification_id}", response_model=CertificationRead)
+def update_certification(
+    certification_id: int,
+    data: CertificationUpdate,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    return ProfileService(db).update_certification(current_user.id, certification_id, data)
+
+
+@router.delete("/me/certifications/{certification_id}", status_code=204)
+def delete_certification(
+    certification_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> Response:
+    ProfileService(db).delete_certification(current_user.id, certification_id)
+    return Response(status_code=204)

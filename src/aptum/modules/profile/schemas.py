@@ -1,4 +1,14 @@
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from typing import Annotated
+
+from pydantic import (
+    AfterValidator,
+    BaseModel,
+    ConfigDict,
+    Field,
+    HttpUrl,
+    TypeAdapter,
+    model_validator,
+)
 
 from aptum.common.enums import (
     EmploymentType,
@@ -15,6 +25,22 @@ from aptum.modules.skills.schemas import SkillRead
 def _check_range(start, end) -> None:
     if start is not None and end is not None and end < start:
         raise ValueError("end_date must not be before start_date")
+
+
+_HTTP_URL = TypeAdapter(HttpUrl)
+
+
+def _check_http_url(value: str) -> str:
+    _HTTP_URL.validate_python(value)
+    return value
+
+
+HttpUrlStr = Annotated[str, Field(max_length=500), AfterValidator(_check_http_url)]
+
+
+def _check_dates(issue, expiration) -> None:
+    if issue is not None and expiration is not None and expiration < issue:
+        raise ValueError("expiration_date must not be before issue_date")
 
 
 class ExperienceCreate(BaseModel):
@@ -120,6 +146,41 @@ class ProfileSkillRead(BaseModel):
     years_experience: int | None
 
 
+class CertificationCreate(BaseModel):
+    name: Annotated[str, Field(min_length=1, max_length=255)]
+    issuing_organization: Annotated[str, Field(min_length=1, max_length=255)]
+    issue_date: YearMonth | None = None
+    expiration_date: YearMonth | None = None
+    credential_id: Annotated[str, Field(max_length=255)] | None = None
+    credential_url: HttpUrlStr | None = None
+    is_active: bool = True
+
+    @model_validator(mode="after")
+    def _validate(self):
+        _check_dates(self.issue_date, self.expiration_date)
+        return self
+
+
+class CertificationUpdate(BaseModel):
+    """Partial update: only the fields sent are changed. `name`, `issuing_organization`
+    and `is_active` cannot be set to null."""
+
+    name: Annotated[str, Field(min_length=1, max_length=255)] | None = None
+    issuing_organization: Annotated[str, Field(min_length=1, max_length=255)] | None = None
+    issue_date: YearMonth | None = None
+    expiration_date: YearMonth | None = None
+    credential_id: Annotated[str, Field(max_length=255)] | None = None
+    credential_url: HttpUrlStr | None = None
+    is_active: bool | None = None
+
+    @model_validator(mode="after")
+    def _validate(self):
+        for field in ("name", "issuing_organization", "is_active"):
+            if field in self.model_fields_set and getattr(self, field) is None:
+                raise ValueError(f"{field} cannot be null")
+        return self
+
+
 class CertificationRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -130,6 +191,7 @@ class CertificationRead(BaseModel):
     expiration_date: YearMonth | None
     credential_id: str | None
     credential_url: str | None
+    is_active: bool
 
 
 class ProjectRead(BaseModel):
