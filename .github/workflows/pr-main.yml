@@ -1,24 +1,23 @@
-name: PR · Validate
+name: PR · Main
 
 on:
   pull_request:
-    branches: [staging, main]
+    branches: [main]
 
 concurrency:
-  group: pr-${{ github.event.pull_request.number }}
+  group: pr-main-${{ github.event.pull_request.number }}
   cancel-in-progress: true
 
 permissions:
   contents: read
 
 jobs:
-  # Release gates. Only for PRs into main; skipped for PRs into staging.
+  # Release gates: source branch, version bump and CHANGELOG entry.
   validate-version:
-    if: github.base_ref == 'main'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
@@ -50,8 +49,6 @@ jobs:
             exit 1
           fi
 
-  # Runs when the gates pass or are skipped (staging); not when they fail.
   checks:
     needs: validate-version
-    if: ${{ !failure() && !cancelled() }}
     uses: ./.github/workflows/reusable-checks.yml

@@ -1,6 +1,6 @@
 name: Reusable · Lint and Docker smoke test
 
-# Reusable: lint + image build + container smoke test. Called by pr-validate, deploy-staging and deploy-production.
+# Reusable: lint + image build + container smoke test. Called by pr-staging, pr-main, deploy-staging and deploy-production.
 on:
   workflow_call:
 
@@ -9,18 +9,18 @@ permissions:
 
 jobs:
   lint:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v6
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.2.0
         with:
           enable-cache: true
       - run: uv sync --frozen
       - run: uv run ruff check src
 
   docker:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     services:
       postgres:
@@ -34,7 +34,7 @@ jobs:
           --health-cmd "pg_isready -U postgres" --health-interval 5s
           --health-timeout 5s --health-retries 10
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Build image
         run: docker build -t aptum-api:ci .
       - name: Boot container (runs migrations) and poll /health
