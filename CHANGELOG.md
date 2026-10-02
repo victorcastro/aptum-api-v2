@@ -12,4 +12,5 @@ and the project follows [Semantic Versioning](https://semver.org/).
 - CV data model and CRUD: experiences, educations, certifications, projects, links, languages and skills.
 - Shared catalogs: companies, industries, skills and countries.
 - CV download as PDF with selectable templates.
+- CORS for the web app, configured with `CORS_ORIGINS`.
 - Dockerfile and GitHub Actions workflows to deploy to Dokploy (staging and production).

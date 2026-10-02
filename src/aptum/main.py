@@ -2,6 +2,7 @@ from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from scalar_fastapi import get_scalar_api_reference
 
@@ -34,6 +35,16 @@ app = FastAPI(
 )
 
 register_exception_handlers(app)
+
+cors_origins = get_settings().cors_origin_list
+if cors_origins:
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=cors_origins,
+        allow_methods=["*"],
+        allow_headers=["*"],
+        expose_headers=["Content-Disposition"],
+    )
 
 app.include_router(users_router)
 app.include_router(profile_router)

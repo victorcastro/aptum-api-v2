@@ -14,6 +14,12 @@ class Settings(BaseSettings):
     firebase_private_key: str = ""
     firebase_check_revoked: bool = False
     openai_api_key: str = ""
+    # Comma-separated browser origins allowed to call the API. Empty disables CORS.
+    cors_origins: str = ""
+
+    @property
+    def cors_origin_list(self) -> list[str]:
+        return [origin.strip().rstrip("/") for origin in self.cors_origins.split(",") if origin.strip()]
 
 
 @lru_cache
