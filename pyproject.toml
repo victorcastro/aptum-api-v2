@@ -1,6 +1,6 @@
 [project]
-name = "aptum-agent"
-version = "0.1.0"
+name = "aptum-api"
+version = "1.0.0"
 description = "Add your description here"
 readme = "README.md"
 authors = [
@@ -10,6 +10,14 @@ requires-python = ">=3.12"
 dependencies = [
     "fastapi[standard]>=0.141.1",
     "uvicorn[standard]>=0.54.0",
+    "sqlalchemy>=2.0.36",
+    "alembic>=1.13.3",
+    "psycopg[binary]>=3.2.3",
+    "pgvector>=0.3.6",
+    "pydantic-settings>=2.6.1",
+    "firebase-admin>=7.7.0",
+    "reportlab>=5.0.1",
+    "scalar-fastapi>=1.9.1",
 ]
 
 [tool.uv.build-backend]
@@ -18,3 +26,21 @@ module-name = "aptum"
 [build-system]
 requires = ["uv_build>=0.12.13,<0.13.0"]
 build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "ruff>=0.16.10",
+]
+
+[tool.ruff.lint.flake8-bugbear]
+# FastAPI dependency markers are meant to be called in argument defaults.
+extend-immutable-calls = [
+    "fastapi.Depends",
+    "fastapi.Query",
+    "fastapi.Path",
+    "fastapi.Body",
+    "fastapi.Header",
+    "fastapi.File",
+    "fastapi.Form",
+    "fastapi.Security",
+]

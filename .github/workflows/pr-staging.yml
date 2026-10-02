@@ -1,0 +1,17 @@
+name: PR · Staging
+
+# No release gates here: staging takes work in progress. They run on PRs into main.
+on:
+  pull_request:
+    branches: [staging]
+
+concurrency:
+  group: pr-staging-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    uses: ./.github/workflows/reusable-checks.yml

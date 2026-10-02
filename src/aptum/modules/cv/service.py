@@ -1,0 +1,71 @@
+import re
+import unicodedata
+from datetime import UTC, datetime
+
+from sqlalchemy.orm import Session
+
+from aptum.core.exceptions import NotFoundError
+from aptum.modules.cv.document import build_cv_data
+from aptum.modules.cv.schemas import CVSettingsRead, CVSettingsUpdate, CVTemplateOut
+from aptum.modules.cv.templates.registry import (
+    DEFAULT_TEMPLATE,
+    get_template,
+    has_template,
+    list_templates,
+)
+from aptum.modules.profile.models import Profile
+from aptum.modules.profile.service import ProfileService
+
+
+class CVService:
+    def __init__(self, db: Session) -> None:
+        self.profiles = ProfileService(db)
+
+    def export_pdf(self, user_id: int, template_id: str | None = None) -> tuple[bytes, str]:
+        """Render the authenticated user's own profile; the profile is always resolved by user_id.
+        An explicit template applies to this download only, without touching the saved preference.
+        Returns the PDF bytes and the download filename."""
+        profile = self.profiles.get_or_create(user_id)
+        template = get_template(template_id or self._effective_template(profile))
+        doc = build_cv_data(profile)
+        return template.render(doc), self._filename(doc.full_name)
+
+    @staticmethod
+    def _filename(full_name: str) -> str:
+        """CV-YYYY.MM-First_Last-YYYYMMDDHHMMSS.pdf, ASCII only so it is safe in a header."""
+        now = datetime.now(UTC)
+        ascii_name = unicodedata.normalize("NFKD", full_name).encode("ascii", "ignore").decode()
+        name = "_".join(re.findall(r"[A-Za-z0-9]+", ascii_name)) or "CV"
+        return f"CV-{now:%Y.%m}-{name}-{now:%Y%m%d%H%M%S}.pdf"
+
+    def list_templates(self, user_id: int) -> list[CVTemplateOut]:
+        effective = self._effective_template(self.profiles.get_or_create(user_id))
+        return [
+            CVTemplateOut(id=t.id, name=t.name, description=t.description, selected=t.id == effective)
+            for t in list_templates()
+        ]
+
+    def get_settings(self, user_id: int) -> CVSettingsRead:
+        profile = self.profiles.get_or_create(user_id)
+        return CVSettingsRead(template_id=self._effective_template(profile))
+
+    def update_settings(self, user_id: int, data: CVSettingsUpdate) -> CVSettingsRead:
+        fields = data.model_dump(exclude_unset=True)
+        template_id = fields.get("template_id")
+        if template_id is not None and not has_template(template_id):
+            raise NotFoundError(f"Template '{template_id}' not found")
+        profile = self.profiles.get_or_create(user_id)
+        if "template_id" in fields:
+            profile = self.profiles.repository.update(profile, preferred_template=template_id)
+        return CVSettingsRead(template_id=self._effective_template(profile))
+
+    def reset_settings(self, user_id: int) -> None:
+        """Back to defaults for every CV setting."""
+        profile = self.profiles.get_or_create(user_id)
+        self.profiles.repository.update(profile, preferred_template=None)
+
+    @staticmethod
+    def _effective_template(profile: Profile) -> str:
+        """Saved preference, or the default when unset or no longer registered."""
+        saved = profile.preferred_template
+        return saved if saved is not None and has_template(saved) else DEFAULT_TEMPLATE
