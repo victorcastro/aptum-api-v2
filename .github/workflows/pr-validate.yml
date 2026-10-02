@@ -1,4 +1,4 @@
-name: PR
+name: PR · Validate
 
 on:
   pull_request:
@@ -12,8 +12,9 @@ permissions:
   contents: read
 
 jobs:
-  # Release gates. They only apply to PRs into main; PRs into staging pass straight through.
+  # Release gates. Only for PRs into main; skipped for PRs into staging.
   validate-version:
+    if: github.base_ref == 'main'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -22,7 +23,6 @@ jobs:
           fetch-depth: 0
 
       - name: main only accepts PRs from staging
-        if: github.base_ref == 'main'
         env:
           HEAD_REF: ${{ github.head_ref }}
         run: |
@@ -32,7 +32,6 @@ jobs:
           fi
 
       - name: Version is strictly greater than main
-        if: github.base_ref == 'main'
         run: |
           read_version() { python3 -c "import sys, tomllib; print(tomllib.loads(sys.stdin.read())['project']['version'])"; }
           PR_VERSION=$(read_version < pyproject.toml)
@@ -45,13 +44,14 @@ jobs:
           echo "VERSION=$PR_VERSION" >> "$GITHUB_ENV"
 
       - name: CHANGELOG has an entry for the version
-        if: github.base_ref == 'main'
         run: |
           if ! grep -Eq "^##[[:space:]]+\[?${VERSION//./\\.}\]?([[:space:]]|$)" CHANGELOG.md; then
             echo "::error::CHANGELOG.md has no entry for version $VERSION."
             exit 1
           fi
 
+  # Runs when the gates pass or are skipped (staging); not when they fail.
   checks:
     needs: validate-version
-    uses: ./.github/workflows/checks.yml
+    if: ${{ !failure() && !cancelled() }}
+    uses: ./.github/workflows/reusable-checks.yml

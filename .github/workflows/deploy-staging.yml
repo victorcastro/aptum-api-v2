@@ -1,4 +1,4 @@
-name: Deploy staging
+name: Deploy · Staging
 
 on:
   push:
@@ -13,7 +13,7 @@ permissions:
 
 jobs:
   checks:
-    uses: ./.github/workflows/checks.yml
+    uses: ./.github/workflows/reusable-checks.yml
 
   deploy:
     needs: checks

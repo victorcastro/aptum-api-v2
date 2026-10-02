@@ -1,4 +1,4 @@
-name: Deploy production
+name: Deploy · Production
 
 # Push covers both a fast-forward from staging and a merged PR with a single event.
 on:
@@ -50,7 +50,7 @@ jobs:
 
   checks:
     needs: validate-version
-    uses: ./.github/workflows/checks.yml
+    uses: ./.github/workflows/reusable-checks.yml
 
   tag:
     needs: [validate-version, checks]
