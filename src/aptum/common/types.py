@@ -1,7 +1,13 @@
 from datetime import date
 from typing import Annotated
 
-from pydantic import AfterValidator, BeforeValidator, Field, PlainSerializer, WithJsonSchema
+from pydantic import (
+    AfterValidator,
+    BeforeValidator,
+    Field,
+    PlainSerializer,
+    WithJsonSchema,
+)
 
 from aptum.common.countries import COUNTRIES
 

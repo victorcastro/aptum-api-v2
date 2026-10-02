@@ -39,7 +39,6 @@ from aptum.modules.skills.models import Skill
 from aptum.modules.users.models import User
 from aptum.modules.users.repository import UserRepository
 
-
 DEFAULT_EMAIL = "victor@castro.com"
 DEFAULT_FIREBASE_UID = "Hez0o0kRJZbHuL5FBvYKD35RcK02"
 

@@ -1,0 +1,57 @@
+name: PR
+
+on:
+  pull_request:
+    branches: [staging, main]
+
+concurrency:
+  group: pr-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  # Release gates. They only apply to PRs into main; PRs into staging pass straight through.
+  validate-version:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: main only accepts PRs from staging
+        if: github.base_ref == 'main'
+        env:
+          HEAD_REF: ${{ github.head_ref }}
+        run: |
+          if [ "$HEAD_REF" != "staging" ]; then
+            echo "::error::PRs into main must come from 'staging' (got '$HEAD_REF')."
+            exit 1
+          fi
+
+      - name: Version is strictly greater than main
+        if: github.base_ref == 'main'
+        run: |
+          read_version() { python3 -c "import sys, tomllib; print(tomllib.loads(sys.stdin.read())['project']['version'])"; }
+          PR_VERSION=$(read_version < pyproject.toml)
+          MAIN_VERSION=$(git show origin/main:pyproject.toml | read_version)
+          HIGHER=$(printf '%s\n%s\n' "$MAIN_VERSION" "$PR_VERSION" | sort -V | tail -n1)
+          if [ "$PR_VERSION" = "$MAIN_VERSION" ] || [ "$HIGHER" != "$PR_VERSION" ]; then
+            echo "::error::pyproject.toml version ($PR_VERSION) must be greater than main ($MAIN_VERSION)."
+            exit 1
+          fi
+          echo "VERSION=$PR_VERSION" >> "$GITHUB_ENV"
+
+      - name: CHANGELOG has an entry for the version
+        if: github.base_ref == 'main'
+        run: |
+          if ! grep -Eq "^##[[:space:]]+\[?${VERSION//./\\.}\]?([[:space:]]|$)" CHANGELOG.md; then
+            echo "::error::CHANGELOG.md has no entry for version $VERSION."
+            exit 1
+          fi
+
+  checks:
+    needs: validate-version
+    uses: ./.github/workflows/checks.yml

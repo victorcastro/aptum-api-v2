@@ -17,7 +17,6 @@ from aptum.modules.skills.router import router as skills_router
 from aptum.modules.users.router import router as users_router
 
 
-
 @asynccontextmanager
 async def lifespan(_: FastAPI) -> AsyncIterator[None]:
     configure_logging(get_settings().log_level)

@@ -1,0 +1,96 @@
+name: Deploy production
+
+# Push covers both a fast-forward from staging and a merged PR with a single event.
+on:
+  push:
+    branches: [main]
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  # Same gates as the PR: the repo has no branch protection, so they run again here.
+  validate-version:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Version is strictly greater than the previous main
+        id: version
+        env:
+          BEFORE_SHA: ${{ github.event.before }}
+        run: |
+          read_version() { python3 -c "import sys, tomllib; print(tomllib.loads(sys.stdin.read())['project']['version'])"; }
+          VERSION=$(read_version < pyproject.toml)
+          PREVIOUS_VERSION=$(git show "$BEFORE_SHA:pyproject.toml" | read_version)
+          HIGHER=$(printf '%s\n%s\n' "$PREVIOUS_VERSION" "$VERSION" | sort -V | tail -n1)
+          if [ "$VERSION" = "$PREVIOUS_VERSION" ] || [ "$HIGHER" != "$VERSION" ]; then
+            echo "::error::pyproject.toml version ($VERSION) must be greater than the previous one ($PREVIOUS_VERSION)."
+            exit 1
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: CHANGELOG has an entry for the version
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          if ! grep -Eq "^##[[:space:]]+\[?${VERSION//./\\.}\]?([[:space:]]|$)" CHANGELOG.md; then
+            echo "::error::CHANGELOG.md has no entry for version $VERSION."
+            exit 1
+          fi
+
+  checks:
+    needs: validate-version
+    uses: ./.github/workflows/checks.yml
+
+  tag:
+    needs: [validate-version, checks]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Create tag
+        env:
+          TAG: v${{ needs.validate-version.outputs.version }}
+        run: |
+          if git ls-remote --exit-code --tags origin "refs/tags/$TAG" >/dev/null; then
+            echo "Tag $TAG already exists, skipping."
+            exit 0
+          fi
+          git tag "$TAG"
+          git push origin "$TAG"
+
+  # Never depends on tag: a failed tag push must not block a deploy.
+  deploy:
+    needs: [validate-version, checks]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    environment: production
+    steps:
+      - name: Trigger Dokploy deploy
+        env:
+          CI_WEBHOOK_URL: ${{ secrets.CI_WEBHOOK_URL }}
+        run: |
+          set -euo pipefail
+          # Dokploy only reads the branch from the body when it sees the GitHub push header.
+          response=$(curl -sS -o /tmp/body -w '%{http_code}' -X POST "$CI_WEBHOOK_URL" \
+            -H "Content-Type: application/json" \
+            -H "X-GitHub-Event: push" \
+            -d '{"ref":"refs/heads/main"}' \
+            --max-time 20 --retry 3 --retry-delay 5 --retry-all-errors --retry-connrefused)
+          cat /tmp/body; echo
+          if [ "$response" != "200" ] || grep -qi "not match" /tmp/body; then
+            echo "::error::Dokploy did not accept the deploy (HTTP $response)."
+            exit 1
+          fi

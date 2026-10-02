@@ -15,7 +15,11 @@ from aptum.modules.profile.models import (
     Project,
 )
 from aptum.modules.profile.repository import ProfileRepository
-from aptum.modules.profile.schemas import ExperienceCreate, ExperienceUpdate, ProfileUpdate
+from aptum.modules.profile.schemas import (
+    ExperienceCreate,
+    ExperienceUpdate,
+    ProfileUpdate,
+)
 from aptum.modules.skills.repository import SkillRepository
 
 _LABELS = {

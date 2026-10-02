@@ -1,7 +1,12 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
-from aptum.core.dependencies import get_current_user, get_db, get_embedding_client, get_llm_client
+from aptum.core.dependencies import (
+    get_current_user,
+    get_db,
+    get_embedding_client,
+    get_llm_client,
+)
 from aptum.modules.embeddings.service import EmbeddingClient
 from aptum.modules.matching.schemas import MatchRequest, MatchResult
 from aptum.modules.matching.service import LLMClient, MatchingService
