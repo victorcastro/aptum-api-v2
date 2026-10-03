@@ -16,6 +16,9 @@ class Settings(BaseSettings):
     openai_api_key: str = ""
     # Comma-separated browser origins allowed to call the API. Empty disables CORS.
     cors_origins: str = ""
+    # Release 1.1.0 ATS CV pipeline (skill categories in the CV, ATS PDF, generation rules,
+    # fidelity check, keyword coverage). Off: CV export behaves exactly as in 1.0.0.
+    ats_cv_enabled: bool = False
 
     @property
     def cors_origin_list(self) -> list[str]:
