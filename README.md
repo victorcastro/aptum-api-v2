@@ -39,23 +39,15 @@ docker run --rm -p 8000:8000 --env-file .env aptum-api
 
 ## ATS CV generation (release 1.1.0)
 
-Everything below is behind a feature flag, **off by default**. With the flag off the API behaves
-exactly as in 1.0.0 (`GET /cv/export` renders the same PDFs, the new endpoints return 404).
-
-### Enable it
-
-```bash
-ATS_CV_ENABLED=true   # in .env, or as an environment variable of the container (Dokploy)
-```
-
-Restart the API after changing it. Turn it off the same way; no migration needs to be undone.
+The ATS CV is the default for every user; there is no switch.
 
 ### What it does
 
 - `GET /cv/export` (no `template` query parameter) renders the ATS PDF: one column, Helvetica,
   no tables/images/icons/lines, standard headings (Summary, Experience, Skills, Education,
-  Certifications, Projects, Languages), `Mon YYYY - Mon YYYY` dates, at most 2 pages. Passing
-  `?template=classic|software-engineer` still renders the legacy template.
+  Certifications, Projects, Languages), `Mon YYYY - Mon YYYY` dates, at most 2 pages. The saved
+  template preference no longer applies to it; an explicit `?template=classic|software-engineer`
+  still renders that legacy layout.
 - `POST /cv/ats/export` with `{"job_description": "..."}` (optional) renders the ATS PDF tailored to
   the offer: offer-relevant skills first (max 25), only skills from the profile.
 - `POST /cv/ats/report` with the same body returns the JSON report of that same CV:

@@ -4,7 +4,6 @@ from datetime import UTC, datetime
 
 from sqlalchemy.orm import Session
 
-from aptum.core.config import get_settings
 from aptum.core.exceptions import NotFoundError
 from aptum.modules.cv.ats.pipeline import ATSResult, generate_ats_cv
 from aptum.modules.cv.document import build_cv_data
@@ -38,21 +37,18 @@ class CVService:
         An explicit template applies to this download only, without touching the saved preference.
         Returns the PDF bytes and the download filename.
 
-        With ATS_CV_ENABLED and no explicit template, the 1.1.0 ATS pipeline renders it
-        (the saved template preference does not apply while the flag is on)."""
+        Without an explicit template the ATS pipeline renders it (the saved template
+        preference no longer applies to the default download)."""
         profile = self.profiles.get_or_create(user_id)
-        if template_id is None and get_settings().ats_cv_enabled:
+        if template_id is None:
             result = generate_ats_cv(profile)
             return result.pdf, self._filename(result.document.full_name)
-        template = get_template(template_id or self._effective_template(profile))
+        template = get_template(template_id)
         doc = build_cv_data(profile)
         return template.render(doc), self._filename(doc.full_name)
 
     def generate_ats(self, user_id: int, job_description: str | None) -> tuple[ATSResult, str]:
-        """ATS CV for the authenticated user's own profile, optionally tailored to a job offer.
-        Unavailable (404) unless ATS_CV_ENABLED is on."""
-        if not get_settings().ats_cv_enabled:
-            raise NotFoundError("Not Found")
+        """ATS CV for the authenticated user's own profile, optionally tailored to a job offer."""
         profile = self.profiles.get_or_create(user_id)
         result = generate_ats_cv(profile, job_description)
         return result, self._filename(result.document.full_name)

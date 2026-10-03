@@ -89,7 +89,7 @@ def export_cv(
 @router.post(
     "/ats/export",
     response_class=Response,
-    responses={**_PDF_RESPONSE, 404: {"description": "ATS_CV_ENABLED is off"}},
+    responses=_PDF_RESPONSE,
 )
 def export_ats_cv(
     data: ATSGenerateRequest,
@@ -101,7 +101,7 @@ def export_ats_cv(
     return _pdf(result.pdf, filename)
 
 
-@router.post("/ats/report", response_model=ATSReport, responses={404: {"description": "ATS_CV_ENABLED is off"}})
+@router.post("/ats/report", response_model=ATSReport)
 def ats_cv_report(
     data: ATSGenerateRequest,
     current_user: User = Depends(get_current_user),

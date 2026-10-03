@@ -6,13 +6,11 @@ and the project follows [Semantic Versioning](https://semver.org/).
 
 ## [1.1.0] - 2026-10-03
 
-ATS-friendly CV generation for English-speaking markets. Everything that changes the generated
-CV is behind the `ATS_CV_ENABLED` feature flag, **off by default**: with it off, CV export
-behaves exactly as in 1.0.0. Enable it with `ATS_CV_ENABLED=true`.
+ATS-friendly CV generation for English-speaking markets. The ATS CV is the default for every
+user (no feature flag).
 
 ### Added
 
-- Feature flag `ATS_CV_ENABLED` (setting `ats_cv_enabled`, default `false`).
 - Skill categories: `profile_skills.category` with the values `LLMs & AI`, `Backend`,
   `Cloud & DevOps`, `Architecture`, `Mobile`, `Other`. Migration
   `0002_profile_skill_category` adds the column and backfills existing rows from a
@@ -44,18 +42,18 @@ behaves exactly as in 1.0.0. Enable it with `ATS_CV_ENABLED=true`.
   missing ones truthfully supported by the profile (suggested, not added).
 - `POST /cv/ats/export` (ATS PDF, optional `job_description`) and `POST /cv/ats/report`
   (`page_count`, `years_of_experience`, `skills`, `warnings`, `fidelity_issues`,
-  `keyword_coverage`). Both return 404 while the flag is off.
+  `keyword_coverage`).
 - Duplicate education detection (same institution, overlapping titles) as a warning.
 - Test suite (pytest, synthetic data only), run in CI.
 
 ### Changed
 
-- With the flag on, `GET /cv/export` without a `template` parameter renders the ATS PDF;
-  `?template=` still renders the legacy templates.
-- With the flag on, the matching prompt includes the computed years of experience as locked
-  facts.
+- `GET /cv/export` without a `template` parameter now renders the ATS PDF for everyone, and the
+  saved template preference (`/cv/settings`) no longer applies to it; `?template=` still renders
+  the legacy templates.
+- The matching prompt includes the computed years of experience as locked facts.
 - The OpenAPI metadata now reports the package version (`1.1.0`), read from `pyproject.toml`.
-- With the flag on, CV skill groups come from `profile_skills.category` (six standard groups)
+- CV skill groups come from `profile_skills.category` (six standard groups)
   instead of the free-text catalog category (`skills.category`).
 
 ## [1.0.0] - 2026-10-02
