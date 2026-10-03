@@ -4,7 +4,9 @@ from datetime import UTC, datetime
 
 from sqlalchemy.orm import Session
 
+from aptum.core.config import get_settings
 from aptum.core.exceptions import NotFoundError
+from aptum.modules.cv.ats.pipeline import ATSResult, generate_ats_cv
 from aptum.modules.cv.document import build_cv_data
 from aptum.modules.cv.schemas import CVSettingsRead, CVSettingsUpdate, CVTemplateOut
 from aptum.modules.cv.templates.registry import (
@@ -24,11 +26,26 @@ class CVService:
     def export_pdf(self, user_id: int, template_id: str | None = None) -> tuple[bytes, str]:
         """Render the authenticated user's own profile; the profile is always resolved by user_id.
         An explicit template applies to this download only, without touching the saved preference.
-        Returns the PDF bytes and the download filename."""
+        Returns the PDF bytes and the download filename.
+
+        With ATS_CV_ENABLED and no explicit template, the 1.1.0 ATS pipeline renders it
+        (the saved template preference does not apply while the flag is on)."""
         profile = self.profiles.get_or_create(user_id)
+        if template_id is None and get_settings().ats_cv_enabled:
+            result = generate_ats_cv(profile)
+            return result.pdf, self._filename(result.document.full_name)
         template = get_template(template_id or self._effective_template(profile))
         doc = build_cv_data(profile)
         return template.render(doc), self._filename(doc.full_name)
+
+    def generate_ats(self, user_id: int, job_description: str | None) -> tuple[ATSResult, str]:
+        """ATS CV for the authenticated user's own profile, optionally tailored to a job offer.
+        Unavailable (404) unless ATS_CV_ENABLED is on."""
+        if not get_settings().ats_cv_enabled:
+            raise NotFoundError("Not Found")
+        profile = self.profiles.get_or_create(user_id)
+        result = generate_ats_cv(profile, job_description)
+        return result, self._filename(result.document.full_name)
 
     @staticmethod
     def _filename(full_name: str) -> str:
