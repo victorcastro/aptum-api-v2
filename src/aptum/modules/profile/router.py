@@ -29,6 +29,7 @@ from aptum.modules.profile.schemas import (
     ProfileRead,
     ProfileSkillCreate,
     ProfileSkillRead,
+    ProfileSkillsGrouped,
     ProfileSkillUpdate,
     ProfileUpdate,
     ProjectCreate,
@@ -286,6 +287,14 @@ def list_skills(
     db: Session = Depends(get_db),
 ):
     return ProfileService(db).list_rows(current_user.id, ProfileSkill)
+
+
+@router.get("/me/skills/grouped", response_model=ProfileSkillsGrouped)
+def list_skills_grouped(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    return ProfileService(db).list_skills_grouped(current_user.id)
 
 
 @router.post("/me/skills", response_model=ProfileSkillRead, status_code=201)

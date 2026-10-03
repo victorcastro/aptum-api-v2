@@ -257,6 +257,26 @@ class ProfileSkillRead(BaseModel):
     category: SkillCategory
 
 
+class ProfileSkillItem(BaseModel):
+    """`id` is the profile skill (PATCH/DELETE); `skill_id` is the shared catalog skill."""
+
+    id: int
+    skill_id: int
+    name: str
+    level: SkillLevel | None
+    years_experience: int | None
+
+
+class ProfileSkillGroup(BaseModel):
+    category: SkillCategory
+    skills: list[ProfileSkillItem]
+
+
+class ProfileSkillsGrouped(BaseModel):
+    total: int
+    groups: list[ProfileSkillGroup]
+
+
 class CertificationCreate(BaseModel):
     name: Annotated[str, Field(min_length=1, max_length=255)]
     issuing_organization: Annotated[str, Field(min_length=1, max_length=255)]

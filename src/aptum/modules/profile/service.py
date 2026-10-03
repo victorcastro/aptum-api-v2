@@ -1,6 +1,7 @@
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
+from aptum.common.enums import SkillCategory
 from aptum.core.exceptions import AptumError, ConflictError, NotFoundError
 from aptum.db.base import Base
 from aptum.modules.companies.repository import CompanyRepository
@@ -18,6 +19,9 @@ from aptum.modules.profile.repository import ProfileRepository
 from aptum.modules.profile.schemas import (
     ExperienceCreate,
     ExperienceUpdate,
+    ProfileSkillGroup,
+    ProfileSkillItem,
+    ProfileSkillsGrouped,
     ProfileUpdate,
 )
 from aptum.modules.skills.categories import classify_skill
@@ -47,6 +51,31 @@ _DATE_RANGES = {
     Project: ("start_date", "end_date"),
     Certification: ("issue_date", "expiration_date"),
 }
+
+
+def group_skills(rows: list[ProfileSkill]) -> ProfileSkillsGrouped:
+    """Groups by CV category in `SkillCategory` order; empty groups are left out and each
+    group is sorted by skill name, case-insensitive."""
+    by_category: dict[str, list[ProfileSkillItem]] = {}
+    for row in rows:
+        by_category.setdefault(row.category, []).append(
+            ProfileSkillItem(
+                id=row.id,
+                skill_id=row.skill_id,
+                name=row.skill.name,
+                level=row.level,
+                years_experience=row.years_experience,
+            )
+        )
+    groups = [
+        ProfileSkillGroup(
+            category=category,
+            skills=sorted(by_category[category.value], key=lambda s: (s.name.casefold(), s.id)),
+        )
+        for category in SkillCategory
+        if category.value in by_category
+    ]
+    return ProfileSkillsGrouped(total=len(rows), groups=groups)
 
 
 class ProfileService:
@@ -99,6 +128,9 @@ class ProfileService:
     def list_rows(self, user_id: int, model: type[Base]):
         profile = self._get_owned(user_id)
         return self.repository.list_rows(model, profile, *_ORDER[model])
+
+    def list_skills_grouped(self, user_id: int) -> ProfileSkillsGrouped:
+        return group_skills(self.list_rows(user_id, ProfileSkill))
 
     def add_row(self, user_id: int, model: type[Base], data: BaseModel):
         profile = self._get_owned(user_id)

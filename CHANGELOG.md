@@ -17,6 +17,11 @@ All schema changes are in a single migration, `0002_release_1_1_0`.
   `Cloud & DevOps`, `Architecture`, `Mobile`, `Other`. The migration adds the column and
   backfills existing rows from a deterministic, versioned dictionary (`skills/data/skill_dictionary.json`, case-insensitive,
   with aliases; unknown skills go to `Other`).
+- `GET /profile/me/skills/grouped`: the user's skills grouped by CV category, in the order the CV
+  prints them (empty groups left out), sorted by name inside each group: `{"total", "groups":
+  [{"category", "skills": [{"id", "skill_id", "name", "level", "years_experience"}]}]}`. `id` is
+  the profile skill (used by `PATCH`/`DELETE`), `skill_id` the catalog skill.
+  `GET /profile/me/skills` is unchanged.
 - `category` (optional) on `POST/PATCH /profile/me/skills` and in skill responses; when omitted
   it is classified with the same dictionary (`null` on PATCH re-classifies).
 - New profile fields, all optional: `linkedin_url`, `github_url`, `portfolio_url` (validated

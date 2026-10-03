@@ -32,7 +32,7 @@ class ATSTemplate:
         name = ParagraphStyle("Name", parent=body, fontName="Helvetica-Bold", fontSize=18, leading=22, spaceAfter=2)
         headline = ParagraphStyle("Headline", parent=body, fontName="Helvetica-Bold", fontSize=11, leading=14)
         section = ParagraphStyle(
-            "Section", parent=body, fontName="Helvetica-Bold", fontSize=11.5, leading=14, spaceBefore=10, spaceAfter=3
+            "Section", parent=body, fontName="Helvetica-Bold", fontSize=11.5, leading=14, spaceBefore=18, spaceAfter=4
         )
         item = ParagraphStyle("Item", parent=body, fontName="Helvetica-Bold", spaceBefore=5, spaceAfter=0)
         bullet = ParagraphStyle("Bullet", parent=body, leftIndent=12, bulletIndent=2)
