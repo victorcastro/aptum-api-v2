@@ -8,7 +8,17 @@ from aptum.core.config import get_settings
 from aptum.core.exceptions import NotFoundError
 from aptum.modules.cv.ats.pipeline import ATSResult, generate_ats_cv
 from aptum.modules.cv.document import build_cv_data
-from aptum.modules.cv.schemas import CVSettingsRead, CVSettingsUpdate, CVTemplateOut
+from aptum.modules.cv.schemas import (
+    ATSReport,
+    CVSettingsRead,
+    CVSettingsUpdate,
+    CVTemplateOut,
+    CVWarningOut,
+    FidelityIssueOut,
+    KeywordCoverageOut,
+    SkillLineOut,
+    YearsOfExperienceOut,
+)
 from aptum.modules.cv.templates.registry import (
     DEFAULT_TEMPLATE,
     get_template,
@@ -46,6 +56,18 @@ class CVService:
         profile = self.profiles.get_or_create(user_id)
         result = generate_ats_cv(profile, job_description)
         return result, self._filename(result.document.full_name)
+
+    @staticmethod
+    def report(result: ATSResult) -> ATSReport:
+        coverage = result.keyword_coverage
+        return ATSReport(
+            page_count=result.pages,
+            years_of_experience=YearsOfExperienceOut(total=result.years.total, by_area=result.years.by_area),
+            skills=[SkillLineOut(category=line.category.value, names=list(line.names)) for line in result.document.skill_lines],
+            warnings=[CVWarningOut(**vars(w)) for w in result.warnings],
+            fidelity_issues=[FidelityIssueOut(**vars(i)) for i in result.fidelity_issues],
+            keyword_coverage=KeywordCoverageOut(**vars(coverage), coverage=coverage.coverage) if coverage else None,
+        )
 
     @staticmethod
     def _filename(full_name: str) -> str:

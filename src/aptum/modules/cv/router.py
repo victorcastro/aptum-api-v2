@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from aptum.core.dependencies import get_current_user, get_db
 from aptum.modules.cv.schemas import (
     ATSGenerateRequest,
+    ATSReport,
     CVSettingsRead,
     CVSettingsUpdate,
     CVTemplateOut,
@@ -98,3 +99,17 @@ def export_ats_cv(
     """ATS-friendly PDF (release 1.1.0), optionally tailored to `job_description`."""
     result, filename = CVService(db).generate_ats(current_user.id, data.job_description)
     return _pdf(result.pdf, filename)
+
+
+@router.post("/ats/report", response_model=ATSReport, responses={404: {"description": "ATS_CV_ENABLED is off"}})
+def ats_cv_report(
+    data: ATSGenerateRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> ATSReport:
+    """Report for the same CV that POST /cv/ats/export renders with the same body: warnings
+    (missing metrics, removed duplicates/filler, trimming), fidelity issues, years of
+    experience, selected skills and, with `job_description`, the keyword coverage."""
+    service = CVService(db)
+    result, _ = service.generate_ats(current_user.id, data.job_description)
+    return service.report(result)

@@ -88,15 +88,16 @@ class ATSDocument:
     languages: list[str]
     selected_skills: list[str] = field(default_factory=list)
 
-    def text_blocks(self) -> list[tuple[str, str]]:
-        """Every piece of free text as (location, text), for checks that scan the whole CV."""
+    def text_blocks(self, skill_labels: bool = True) -> list[tuple[str, str]]:
+        """Every piece of free text as (location, text), for checks that scan the whole CV.
+        `skill_labels=False` leaves out the category labels ("LLMs & AI:"), which are not skills."""
         blocks: list[tuple[str, str]] = []
         if self.headline:
             blocks.append(("headline", self.headline))
         if self.summary:
             blocks.append(("summary", self.summary))
         for line in self.skill_lines:
-            blocks.append(("skills", line.render()))
+            blocks.append(("skills", line.render() if skill_labels else ", ".join(line.names)))
         for exp in self.experiences:
             blocks.append((f"experience:{exp.title}", exp.title))
             if exp.description:
@@ -114,5 +115,5 @@ class ATSDocument:
         blocks.extend(("languages", language) for language in self.languages)
         return blocks
 
-    def plain_text(self) -> str:
-        return "\n".join(text for _, text in self.text_blocks())
+    def plain_text(self, skill_labels: bool = True) -> str:
+        return "\n".join(text for _, text in self.text_blocks(skill_labels))
