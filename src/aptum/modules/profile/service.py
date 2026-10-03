@@ -123,6 +123,8 @@ class ProfileService:
         fields = data.model_dump(exclude_unset=True)
         if model in _DATE_RANGES:
             self._check_range(row, fields, *_DATE_RANGES[model])
+        if model is Education:
+            self._check_range(row, fields, "start_year", "end_year")
         if model is ProfileSkill and "category" in fields and fields["category"] is None:
             fields["category"] = classify_skill(row.skill.name)
         return self.repository.update_row(row, **fields)

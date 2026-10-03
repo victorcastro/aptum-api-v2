@@ -50,3 +50,29 @@ class SkillCategory(StrEnum):
     architecture = "Architecture"
     mobile = "Mobile"
     other = "Other"
+
+
+class EnglishLevel(StrEnum):
+    """CEFR level, plus Native."""
+
+    a1 = "A1"
+    a2 = "A2"
+    b1 = "B1"
+    b2 = "B2"
+    c1 = "C1"
+    c2 = "C2"
+    native = "Native"
+
+
+class WorkAuthorization(StrEnum):
+    authorized = "authorized"
+    requires_sponsorship = "requires_sponsorship"
+
+
+class ExperienceArea(StrEnum):
+    """Used to compute per-area years of experience."""
+
+    backend = "backend"
+    mobile = "mobile"
+    ai = "ai"
+    other = "other"

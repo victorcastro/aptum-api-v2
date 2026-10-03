@@ -2,6 +2,7 @@ from datetime import date
 
 from pgvector.sqlalchemy import Vector
 from sqlalchemy import (
+    Boolean,
     CheckConstraint,
     Date,
     Enum,
@@ -11,6 +12,7 @@ from sqlalchemy import (
     String,
     Text,
     UniqueConstraint,
+    false,
     true,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -18,10 +20,13 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from aptum.common.constants import EMBEDDING_DIM
 from aptum.common.enums import (
     EmploymentType,
+    EnglishLevel,
+    ExperienceArea,
     LanguageProficiency,
     LinkKind,
     SkillCategory,
     SkillLevel,
+    WorkAuthorization,
     WorkMode,
 )
 from aptum.db.base import Base, TimestampMixin
@@ -40,6 +45,10 @@ class Profile(TimestampMixin, Base):
     """Root of the CV. Every CV table hangs from here, and the profile belongs to one user."""
 
     __tablename__ = "profiles"
+    __table_args__ = (
+        in_values_check("english_level", EnglishLevel),
+        in_values_check("work_authorization", WorkAuthorization),
+    )
 
     id: Mapped[int] = mapped_column(primary_key=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), unique=True)
@@ -53,6 +62,14 @@ class Profile(TimestampMixin, Base):
     region: Mapped[str | None] = mapped_column(String(120), default=None)
     country_code: Mapped[str | None] = mapped_column(String(2), default=None)
     preferred_template: Mapped[str | None] = mapped_column(String(40), default=None)
+    linkedin_url: Mapped[str | None] = mapped_column(String(500), default=None)
+    github_url: Mapped[str | None] = mapped_column(String(500), default=None)
+    portfolio_url: Mapped[str | None] = mapped_column(String(500), default=None)
+    english_level: Mapped[str | None] = mapped_column(String(8), default=None)
+    work_authorization: Mapped[str | None] = mapped_column(String(32), default=None)
+    # Country the authorization (or the relocation target) refers to; ISO 3166-1 alpha-2.
+    work_authorization_country: Mapped[str | None] = mapped_column(String(2), default=None)
+    open_to_relocation: Mapped[bool] = mapped_column(Boolean, default=False, server_default=false())
     embedding: Mapped[list[float] | None] = mapped_column(Vector(EMBEDDING_DIM), nullable=True)
 
     links: Mapped[list["ProfileLink"]] = relationship(back_populates="profile", **_OWNED)
@@ -138,6 +155,7 @@ class Experience(TimestampMixin, Base):
         CheckConstraint("is_current = (end_date IS NULL)", name="is_current_matches_end_date"),
         *month_precision_checks("start_date", "end_date"),
         Index("ix_experiences_profile_id_start_date", "profile_id", "start_date"),
+        in_values_check("area", ExperienceArea),
     )
 
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -160,6 +178,7 @@ class Experience(TimestampMixin, Base):
     is_current: Mapped[bool] = mapped_column(default=False)
     is_active: Mapped[bool] = mapped_column(default=True, server_default=true())
     description: Mapped[str | None] = mapped_column(Text, default=None)
+    area: Mapped[str | None] = mapped_column(String(16), default=None)
 
     profile: Mapped["Profile"] = relationship(back_populates="experiences")
     employer: Mapped["Company"] = relationship(foreign_keys=[employer_id], lazy="joined")
@@ -198,7 +217,13 @@ class ExperienceSkill(Base):
 
 class Education(TimestampMixin, Base):
     __tablename__ = "educations"
-    __table_args__ = (date_range_check(), *month_precision_checks("start_date", "end_date"))
+    __table_args__ = (
+        date_range_check(),
+        *month_precision_checks("start_date", "end_date"),
+        CheckConstraint(
+            "start_year IS NULL OR end_year IS NULL OR end_year >= start_year", name="year_range"
+        ),
+    )
 
     id: Mapped[int] = mapped_column(primary_key=True)
     profile_id: Mapped[int] = mapped_column(
@@ -209,6 +234,9 @@ class Education(TimestampMixin, Base):
     field_of_study: Mapped[str | None] = mapped_column(String(255), default=None)
     start_date: Mapped[date | None] = mapped_column(Date, default=None)
     end_date: Mapped[date | None] = mapped_column(Date, default=None)
+    # Year-only alternative for when the month is unknown; the CV prefers the month dates.
+    start_year: Mapped[int | None] = mapped_column(SmallInteger, default=None)
+    end_year: Mapped[int | None] = mapped_column(SmallInteger, default=None)
     grade: Mapped[str | None] = mapped_column(String(80), default=None)
     is_active: Mapped[bool] = mapped_column(default=True, server_default=true())
     description: Mapped[str | None] = mapped_column(Text, default=None)
