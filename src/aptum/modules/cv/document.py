@@ -120,8 +120,8 @@ def build_cv_data(profile: Profile) -> CVDocument:
 
     experiences = tuple(
         ExperienceEntry(
-            title=f"{exp.position} - {exp.employer.name}"
-            + (f" (client: {exp.client.name})" if exp.client else ""),
+            title=f"{exp.position} - "
+            + (f"{exp.client.name} (via {exp.employer.name})" if exp.client else exp.employer.name),
             dates=_range(exp.start_date, exp.end_date, exp.is_current),
             description=exp.description or None,
             bullets=tuple(function.description for function in exp.functions),
