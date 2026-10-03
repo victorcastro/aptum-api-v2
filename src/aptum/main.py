@@ -1,5 +1,6 @@
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
+from importlib.metadata import version
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -28,6 +29,7 @@ docs_enabled = get_settings().environment != "production"
 
 app = FastAPI(
     title="Aptum API",
+    version=version("aptum-api"),  # single source of truth: pyproject.toml
     lifespan=lifespan,
     docs_url=None,
     redoc_url=None,
