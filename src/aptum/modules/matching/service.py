@@ -1,7 +1,10 @@
+from datetime import UTC, datetime
 from typing import Protocol
 
 from sqlalchemy.orm import Session
 
+from aptum.core.config import get_settings
+from aptum.modules.cv.ats.years import locked_facts_prompt, years_of_experience
 from aptum.modules.embeddings.service import EmbeddingClient
 from aptum.modules.matching.repository import MatchingRepository
 from aptum.modules.matching.schemas import MatchResult
@@ -36,7 +39,12 @@ class MatchingService:
         score = (
             cosine_similarity(profile_embedding, job_embedding) if profile_embedding else 0.0
         )
-        tailored_cv = self.llm_client.generate(
-            f"Tailor this candidate's CV for the following job:\n{job_description}"
-        )
+        prompt = f"Tailor this candidate's CV for the following job:\n{job_description}"
+        if get_settings().ats_cv_enabled:
+            # Years of experience are computed in code and locked: the model must not change them.
+            profile = self.repository.get_profile(user_id)
+            if profile is not None:
+                today = datetime.now(UTC).date()
+                prompt += "\n\n" + locked_facts_prompt(years_of_experience(profile.experiences, today))
+        tailored_cv = self.llm_client.generate(prompt)
         return MatchResult(score=score, tailored_cv=tailored_cv)
