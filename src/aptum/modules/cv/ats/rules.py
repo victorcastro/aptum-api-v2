@@ -191,24 +191,24 @@ def _drop_weakest(exp: ATSExperience, words: frozenset[str]) -> str:
     return exp.bullets.pop(index)
 
 
-def _trim_once(doc: ATSDocument, words: frozenset[str]) -> tuple[str, str] | None:
+def _trim_once(doc: ATSDocument, words: frozenset[str]) -> tuple[str, str, str] | None:
     """Remove the next least valuable piece: extra bullets of the oldest roles, then old role
     descriptions, then last bullets oldest first, then project descriptions. Roles stay."""
     oldest_first = list(reversed(doc.experiences))
     for exp in oldest_first:
         if len(exp.bullets) > 1:
-            return exp.title, _drop_weakest(exp, words)
+            return "experience", exp.title, _drop_weakest(exp, words)
     for exp in oldest_first:
         if exp.description:
             text, exp.description = exp.description, None
-            return exp.title, text
+            return "experience", exp.title, text
     for exp in oldest_first:
         if exp.bullets:
-            return exp.title, _drop_weakest(exp, words)
+            return "experience", exp.title, _drop_weakest(exp, words)
     for project in reversed(doc.projects):
         if project.description:
             text, project.description = project.description, None
-            return project.name, text
+            return "projects", project.name, text
     return None
 
 
@@ -228,10 +228,10 @@ def enforce_page_limit(
                 suggestion="Shorten the summary or remove old entries in your profile.",
             ))
             break
-        item, text = removed
+        section, item, text = removed
         warnings.append(CVWarning(
             "trimmed_for_length", f"Removed to keep the CV within {max_pages} pages.",
-            section="experience", item=item, text=text,
+            section=section, item=item, text=text,
         ))
         pages = count_pages(doc)
     return pages

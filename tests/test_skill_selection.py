@@ -61,3 +61,12 @@ def test_one_line_per_category_in_fixed_order():
 def test_stored_category_wins_over_dictionary():
     skill = profile_skill("Python", 0, category=SkillCategory.llms_ai.value)
     assert select_skills([skill])[0].category is SkillCategory.llms_ai
+
+
+def test_dotnet_does_not_match_the_word_net():
+    from aptum.modules.cv.ats.text import TextIndex
+    from aptum.modules.skills.categories import classify_skill
+
+    assert not TextIndex("Strong focus on net income").find(".NET")
+    assert TextIndex("Backend in C# and .NET 8").find(".NET")
+    assert classify_skill(".net") is SkillCategory.backend and classify_skill("net") is SkillCategory.other

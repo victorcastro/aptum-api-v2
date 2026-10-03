@@ -15,7 +15,8 @@ from aptum.modules.cv.ats.report import CVWarning
 from aptum.modules.cv.ats.years import YearsOfExperience
 from aptum.modules.profile.models import Profile
 
-_NUMBER = re.compile(r"(?<![A-Za-z0-9.,])(\d+(?:[.,]\d+)*)(?=[xXkKmM]\b|%|(?![A-Za-z0-9]))")
+# Digits not glued to a preceding letter ("S3", "EC2" are names); a trailing unit is allowed ("200ms", "5GB", "3x").
+_NUMBER = re.compile(r"(?<![A-Za-z0-9.,])(\d+(?:[.,]\d+)*)")
 _MONTH_DATE = re.compile(r"\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) (\d{4})\b")
 
 

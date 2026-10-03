@@ -17,8 +17,9 @@ DICTIONARY_PATH = Path(__file__).parent / "data" / "skill_dictionary.json"
 
 
 def skill_key(name: str) -> str:
-    """Case/accent-insensitive lookup key; `-`, `_` and `/` count as spaces ("CI/CD" == "ci cd")."""
-    return re.sub(r"[\s\-_/]+", " ", normalize_name(name)).strip(" .,;:")
+    """Case/accent-insensitive lookup key; `-`, `_` and `/` count as spaces ("CI/CD" == "ci cd").
+    A leading dot is kept (".NET" is not "net"); trailing punctuation is dropped."""
+    return re.sub(r"[\s\-_/]+", " ", normalize_name(name)).strip(" ,;:").rstrip(".")
 
 
 @dataclass(frozen=True)

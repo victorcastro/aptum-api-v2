@@ -80,8 +80,9 @@ def claim_area(text_after: str) -> str | None:
 
 
 def true_figure(years: YearsOfExperience, area: str | None) -> int:
-    """The per-area figure when the claim names an area we have data for, else the total."""
-    if area and years.by_area.get(area):
+    """The per-area figure when the claim names an area the profile has tagged experience in
+    (even under a year, so "5 years in AI" with 6 months of AI fails), else the total."""
+    if area and area in years.by_area_months:
         return years.by_area[area]
     return years.total
 

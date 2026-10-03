@@ -55,11 +55,8 @@ behaves exactly as in 1.0.0. Enable it with `ATS_CV_ENABLED=true`.
 - With the flag on, the matching prompt includes the computed years of experience as locked
   facts.
 - The OpenAPI metadata now reports the package version (`1.1.0`), read from `pyproject.toml`.
-
-### Fixed
-
-- Skill groups in the CV no longer depend on the free-text catalog category (`skills.category`)
-  when the flag is on: every profile skill lands in one of the six standard groups.
+- With the flag on, CV skill groups come from `profile_skills.category` (six standard groups)
+  instead of the free-text catalog category (`skills.category`).
 
 ## [1.0.0] - 2026-10-02
 

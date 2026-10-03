@@ -93,7 +93,6 @@ def build_ats_document(profile: Profile, offer: str | None = None) -> ATSDocumen
         work_authorization_line=work_authorization_line(profile),
         summary=profile.summary or None,
         skill_lines=skill_lines(selected),
-        selected_skills=[skill.name for skill in selected],
         experiences=[
             ATSExperience(
                 experience_id=exp.id,

@@ -24,9 +24,10 @@ def _setup():
 
 
 def test_number_extraction_and_normalization():
-    assert numbers_in("Served 12,000 users, cut 35% latency, 2x faster, 4.70 stars, S3 and EC2, GPT-4o") == [
+    assert numbers_in("Served 12,000 users, cut 35% latency, 2x faster, 4.70 stars, S3 and EC2") == [
         "12000", "35", "2", "4.7",
     ]
+    assert numbers_in("p95 down to 200ms on 5GB") == ["200", "5"]  # units do not hide a number
     assert normalize_number("1,5") == "1.5"
 
 
@@ -112,3 +113,9 @@ def test_keyword_supported_by_profile_but_trimmed_from_cv():
 
 def test_no_offer_no_coverage():
     assert generate_ats_cv(base_profile(), today=TODAY).keyword_coverage is None
+
+
+def test_invented_number_with_unit_is_caught():
+    _, facts, doc = _setup()
+    doc.experiences[0].bullets.append("Cut p95 latency to 80ms.")
+    assert [(i.kind, i.value) for i in check_fidelity(doc, facts)] == [("number", "80")]

@@ -1,7 +1,7 @@
 """ATS CV document: structured (not pre-formatted) so the generation rules and the fidelity
 check can work on employers, titles and dates, and the template only lays it out."""
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import date
 
 from aptum.modules.cv.ats.skills import SkillLine
@@ -86,7 +86,6 @@ class ATSDocument:
     certifications: list[ATSCertification]
     projects: list[ATSProject]
     languages: list[str]
-    selected_skills: list[str] = field(default_factory=list)
 
     def text_blocks(self, skill_labels: bool = True) -> list[tuple[str, str]]:
         """Every piece of free text as (location, text), for checks that scan the whole CV.

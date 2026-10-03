@@ -176,3 +176,12 @@ def test_duplicate_education_detection():
 def test_years_helper_matches_pipeline():
     profile = base_profile()
     assert generate_ats_cv(profile, today=TODAY).years == years_of_experience(profile.experiences, TODAY)
+
+
+def test_area_claim_fails_when_area_experience_is_under_a_year():
+    profile = base_profile(summary="Engineer with 5+ years in AI.")
+    profile.experiences[0].start_date = date(2026, 4, 1)
+    profile.experiences[0].area = "ai"
+    result = generate_ats_cv(profile, today=TODAY)
+    assert result.document.summary == "Engineer with 5+ years in AI."  # user text kept...
+    assert "years_unsupported" in _codes(result)  # ...but reported, not validated against the total
