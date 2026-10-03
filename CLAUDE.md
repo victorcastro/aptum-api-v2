@@ -17,7 +17,8 @@ Python 3.12 + uv, FastAPI, SQLAlchemy 2.0 (typed `Mapped`, sync `Session`), Alem
 - New migration after model changes: `uv run alembic revision --autogenerate -m "<message>"`, then review it (autogenerate does not create/drop extensions or native enum types).
 - Check models match migrations: `uv run alembic check`
 - Config comes from `.env` (see `.env.example`); `DATABASE_URL` in the environment overrides it.
-- There is no test suite yet, and no Docker/Postgres is provided: bring your own Postgres with the `vector` extension.
+- Run tests: `uv run pytest` (synthetic data only, no database needed). The migration round-trip test runs only with `MIGRATION_TEST_DATABASE_URL` pointing at a throwaway Postgres (see `tests/test_migrations.py`).
+- No Docker/Postgres is provided for development: bring your own Postgres with the `vector` extension.
 
 ## Layout
 

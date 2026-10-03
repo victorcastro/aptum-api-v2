@@ -29,6 +29,8 @@ build-backend = "uv_build"
 
 [dependency-groups]
 dev = [
+    "pypdf>=6.19.0",
+    "pytest>=9.1.1",
     "ruff>=0.16.10",
 ]
 
@@ -44,3 +46,6 @@ extend-immutable-calls = [
     "fastapi.Form",
     "fastapi.Security",
 ]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
