@@ -1,0 +1,39 @@
+name: Deploy · Staging
+
+on:
+  push:
+    branches: [staging]
+
+concurrency:
+  group: deploy-staging
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    uses: ./.github/workflows/reusable-checks.yml
+
+  deploy:
+    needs: checks
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    environment: staging
+    steps:
+      - name: Trigger Dokploy deploy
+        env:
+          CI_WEBHOOK_URL: ${{ secrets.CI_WEBHOOK_URL }}
+        run: |
+          set -euo pipefail
+          # Dokploy only reads the branch from the body when it sees the GitHub push header.
+          response=$(curl -sS -o /tmp/body -w '%{http_code}' -X POST "$CI_WEBHOOK_URL" \
+            -H "Content-Type: application/json" \
+            -H "X-GitHub-Event: push" \
+            -d '{"ref":"refs/heads/staging"}' \
+            --max-time 20 --retry 3 --retry-delay 5 --retry-all-errors --retry-connrefused)
+          cat /tmp/body; echo
+          if [ "$response" != "200" ] || grep -qi "not match" /tmp/body; then
+            echo "::error::Dokploy did not accept the deploy (HTTP $response)."
+            exit 1
+          fi

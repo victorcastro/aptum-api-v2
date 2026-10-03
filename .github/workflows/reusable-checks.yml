@@ -1,0 +1,55 @@
+name: Reusable · Lint and Docker smoke test
+
+# Reusable: lint + image build + container smoke test. Called by pr-staging, pr-main, deploy-staging and deploy-production.
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.2.0
+        with:
+          enable-cache: true
+      - run: uv sync --frozen
+      - run: uv run ruff check src
+
+  docker:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: pgvector/pgvector:pg18
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: aptum
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres" --health-interval 5s
+          --health-timeout 5s --health-retries 10
+    steps:
+      - uses: actions/checkout@v7
+      - name: Build image
+        run: docker build -t aptum-api:ci .
+      - name: Boot container (runs migrations) and poll /health
+        run: |
+          docker run -d --name smoke --network host \
+            -e ENVIRONMENT=production \
+            -e DATABASE_URL=postgresql+psycopg://postgres:postgres@localhost:5432/aptum \
+            -e FIREBASE_PROJECT_ID=ci \
+            aptum-api:ci
+          for attempt in $(seq 1 30); do
+            if curl -fsS http://localhost:8000/health >/dev/null 2>&1; then
+              docker rm -f smoke
+              exit 0
+            fi
+            sleep 2
+          done
+          docker logs smoke
+          exit 1
