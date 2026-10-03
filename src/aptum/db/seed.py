@@ -14,9 +14,12 @@ from sqlalchemy.orm import Session
 
 from aptum.common.enums import (
     EmploymentType,
+    EnglishLevel,
+    ExperienceArea,
     LanguageProficiency,
     LinkKind,
     SkillLevel,
+    WorkAuthorization,
     WorkMode,
 )
 from aptum.common.utils import normalize_name, slugify
@@ -35,6 +38,7 @@ from aptum.modules.profile.models import (
     Project,
 )
 from aptum.modules.profile.repository import ProfileRepository
+from aptum.modules.skills.categories import classify_skill
 from aptum.modules.skills.models import Skill
 from aptum.modules.users.models import User
 from aptum.modules.users.repository import UserRepository
@@ -148,6 +152,12 @@ def seed(db: Session, firebase_uid: str, email: str | None, reset: bool) -> Prof
     profile.contact_email = "ana.torres@example.com"
     profile.city = "Lima"
     profile.country_code = "PE"
+    profile.linkedin_url = "https://linkedin.com/in/ana-torres-demo"
+    profile.github_url = "https://github.com/ana-torres-demo"
+    profile.english_level = EnglishLevel.c1
+    profile.work_authorization = WorkAuthorization.requires_sponsorship
+    profile.work_authorization_country = "CA"
+    profile.open_to_relocation = True
 
     profile.links = [
         ProfileLink(kind=LinkKind.linkedin, url="https://linkedin.com/in/ana-torres-demo", label="LinkedIn"),
@@ -165,6 +175,7 @@ def seed(db: Session, firebase_uid: str, email: str | None, reset: bool) -> Prof
             start_date=date(2022, 3, 1),
             end_date=None,
             is_current=True,
+            area=ExperienceArea.backend,
             description="Payments platform for a leading retail bank.",
             functions=[
                 ExperienceFunction(description="Designed FastAPI services handling 2M transactions per day."),
@@ -184,6 +195,7 @@ def seed(db: Session, firebase_uid: str, email: str | None, reset: bool) -> Prof
             start_date=date(2020, 9, 1),
             end_date=date(2022, 2, 1),
             is_current=False,
+            area=ExperienceArea.backend,
             description="Digital banking backend for a Peruvian bank.",
             functions=[
                 ExperienceFunction(description="Built event-driven services with Kafka and Java."),
@@ -200,6 +212,7 @@ def seed(db: Session, firebase_uid: str, email: str | None, reset: bool) -> Prof
             start_date=date(2018, 6, 1),
             end_date=date(2020, 8, 1),
             is_current=False,
+            area=ExperienceArea.backend,
             functions=[
                 ExperienceFunction(description="Built the order tracking API used by 5 countries."),
                 ExperienceFunction(description="Migrated services to AWS with Docker and CI/CD."),
@@ -217,6 +230,7 @@ def seed(db: Session, firebase_uid: str, email: str | None, reset: bool) -> Prof
             start_date=date(2017, 1, 1),
             end_date=date(2018, 5, 1),
             is_current=False,
+            area=ExperienceArea.other,
             description="Payment gateway for online merchants.",
             functions=[
                 ExperienceFunction(description="Developed merchant dashboard screens in React."),
@@ -234,6 +248,7 @@ def seed(db: Session, firebase_uid: str, email: str | None, reset: bool) -> Prof
             start_date=date(2016, 1, 1),
             end_date=date(2016, 12, 1),
             is_current=False,
+            area=ExperienceArea.other,
             functions=[
                 ExperienceFunction(description="Automated internal reports with Python scripts."),
                 ExperienceFunction(description="Fixed defects in a customer billing tool."),
@@ -251,12 +266,12 @@ def seed(db: Session, firebase_uid: str, email: str | None, reset: bool) -> Prof
         )
     ]
     profile.skills = [
-        ProfileSkill(skill_id=python.id, level=SkillLevel.expert, years_experience=8),
-        ProfileSkill(skill_id=fastapi.id, level=SkillLevel.advanced, years_experience=4),
-        ProfileSkill(skill_id=postgres.id, level=SkillLevel.advanced, years_experience=7),
-        ProfileSkill(skill_id=docker.id, level=SkillLevel.advanced, years_experience=6),
-        ProfileSkill(skill_id=aws.id, level=SkillLevel.intermediate, years_experience=4),
-        ProfileSkill(skill_id=react.id, level=SkillLevel.beginner, years_experience=1),
+        ProfileSkill(skill_id=python.id, category=classify_skill(python.name), level=SkillLevel.expert, years_experience=8),
+        ProfileSkill(skill_id=fastapi.id, category=classify_skill(fastapi.name), level=SkillLevel.advanced, years_experience=4),
+        ProfileSkill(skill_id=postgres.id, category=classify_skill(postgres.name), level=SkillLevel.advanced, years_experience=7),
+        ProfileSkill(skill_id=docker.id, category=classify_skill(docker.name), level=SkillLevel.advanced, years_experience=6),
+        ProfileSkill(skill_id=aws.id, category=classify_skill(aws.name), level=SkillLevel.intermediate, years_experience=4),
+        ProfileSkill(skill_id=react.id, category=classify_skill(react.name), level=SkillLevel.beginner, years_experience=1),
     ]
     profile.languages = [
         ProfileLanguage(language_code="es", proficiency=LanguageProficiency.native_or_bilingual),
