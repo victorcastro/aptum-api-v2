@@ -14,6 +14,7 @@ from aptum.common.enums import (
     EmploymentType,
     LanguageProficiency,
     LinkKind,
+    SkillCategory,
     SkillLevel,
     WorkMode,
 )
@@ -201,6 +202,9 @@ class ProfileSkillCreate(BaseModel):
     skill_id: int
     level: SkillLevel | None = None
     years_experience: Annotated[int, Field(ge=0, le=80)] | None = None
+    category: SkillCategory | None = Field(
+        default=None, description="CV group. Omitted or null: classified from the skill dictionary."
+    )
 
 
 class ProfileSkillUpdate(PartialUpdate):
@@ -209,6 +213,9 @@ class ProfileSkillUpdate(PartialUpdate):
     level: SkillLevel | None = None
     years_experience: Annotated[int, Field(ge=0, le=80)] | None = None
     position: Annotated[int, Field(ge=0)] | None = None
+    category: SkillCategory | None = Field(
+        default=None, description="CV group. `null` re-classifies it from the skill dictionary."
+    )
 
 
 class ProfileSkillRead(BaseModel):
@@ -219,6 +226,7 @@ class ProfileSkillRead(BaseModel):
     level: SkillLevel | None
     years_experience: int | None
     position: int
+    category: SkillCategory
 
 
 class CertificationCreate(BaseModel):

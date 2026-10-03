@@ -20,11 +20,16 @@ from aptum.common.enums import (
     EmploymentType,
     LanguageProficiency,
     LinkKind,
+    SkillCategory,
     SkillLevel,
     WorkMode,
 )
 from aptum.db.base import Base, TimestampMixin
-from aptum.db.constraints import date_range_check, month_precision_checks
+from aptum.db.constraints import (
+    date_range_check,
+    in_values_check,
+    month_precision_checks,
+)
 from aptum.modules.companies.models import Company
 from aptum.modules.skills.models import Skill
 
@@ -101,7 +106,10 @@ class ProfileLanguage(Base):
 
 class ProfileSkill(Base):
     __tablename__ = "profile_skills"
-    __table_args__ = (UniqueConstraint("profile_id", "skill_id"),)
+    __table_args__ = (
+        UniqueConstraint("profile_id", "skill_id"),
+        in_values_check("category", SkillCategory),
+    )
 
     id: Mapped[int] = mapped_column(primary_key=True)
     profile_id: Mapped[int] = mapped_column(ForeignKey("profiles.id", ondelete="CASCADE"))
@@ -111,6 +119,10 @@ class ProfileSkill(Base):
     )
     years_experience: Mapped[int | None] = mapped_column(SmallInteger, default=None)
     position: Mapped[int] = mapped_column(SmallInteger, default=0)
+    # CV group. Set from the skill dictionary (skills/categories.py) unless the client sends one.
+    category: Mapped[str] = mapped_column(
+        String(40), default=SkillCategory.other.value, server_default=SkillCategory.other.value
+    )
 
     profile: Mapped["Profile"] = relationship(back_populates="skills")
     skill: Mapped["Skill"] = relationship(lazy="joined")

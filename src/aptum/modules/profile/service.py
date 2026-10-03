@@ -20,6 +20,7 @@ from aptum.modules.profile.schemas import (
     ExperienceUpdate,
     ProfileUpdate,
 )
+from aptum.modules.skills.categories import classify_skill
 from aptum.modules.skills.repository import SkillRepository
 
 _LABELS = {
@@ -107,11 +108,14 @@ class ProfileService:
         ):
             raise ConflictError("Language already added")
         if model is ProfileSkill:
-            if self.skills.get(fields["skill_id"]) is None:
+            catalog_skill = self.skills.get(fields["skill_id"])
+            if catalog_skill is None:
                 raise NotFoundError("Skill not found")
             if any(skill.skill_id == fields["skill_id"] for skill in profile.skills):
                 raise ConflictError("Skill already added")
             fields["position"] = self.repository.next_skill_position(profile)
+            if fields.get("category") is None:
+                fields["category"] = classify_skill(catalog_skill.name)
         return self.repository.add_row(model, profile, **fields)
 
     def update_row(self, user_id: int, model: type[Base], row_id: int, data: BaseModel):
@@ -119,6 +123,8 @@ class ProfileService:
         fields = data.model_dump(exclude_unset=True)
         if model in _DATE_RANGES:
             self._check_range(row, fields, *_DATE_RANGES[model])
+        if model is ProfileSkill and "category" in fields and fields["category"] is None:
+            fields["category"] = classify_skill(row.skill.name)
         return self.repository.update_row(row, **fields)
 
     def delete_row(self, user_id: int, model: type[Base], row_id: int) -> None:
