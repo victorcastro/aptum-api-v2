@@ -41,10 +41,13 @@ def test_default_export_is_ats_even_with_a_saved_template(client, profile):
     assert "LLMs & AI: OpenAI API, RAG" in text and "TECHNICAL SKILLS" not in text
 
 
-@pytest.mark.parametrize("template", ["classic", "software-engineer"])
-def test_explicit_template_renders_the_legacy_layout_unchanged(client, template):
-    response = client.get("/cv/export", params={"template": template})
-    assert pdf_text(response.content) == (GOLDEN / f"legacy_{template}.txt").read_text()
+def test_explicit_template_renders_the_legacy_layout_unchanged(client):
+    response = client.get("/cv/export", params={"template": "software-engineer"})
+    assert pdf_text(response.content) == (GOLDEN / "legacy_software-engineer.txt").read_text()
+
+
+def test_classic_template_is_gone(client):
+    assert client.get("/cv/export", params={"template": "classic"}).status_code == 404
 
 
 def test_unknown_template_is_404(client):

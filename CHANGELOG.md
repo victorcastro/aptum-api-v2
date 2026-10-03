@@ -63,6 +63,9 @@ All schema changes are in a single migration, `0002_release_1_1_0`.
   `PATCH /profile/me/skills/{id}` (a `position` sent is ignored). Skills are listed by creation
   order and the CV orders them by evidence. The migration downgrade rebuilds `position` from
   the creation order.
+- `classic` CV template: removed from the template registry. `?template=classic` now returns 404,
+  and the default template (`/cv/settings`, `/cv/templates`) is `software-engineer`. A saved
+  `preferred_template` of `classic` falls back to the default.
 
 ## [1.0.0] - 2026-10-02
 
