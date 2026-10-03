@@ -83,7 +83,7 @@ def build_ats_document(profile: Profile, offer: str | None = None) -> ATSDocumen
     full_name = " ".join(part for part in (profile.first_name, profile.last_name) if part)
     location = ", ".join(x for x in (profile.city, profile.region, country_name(profile.country_code)) if x)
     contact = " | ".join(x for x in (location, profile.phone, profile.contact_email) if x)
-    selected = select_skills(profile.skills, offer)
+    selected = select_skills(profile.skills, offer, profile.experiences)
 
     return ATSDocument(
         full_name=full_name or "Curriculum Vitae",

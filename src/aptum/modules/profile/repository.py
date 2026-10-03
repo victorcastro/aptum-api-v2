@@ -86,10 +86,6 @@ class ProfileRepository:
         self.db.delete(row)
         self.db.commit()
 
-    def next_skill_position(self, profile: Profile) -> int:
-        positions = [skill.position for skill in profile.skills]
-        return max(positions, default=-1) + 1
-
 
 def _build_functions(functions: list[str]) -> list[ExperienceFunction]:
     return [

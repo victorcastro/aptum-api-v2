@@ -39,7 +39,7 @@ _ORDER = {
     Project: (Project.start_date.desc().nulls_last(), Project.id),
     ProfileLink: (ProfileLink.id,),
     ProfileLanguage: (ProfileLanguage.id,),
-    ProfileSkill: (ProfileSkill.position, ProfileSkill.id),
+    ProfileSkill: (ProfileSkill.id,),
 }
 
 _DATE_RANGES = {
@@ -113,7 +113,6 @@ class ProfileService:
                 raise NotFoundError("Skill not found")
             if any(skill.skill_id == fields["skill_id"] for skill in profile.skills):
                 raise ConflictError("Skill already added")
-            fields["position"] = self.repository.next_skill_position(profile)
             if fields.get("category") is None:
                 fields["category"] = classify_skill(catalog_skill.name)
         return self.repository.add_row(model, profile, **fields)

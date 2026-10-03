@@ -68,9 +68,6 @@ class _FakeRepo:
     def get_by_user_id(self, user_id):
         return self.profile
 
-    def next_skill_position(self, profile):
-        return 0
-
     def add_row(self, model, profile, **fields):
         self.saved = fields
         return fields
@@ -104,7 +101,7 @@ def test_api_update_null_category_reclassifies_and_omitted_keeps():
     service.update_row(1, ProfileSkill, 3, ProfileSkillUpdate(category=None))
     assert service.repository.saved["category"] == "LLMs & AI"
 
-    service.update_row(1, ProfileSkill, 3, ProfileSkillUpdate(position=2))
+    service.update_row(1, ProfileSkill, 3, ProfileSkillUpdate(years_experience=2))
     assert "category" not in service.repository.saved
 
 

@@ -240,11 +240,8 @@ class ProfileSkillCreate(BaseModel):
 
 
 class ProfileSkillUpdate(PartialUpdate):
-    non_nullable = ("position",)
-
     level: SkillLevel | None = None
     years_experience: Annotated[int, Field(ge=0, le=80)] | None = None
-    position: Annotated[int, Field(ge=0)] | None = None
     category: SkillCategory | None = Field(
         default=None, description="CV group. `null` re-classifies it from the skill dictionary."
     )
@@ -257,7 +254,6 @@ class ProfileSkillRead(BaseModel):
     skill: SkillRead
     level: SkillLevel | None
     years_experience: int | None
-    position: int
     category: SkillCategory
 
 

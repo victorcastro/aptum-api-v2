@@ -54,7 +54,9 @@ The ATS CV is the default for every user; there is no switch.
   `page_count`, `years_of_experience`, `skills`, `warnings`, `fidelity_issues`, `keyword_coverage`.
   Warnings are never printed in the PDF.
 - Skills are printed one line per category: `LLMs & AI`, `Backend`, `Cloud & DevOps`,
-  `Architecture`, `Mobile`, `Other`.
+  `Architecture`, `Mobile`, `Other`. Up to 25, ordered by evidence (no manual order): mentioned
+  by the offer, then used in the most recent experience, then `level` / `years_experience`,
+  then alphabetical. Profile skills no longer have a `position` field.
 - Years of experience are computed from experience dates (overlaps merged, per `area` too); a
   summary claiming more years than the dates support is corrected to the computed figure.
 - Roles that ended more than 7 years ago are shortened to 2 bullets; near-duplicate bullets and

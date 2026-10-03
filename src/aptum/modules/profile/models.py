@@ -85,7 +85,7 @@ class Profile(TimestampMixin, Base):
     )
     languages: Mapped[list["ProfileLanguage"]] = relationship(back_populates="profile", **_OWNED)
     skills: Mapped[list["ProfileSkill"]] = relationship(
-        back_populates="profile", order_by="ProfileSkill.position", **_OWNED
+        back_populates="profile", order_by="ProfileSkill.id", **_OWNED
     )
     certifications: Mapped[list["Certification"]] = relationship(
         back_populates="profile", **_OWNED
@@ -135,7 +135,6 @@ class ProfileSkill(Base):
         Enum(SkillLevel, name="skill_level"), default=None
     )
     years_experience: Mapped[int | None] = mapped_column(SmallInteger, default=None)
-    position: Mapped[int] = mapped_column(SmallInteger, default=0)
     # CV group. Set from the skill dictionary (skills/categories.py) unless the client sends one.
     category: Mapped[str] = mapped_column(
         String(40), default=SkillCategory.other.value, server_default=SkillCategory.other.value

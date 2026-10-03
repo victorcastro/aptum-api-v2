@@ -32,9 +32,9 @@ def skill(name: str, category: str | None = None) -> Skill:
     return Skill(id=next(_ids), name=name, slug=slugify(name), category=category)
 
 
-def profile_skill(name: str, position: int, **fields) -> ProfileSkill:
+def profile_skill(name: str, **fields) -> ProfileSkill:
     s = skill(name)
-    return ProfileSkill(id=next(_ids), skill_id=s.id, skill=s, position=position, **fields)
+    return ProfileSkill(id=next(_ids), skill_id=s.id, skill=s, **fields)
 
 
 def experience(
@@ -163,9 +163,7 @@ def base_profile(**fields) -> Profile:
         ProfileLanguage(id=next(_ids), language_code="en", proficiency=LanguageProficiency.full_professional),
     ]
     profile.skills = [
-        profile_skill(name, index)
-        for index, name in enumerate(
-            ["Python", "FastAPI", "OpenAI API", "RAG", "Docker", "AWS", "Swift", "Hexagonal Architecture", "Excel"]
-        )
+        profile_skill(name)
+        for name in ["Python", "FastAPI", "OpenAI API", "RAG", "Docker", "AWS", "Swift", "Hexagonal Architecture", "Excel"]
     ]
     return profile

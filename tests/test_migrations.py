@@ -85,9 +85,15 @@ def test_upgrade_backfills_and_downgrade_round_trips(engine):
     with engine.begin() as conn, pytest.raises(sa.exc.IntegrityError):
         conn.execute(sa.text("UPDATE profile_skills SET category = 'Frontend' WHERE id = 1"))
 
+    with engine.connect() as conn:
+        columns = {row[0] for row in conn.execute(sa.text(
+            "SELECT column_name FROM information_schema.columns WHERE table_name = 'profile_skills'"
+        ))}
+    assert "position" not in columns and "category" in columns
+
     alembic("check")  # models and migrations agree
     alembic("downgrade", "0001")
     with engine.connect() as conn:
-        count = conn.execute(sa.text("SELECT count(*) FROM profile_skills")).scalar_one()
-    assert count == 8  # rolled back without losing rows
+        positions = conn.execute(sa.text("SELECT position FROM profile_skills ORDER BY id")).scalars().all()
+    assert positions == list(range(8))  # rolled back without losing rows; position rebuilt from id order
     alembic("upgrade", "head")

@@ -167,9 +167,9 @@ def seed(db: Session, firebase_uid: str, email: str | None, reset: bool) -> Prof
             is_current=True,
             description="Payments platform for a leading retail bank.",
             functions=[
-                ExperienceFunction(description="Designed FastAPI services handling 2M transactions per day.", position=0),
-                ExperienceFunction(description="Cut p95 latency by 40% with query tuning and caching.", position=1),
-                ExperienceFunction(description="Mentored 4 engineers and led code reviews.", position=2),
+                ExperienceFunction(description="Designed FastAPI services handling 2M transactions per day."),
+                ExperienceFunction(description="Cut p95 latency by 40% with query tuning and caching."),
+                ExperienceFunction(description="Mentored 4 engineers and led code reviews."),
             ],
             skills=[python, fastapi, postgres, docker],
         ),
@@ -186,8 +186,8 @@ def seed(db: Session, firebase_uid: str, email: str | None, reset: bool) -> Prof
             is_current=False,
             description="Digital banking backend for a Peruvian bank.",
             functions=[
-                ExperienceFunction(description="Built event-driven services with Kafka and Java.", position=0),
-                ExperienceFunction(description="Introduced contract tests that removed release regressions.", position=1),
+                ExperienceFunction(description="Built event-driven services with Kafka and Java."),
+                ExperienceFunction(description="Introduced contract tests that removed release regressions."),
             ],
             skills=[java, kafka, postgres],
         ),
@@ -201,9 +201,9 @@ def seed(db: Session, firebase_uid: str, email: str | None, reset: bool) -> Prof
             end_date=date(2020, 8, 1),
             is_current=False,
             functions=[
-                ExperienceFunction(description="Built the order tracking API used by 5 countries.", position=0),
-                ExperienceFunction(description="Migrated services to AWS with Docker and CI/CD.", position=1),
-                ExperienceFunction(description="Added Redis caching that halved database load.", position=2),
+                ExperienceFunction(description="Built the order tracking API used by 5 countries."),
+                ExperienceFunction(description="Migrated services to AWS with Docker and CI/CD."),
+                ExperienceFunction(description="Added Redis caching that halved database load."),
             ],
             skills=[python, aws, docker, redis],
         ),
@@ -219,8 +219,8 @@ def seed(db: Session, firebase_uid: str, email: str | None, reset: bool) -> Prof
             is_current=False,
             description="Payment gateway for online merchants.",
             functions=[
-                ExperienceFunction(description="Developed merchant dashboard screens in React.", position=0),
-                ExperienceFunction(description="Implemented REST endpoints for payment reports.", position=1),
+                ExperienceFunction(description="Developed merchant dashboard screens in React."),
+                ExperienceFunction(description="Implemented REST endpoints for payment reports."),
             ],
             skills=[python, react, postgres],
         ),
@@ -235,8 +235,8 @@ def seed(db: Session, firebase_uid: str, email: str | None, reset: bool) -> Prof
             end_date=date(2016, 12, 1),
             is_current=False,
             functions=[
-                ExperienceFunction(description="Automated internal reports with Python scripts.", position=0),
-                ExperienceFunction(description="Fixed defects in a customer billing tool.", position=1),
+                ExperienceFunction(description="Automated internal reports with Python scripts."),
+                ExperienceFunction(description="Fixed defects in a customer billing tool."),
             ],
             skills=[python, java],
         ),
@@ -251,12 +251,12 @@ def seed(db: Session, firebase_uid: str, email: str | None, reset: bool) -> Prof
         )
     ]
     profile.skills = [
-        ProfileSkill(skill_id=python.id, level=SkillLevel.expert, years_experience=8, position=0),
-        ProfileSkill(skill_id=fastapi.id, level=SkillLevel.advanced, years_experience=4, position=1),
-        ProfileSkill(skill_id=postgres.id, level=SkillLevel.advanced, years_experience=7, position=2),
-        ProfileSkill(skill_id=docker.id, level=SkillLevel.advanced, years_experience=6, position=3),
-        ProfileSkill(skill_id=aws.id, level=SkillLevel.intermediate, years_experience=4, position=4),
-        ProfileSkill(skill_id=react.id, level=SkillLevel.beginner, years_experience=1, position=5),
+        ProfileSkill(skill_id=python.id, level=SkillLevel.expert, years_experience=8),
+        ProfileSkill(skill_id=fastapi.id, level=SkillLevel.advanced, years_experience=4),
+        ProfileSkill(skill_id=postgres.id, level=SkillLevel.advanced, years_experience=7),
+        ProfileSkill(skill_id=docker.id, level=SkillLevel.advanced, years_experience=6),
+        ProfileSkill(skill_id=aws.id, level=SkillLevel.intermediate, years_experience=4),
+        ProfileSkill(skill_id=react.id, level=SkillLevel.beginner, years_experience=1),
     ]
     profile.languages = [
         ProfileLanguage(language_code="es", proficiency=LanguageProficiency.native_or_bilingual),

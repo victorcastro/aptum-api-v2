@@ -90,7 +90,7 @@ def test_education_year_fallback():
 def test_skills_section_one_line_per_category():
     lines = _lines(generate_ats_cv(_profile(), today=TODAY).pdf)
     start = lines.index("SKILLS")
-    assert lines[start + 1 : start + 3] == ["LLMs & AI: OpenAI API, RAG", "Backend: Python, FastAPI"]
+    assert lines[start + 1 : start + 3] == ["LLMs & AI: OpenAI API, RAG", "Backend: Python, FastAPI"]  # by evidence
 
 
 def test_warnings_never_end_up_in_the_pdf():

@@ -58,7 +58,7 @@ def test_report_and_export(client):
     data = report.json()
     assert data["page_count"] <= 2
     assert data["years_of_experience"]["total"] >= 1
-    assert data["skills"][0] == {"category": "LLMs & AI", "names": ["RAG", "OpenAI API"]}
+    assert data["skills"][0] == {"category": "LLMs & AI", "names": ["RAG", "OpenAI API"]}  # offer-relevant first
     assert data["fidelity_issues"] == []
     assert data["keyword_coverage"]["missing"] == ["Kubernetes"]
     assert any(w["code"] == "missing_metric" for w in data["warnings"])
