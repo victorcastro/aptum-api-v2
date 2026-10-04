@@ -19,13 +19,17 @@ router = APIRouter(prefix="/companies", tags=["companies"])
 
 @router.get("", response_model=list[CompanyRead])
 def search_companies(
-    q: str = Query(min_length=1),
+    q: str | None = Query(default=None, min_length=1),
+    limit: int = Query(default=100, ge=1, le=100),
+    offset: int = Query(default=0, ge=0),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """Search by name. Each result says whether the caller may edit it (`can_edit`). 401 bad token."""
+    """Search by name (top 20). Without `q`, the whole catalog in name order, paged by `limit` and
+    `offset`. Each result says whether the caller may edit it (`can_edit`). 401 bad token."""
     service = CompanyService(db)
-    return service.to_read(current_user, service.search(q))
+    companies = service.search(q) if q is not None else service.list_page(limit, offset)
+    return service.to_read(current_user, companies)
 
 
 @router.get("/industries", response_model=list[IndustryRead])

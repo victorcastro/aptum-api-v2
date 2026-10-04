@@ -50,6 +50,16 @@ def skills(monkeypatch):
     return rows
 
 
+def test_any_user_lists_the_skill_catalog_without_a_query(state, monkeypatch):
+    pages = []
+    rows = [Skill(id=1, name="React", slug="react")]
+    monkeypatch.setattr(SkillRepository, "list_page", lambda self, limit, offset: pages.append((limit, offset)) or rows)
+    response = as_role("user").get("/skills", params={"offset": 100})
+    assert response.status_code == 200
+    assert response.json() == [{"id": 1, "name": "React", "slug": "react"}]
+    assert pages == [(100, 100)]
+
+
 def test_moderator_renames_a_skill_and_slug_follows(state, skills):
     response = as_role("moderator").patch("/skills/2", json={"name": " React Native "})
     assert response.status_code == 200

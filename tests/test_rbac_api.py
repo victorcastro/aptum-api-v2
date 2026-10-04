@@ -87,3 +87,14 @@ def test_search_computes_can_edit_with_one_in_use_query(client_as, catalog):
 def test_moderator_can_edit_every_result(client_as, catalog):
     body = client_as(make_user("moderator", 9)).get("/companies", params={"q": "m"}).json()
     assert all(row["can_edit"] for row in body)
+
+
+
+def test_any_user_lists_the_catalog_without_a_query(client_as, catalog, monkeypatch):
+    pages = []
+    monkeypatch.setattr(
+        CompanyRepository, "list_page", lambda self, limit, offset: pages.append((limit, offset)) or []
+    )
+    response = client_as(make_user()).get("/companies", params={"offset": 100})
+    assert response.status_code == 200
+    assert pages == [(100, 100)]

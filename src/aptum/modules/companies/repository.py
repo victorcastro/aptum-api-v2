@@ -28,6 +28,11 @@ class CompanyRepository:
             .all()
         )
 
+    def list_page(self, limit: int, offset: int) -> list[Company]:
+        return (
+            self.db.query(Company).order_by(Company.name, Company.id).limit(limit).offset(offset).all()
+        )
+
     def used_ids(self, company_ids: Collection[int]) -> set[int]:
         """Which of these companies some experience uses, as employer or client. One query."""
         if not company_ids:

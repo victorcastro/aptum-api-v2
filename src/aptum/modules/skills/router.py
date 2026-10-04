@@ -12,11 +12,16 @@ router = APIRouter(prefix="/skills", tags=["skills"])
 
 @router.get("", response_model=list[SkillRead])
 def search_skills(
-    q: str = Query(min_length=1),
+    q: str | None = Query(default=None, min_length=1),
+    limit: int = Query(default=100, ge=1, le=100),
+    offset: int = Query(default=0, ge=0),
     _: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    return SkillService(db).search(q)
+    """Search by name (top 20). Without `q`, the whole catalog in name order, paged by `limit` and
+    `offset`. 401 bad token."""
+    service = SkillService(db)
+    return service.search(q) if q is not None else service.list_page(limit, offset)
 
 
 @router.post("", response_model=SkillRead, status_code=201)

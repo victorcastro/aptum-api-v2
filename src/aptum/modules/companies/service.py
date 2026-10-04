@@ -133,6 +133,10 @@ class CompanyService:
     def search(self, query: str, limit: int = 20) -> list[Company]:
         return self.repository.search(normalize_name(query), limit)
 
+    def list_page(self, limit: int, offset: int) -> list[Company]:
+        """The whole catalog in name order."""
+        return self.repository.list_page(limit, offset)
+
     def to_read(self, user: User, companies: list[Company]) -> list[CompanyRead]:
         """API view with `can_edit` for this caller. "In use" is fetched in one query for all."""
         used = self.repository.used_ids([company.id for company in companies])

@@ -40,6 +40,9 @@ Schema changes are in migration `0003_release_1_2_0`.
 - The `admin` role cannot be edited or deleted. `user` and `moderator` can only be edited by an
   admin, and are never renamed or deleted. A role still assigned to users cannot be deleted.
 - `set-role` CLI takes any role name in the table.
+- `GET /companies` and `GET /skills`: `q` is optional. Without it they list the whole catalog in
+  name order, paged by `limit` (1–100, default 100) and `offset`, for any signed-in user. With
+  `q` the search is unchanged (top 20).
 
 ## [1.1.0] - 2026-10-03
 
