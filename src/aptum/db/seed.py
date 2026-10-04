@@ -14,9 +14,7 @@ from sqlalchemy.orm import Session
 
 from aptum.common.enums import (
     EmploymentType,
-    EnglishLevel,
     ExperienceArea,
-    LanguageProficiency,
     LinkKind,
     SkillLevel,
     WorkAuthorization,
@@ -154,7 +152,6 @@ def seed(db: Session, firebase_uid: str, email: str | None, reset: bool) -> Prof
     profile.country_code = "PE"
     profile.linkedin_url = "https://linkedin.com/in/ana-torres-demo"
     profile.github_url = "https://github.com/ana-torres-demo"
-    profile.english_level = EnglishLevel.c1
     profile.work_authorization = WorkAuthorization.requires_sponsorship
     profile.work_authorization_country = "CA"
     profile.open_to_relocation = True
@@ -274,8 +271,8 @@ def seed(db: Session, firebase_uid: str, email: str | None, reset: bool) -> Prof
         ProfileSkill(skill_id=react.id, category=classify_skill(react.name), level=SkillLevel.beginner, years_experience=1),
     ]
     profile.languages = [
-        ProfileLanguage(language_code="es", proficiency=LanguageProficiency.native_or_bilingual),
-        ProfileLanguage(language_code="en", proficiency=LanguageProficiency.full_professional),
+        ProfileLanguage(language_code="es", proficiency="Native"),
+        ProfileLanguage(language_code="en", proficiency="C1"),
     ]
     profile.certifications = [
         Certification(

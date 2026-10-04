@@ -22,17 +22,21 @@ All schema changes are in a single migration, `0002_release_1_1_0`.
   [{"category", "skills": [{"id", "skill_id", "name", "level", "years_experience"}]}]}`. `id` is
   the profile skill (used by `PATCH`/`DELETE`), `skill_id` the catalog skill.
   `GET /profile/me/skills` is unchanged.
+- Language catalogs: tables `languages` (ISO 639-1 code, English name) and `language_levels`
+  (CEFR `A1`-`C2` plus `Native`, ranked, with a short description), seeded by the migration and
+  served by `GET /commons/languages` and `GET /commons/language-levels`. `profile_languages`
+  references both by foreign key; codes outside the catalogs return 404 on
+  `POST/PATCH /profile/me/languages`.
 - `category` (optional) on `POST/PATCH /profile/me/skills` and in skill responses; when omitted
   it is classified with the same dictionary (`null` on PATCH re-classifies).
 - New profile fields, all optional: `linkedin_url`, `github_url`, `portfolio_url` (validated
-  URLs), `english_level` (`A1`-`C2`, `Native`), `work_authorization` (`authorized`,
+  URLs), `work_authorization` (`authorized`,
   `requires_sponsorship`), `work_authorization_country`, `open_to_relocation`; `area` on
   experiences (`backend`, `mobile`, `ai`, `other`); `start_year` / `end_year` on educations.
 - ATS PDF: single column, standard font, no tables/images/icons/lines/photo, selectable text,
   standard headings (Summary, Experience, Skills, Education, Certifications, Projects,
   Languages), `Mon YYYY - Mon YYYY` dates, at most 2 pages. The header prints the profile
-  links as visible URLs and one work authorization line only when set; `english_level` is
-  printed in Languages.
+  links as visible URLs and one work authorization line only when set.
 - Skills printed one line per category, up to 25, ordered by evidence: mentioned by the job
   offer first, then used in the most recent experience, then `level` and `years_experience`,
   then alphabetical. Only skills from the profile are ever printed.
@@ -61,9 +65,13 @@ All schema changes are in a single migration, `0002_release_1_1_0`.
 - The OpenAPI metadata now reports the package version (`1.1.0`), read from `pyproject.toml`.
 - CV skill groups come from `profile_skills.category` (six standard groups)
   instead of the free-text catalog category (`skills.category`).
-- All CV templates render on A4 (the ATS PDF was US Letter), and the `software-engineer`
-  Languages section is built the same way as the ATS one (same lines, `english_level`
-  included).
+- All CV templates render on A4 (the ATS PDF was US Letter), and every template prints the
+  same Languages lines: language name and level code (`Spanish - Native`, `English - C1`).
+- **Breaking:** `proficiency` on `/profile/me/languages` takes a level code from
+  `GET /commons/language-levels` (`A1`-`C2`, `Native`) instead of `elementary`,
+  `limited_working`, `professional_working`, `full_professional`, `native_or_bilingual`. The
+  migration converts stored rows: elementary -> A2, limited_working -> B1,
+  professional_working -> B2, full_professional -> C1, native_or_bilingual -> Native.
 
 ### Removed
 

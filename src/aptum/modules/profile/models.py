@@ -20,9 +20,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from aptum.common.constants import EMBEDDING_DIM
 from aptum.common.enums import (
     EmploymentType,
-    EnglishLevel,
     ExperienceArea,
-    LanguageProficiency,
     LinkKind,
     SkillCategory,
     SkillLevel,
@@ -35,6 +33,7 @@ from aptum.db.constraints import (
     in_values_check,
     month_precision_checks,
 )
+from aptum.modules.commons.models import Language
 from aptum.modules.companies.models import Company
 from aptum.modules.skills.models import Skill
 
@@ -46,7 +45,6 @@ class Profile(TimestampMixin, Base):
 
     __tablename__ = "profiles"
     __table_args__ = (
-        in_values_check("english_level", EnglishLevel),
         in_values_check("work_authorization", WorkAuthorization),
     )
 
@@ -65,7 +63,6 @@ class Profile(TimestampMixin, Base):
     linkedin_url: Mapped[str | None] = mapped_column(String(500), default=None)
     github_url: Mapped[str | None] = mapped_column(String(500), default=None)
     portfolio_url: Mapped[str | None] = mapped_column(String(500), default=None)
-    english_level: Mapped[str | None] = mapped_column(String(8), default=None)
     work_authorization: Mapped[str | None] = mapped_column(String(32), default=None)
     # Country the authorization (or the relocation target) refers to; ISO 3166-1 alpha-2.
     work_authorization_country: Mapped[str | None] = mapped_column(String(2), default=None)
@@ -113,12 +110,12 @@ class ProfileLanguage(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     profile_id: Mapped[int] = mapped_column(ForeignKey("profiles.id", ondelete="CASCADE"))
-    language_code: Mapped[str] = mapped_column(String(2))
-    proficiency: Mapped[LanguageProficiency] = mapped_column(
-        Enum(LanguageProficiency, name="language_proficiency")
-    )
+    language_code: Mapped[str] = mapped_column(String(2), ForeignKey("languages.code"))
+    # Code of a `language_levels` row: CEFR (A1-C2) or Native.
+    proficiency: Mapped[str] = mapped_column(String(8), ForeignKey("language_levels.code"))
 
     profile: Mapped["Profile"] = relationship(back_populates="languages")
+    language: Mapped[Language] = relationship(lazy="joined")
 
 
 class ProfileSkill(Base):

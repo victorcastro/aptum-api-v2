@@ -5,8 +5,9 @@ Objects are transient ORM instances (never added to a session), so tests need no
 
 from datetime import date
 
-from aptum.common.enums import LanguageProficiency, LinkKind
+from aptum.common.enums import LinkKind
 from aptum.common.utils import normalize_name, slugify
+from aptum.modules.commons.models import Language
 from aptum.modules.companies.models import Company
 from aptum.modules.profile.models import (
     Certification,
@@ -30,6 +31,10 @@ def company(name: str) -> Company:
 
 def skill(name: str, category: str | None = None) -> Skill:
     return Skill(id=next(_ids), name=name, slug=slugify(name), category=category)
+
+
+def profile_language(code: str, name: str, level: str) -> ProfileLanguage:
+    return ProfileLanguage(id=next(_ids), language_code=code, language=Language(code=code, name=name), proficiency=level)
 
 
 def profile_skill(name: str, **fields) -> ProfileSkill:
@@ -159,8 +164,8 @@ def base_profile(**fields) -> Profile:
         ProfileLink(id=next(_ids), kind=LinkKind.linkedin, url="https://www.linkedin.com/in/example-alex"),
     ]
     profile.languages = [
-        ProfileLanguage(id=next(_ids), language_code="es", proficiency=LanguageProficiency.native_or_bilingual),
-        ProfileLanguage(id=next(_ids), language_code="en", proficiency=LanguageProficiency.full_professional),
+        profile_language("es", "Spanish", "Native"),
+        profile_language("en", "English", "C1"),
     ]
     profile.skills = [
         profile_skill(name)

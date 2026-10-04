@@ -40,5 +40,5 @@ CERTIFICATIONS
 Cloud Practitioner - Example Cloud Institute
 May 2022
 LANGUAGES
-Spanish - Native or bilingual proficiency
-English - Full professional proficiency
+Spanish - Native
+English - C1

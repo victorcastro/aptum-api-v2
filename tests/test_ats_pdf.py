@@ -13,7 +13,6 @@ TODAY = date(2026, 10, 1)
 
 def _profile(**fields):
     defaults = {
-        "english_level": "C1",
         "work_authorization": "authorized",
         "work_authorization_country": "CA",
         "portfolio_url": "https://alex.example.dev",
@@ -71,12 +70,9 @@ def test_dates_are_consistent_mon_yyyy():
     assert "Jan 2023 - Present" in lines
 
 
-def test_english_level_printed_in_languages():
+def test_languages_print_name_and_level_code():
     lines = _lines(generate_ats_cv(_profile(), today=TODAY).pdf)
-    assert "English - C1 (Full professional proficiency)" in lines
-    profile = _profile(english_level="Native")
-    profile.languages = []
-    assert "English - Native" in _lines(generate_ats_cv(profile, today=TODAY).pdf)
+    assert "Spanish - Native" in lines and "English - C1" in lines
 
 
 def test_education_year_fallback():

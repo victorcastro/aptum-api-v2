@@ -48,13 +48,12 @@ def test_explicit_template_renders_the_legacy_layout_unchanged(client):
     assert pdf_text(response.content) == (GOLDEN / "legacy_software-engineer.txt").read_text()
 
 
-def test_languages_section_matches_between_templates(client, profile):
-    profile.english_level = "C1"
+def test_languages_section_matches_between_templates(client):
     default = pdf_text(client.get("/cv/export").content)
     explicit = pdf_text(client.get("/cv/export", params={"template": "software-engineer"}).content)
     for text in (default, explicit):
-        assert "Spanish - Native or bilingual proficiency" in text
-        assert "English - C1 (Full professional proficiency)" in text
+        assert "Spanish - Native" in text
+        assert "English - C1" in text
 
 
 @pytest.mark.parametrize("params", [{}, {"template": "software-engineer"}])

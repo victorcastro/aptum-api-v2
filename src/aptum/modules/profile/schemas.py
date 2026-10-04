@@ -13,9 +13,7 @@ from pydantic import (
 
 from aptum.common.enums import (
     EmploymentType,
-    EnglishLevel,
     ExperienceArea,
-    LanguageProficiency,
     LinkKind,
     SkillCategory,
     SkillLevel,
@@ -190,15 +188,21 @@ class EducationRead(EducationCreate):
     id: int
 
 
+LanguageLevelCode = Annotated[
+    str,
+    Field(min_length=1, max_length=8, description="Code from `GET /commons/language-levels` (A1-C2, Native)."),
+]
+
+
 class LanguageCreate(BaseModel):
-    language_code: LanguageCode
-    proficiency: LanguageProficiency
+    language_code: LanguageCode = Field(description="Code from `GET /commons/languages` (ISO 639-1).")
+    proficiency: LanguageLevelCode
 
 
 class LanguageUpdate(PartialUpdate):
     non_nullable = ("proficiency",)
 
-    proficiency: LanguageProficiency | None = None
+    proficiency: LanguageLevelCode | None = None
 
 
 class LanguageRead(LanguageCreate):
@@ -369,7 +373,6 @@ class ProfileUpdate(PartialUpdate):
     linkedin_url: LinkedInUrl | None = None
     github_url: GitHubUrl | None = None
     portfolio_url: HttpUrlStr | None = None
-    english_level: EnglishLevel | None = None
     work_authorization: WorkAuthorization | None = None
     work_authorization_country: CountryCode | None = Field(
         default=None, description="Country the authorization or relocation refers to."
@@ -394,7 +397,6 @@ class ProfileRead(BaseModel):
     linkedin_url: str | None = None
     github_url: str | None = None
     portfolio_url: str | None = None
-    english_level: EnglishLevel | None = None
     work_authorization: WorkAuthorization | None = None
     work_authorization_country: str | None = None
     open_to_relocation: bool = False

@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from aptum.common.enums import SkillCategory
 from aptum.core.exceptions import AptumError, ConflictError, NotFoundError
 from aptum.db.base import Base
+from aptum.modules.commons.repository import CommonsRepository
 from aptum.modules.companies.repository import CompanyRepository
 from aptum.modules.profile.models import (
     Certification,
@@ -85,6 +86,7 @@ class ProfileService:
     def __init__(self, db: Session) -> None:
         self.repository = ProfileRepository(db)
         self.companies = CompanyRepository(db)
+        self.commons = CommonsRepository(db)
         self.skills = SkillRepository(db)
 
     def get_or_create(self, user_id: int) -> Profile:
@@ -139,6 +141,8 @@ class ProfileService:
             language.language_code == fields["language_code"] for language in profile.languages
         ):
             raise ConflictError("Language already added")
+        if model is ProfileLanguage:
+            self._check_language_catalog(fields)
         if model is ProfileSkill:
             catalog_skill = self.skills.get(fields["skill_id"])
             if catalog_skill is None:
@@ -156,6 +160,8 @@ class ProfileService:
             self._check_range(row, fields, *_DATE_RANGES[model])
         if model is Education:
             self._check_range(row, fields, "start_year", "end_year")
+        if model is ProfileLanguage:
+            self._check_language_catalog(fields)
         if model is ProfileSkill and "category" in fields and fields["category"] is None:
             fields["category"] = classify_skill(row.skill.name)
         return self.repository.update_row(row, **fields)
@@ -163,6 +169,14 @@ class ProfileService:
     def delete_row(self, user_id: int, model: type[Base], row_id: int) -> None:
         row = self._get_owned_row(user_id, model, row_id)
         self.repository.delete_row(row)
+
+    def _check_language_catalog(self, fields: dict) -> None:
+        code = fields.get("language_code")
+        if code is not None and not self.commons.has_language(code):
+            raise NotFoundError("Language not found")
+        level = fields.get("proficiency")
+        if level is not None and not self.commons.has_language_level(level):
+            raise NotFoundError("Language level not found")
 
     def _check_companies(self, *company_ids: int | None) -> None:
         for company_id in set(company_ids) - {None}:

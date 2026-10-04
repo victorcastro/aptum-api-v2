@@ -18,14 +18,6 @@ class EmploymentType(StrEnum):
     temporary = "temporary"
 
 
-class LanguageProficiency(StrEnum):
-    elementary = "elementary"
-    limited_working = "limited_working"
-    professional_working = "professional_working"
-    full_professional = "full_professional"
-    native_or_bilingual = "native_or_bilingual"
-
-
 class SkillLevel(StrEnum):
     beginner = "beginner"
     intermediate = "intermediate"
@@ -50,18 +42,6 @@ class SkillCategory(StrEnum):
     architecture = "Architecture"
     mobile = "Mobile"
     other = "Other"
-
-
-class EnglishLevel(StrEnum):
-    """CEFR level, plus Native."""
-
-    a1 = "A1"
-    a2 = "A2"
-    b1 = "B1"
-    b2 = "B2"
-    c1 = "C1"
-    c2 = "C2"
-    native = "Native"
 
 
 class WorkAuthorization(StrEnum):

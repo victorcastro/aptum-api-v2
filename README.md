@@ -73,12 +73,12 @@ Deterministic configuration (no LLM involved), easy to extend:
 | Endpoint | Field | Values |
 | --- | --- | --- |
 | `PATCH /profile/me` | `linkedin_url`, `github_url`, `portfolio_url` | http(s) URL; LinkedIn/GitHub must be on their domain |
-| `PATCH /profile/me` | `english_level` | `A1` `A2` `B1` `B2` `C1` `C2` `Native` |
 | `PATCH /profile/me` | `work_authorization` | `authorized`, `requires_sponsorship` |
 | `PATCH /profile/me` | `work_authorization_country` | ISO 3166-1 alpha-2 (e.g. `CA`) |
 | `PATCH /profile/me` | `open_to_relocation` | boolean (default `false`, not nullable) |
 | `POST/PATCH /profile/me/experiences` | `area` | `backend`, `mobile`, `ai`, `other` |
 | `POST/PATCH /profile/me/educations` | `start_year`, `end_year` | 1900-2100, end >= start |
 | `POST/PATCH /profile/me/skills` | `category` | one of the six categories; omitted = dictionary |
+| `POST/PATCH /profile/me/languages` | `language_code`, `proficiency` | codes from `GET /commons/languages` and `GET /commons/language-levels` (`A1`-`C2`, `Native`) |
 
 All of them are returned by the matching `GET` endpoints (`GET /profile/me` included).

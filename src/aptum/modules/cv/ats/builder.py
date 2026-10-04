@@ -1,10 +1,7 @@
 """Profile -> ATSDocument. Every value comes from the profile; nothing is generated here."""
 
-from aptum.common.constants import LANGUAGE_NAMES
 from aptum.common.countries import country_name
 from aptum.common.enums import (
-    EnglishLevel,
-    LanguageProficiency,
     LinkKind,
     WorkAuthorization,
 )
@@ -19,14 +16,6 @@ from aptum.modules.cv.ats.document import (
 )
 from aptum.modules.cv.ats.skills import select_skills, skill_lines
 from aptum.modules.profile.models import Education, Profile
-
-_PROFICIENCY_LABELS = {
-    LanguageProficiency.elementary: "Elementary proficiency",
-    LanguageProficiency.limited_working: "Limited working proficiency",
-    LanguageProficiency.professional_working: "Professional working proficiency",
-    LanguageProficiency.full_professional: "Full professional proficiency",
-    LanguageProficiency.native_or_bilingual: "Native or bilingual proficiency",
-}
 
 
 def header_links(profile: Profile) -> list[str]:
@@ -57,20 +46,8 @@ def work_authorization_line(profile: Profile) -> str | None:
 
 
 def language_lines(profile: Profile) -> list[str]:
-    lines: list[str] = []
-    english_level = EnglishLevel(profile.english_level) if profile.english_level else None
-    has_english = False
-    for lang in profile.languages:
-        code = lang.language_code.lower()
-        name = LANGUAGE_NAMES.get(code, code.upper())
-        label = _PROFICIENCY_LABELS[LanguageProficiency(lang.proficiency)]
-        if code == "en" and english_level:
-            has_english = True
-            label = english_level.value if english_level is EnglishLevel.native else f"{english_level.value} ({label})"
-        lines.append(f"{name} - {label}")
-    if english_level and not has_english:
-        lines.append(f"English - {english_level.value}")
-    return lines
+    """`Spanish - Native`, `English - C1`: language name and level code from the catalogs."""
+    return [f"{lang.language.name} - {lang.proficiency}" for lang in profile.languages]
 
 
 def _education_dates(edu: Education) -> str:
