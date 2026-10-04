@@ -3,11 +3,7 @@
 from typing import Protocol
 
 from aptum.core.exceptions import ForbiddenError, NotFoundError
-from aptum.core.permissions import HasRole, Permission, has_permission
-
-
-class Actor(HasRole, Protocol):
-    id: int
+from aptum.core.permissions import Actor, Permission, has_permission
 
 
 class CompanyLike(Protocol):

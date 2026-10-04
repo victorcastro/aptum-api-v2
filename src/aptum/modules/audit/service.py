@@ -57,7 +57,7 @@ class AuditService:
         self.repository.add(entry)
         return entry
 
-    def list(
+    def list_page(
         self,
         page: PageParams,
         *,
@@ -68,7 +68,7 @@ class AuditService:
         since: datetime | None = None,
         until: datetime | None = None,
     ) -> tuple[list[AuditLog], int]:
-        return self.repository.list(
+        return self.repository.list_page(
             entity_type=entity_type,
             entity_id=entity_id,
             actor_user_id=actor_user_id,

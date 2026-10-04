@@ -14,7 +14,7 @@ class AuditRepository:
         """No commit: the entry is written in the same transaction as the change it records."""
         self.db.add(entry)
 
-    def list(
+    def list_page(
         self,
         *,
         entity_type: str | None,

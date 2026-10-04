@@ -57,6 +57,10 @@ class HasRole(Protocol):
     role: str
 
 
+class Actor(HasRole, Protocol):
+    id: int
+
+
 def permissions_for(role: str) -> frozenset[Permission]:
     """Unknown roles get nothing (safe default)."""
     try:

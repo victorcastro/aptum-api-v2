@@ -89,7 +89,7 @@ def test_admin_lists_audit_logs_with_filters(client_as, monkeypatch):
         seen.update(filters)
         return [], 0
 
-    monkeypatch.setattr(AuditRepository, "list", fake_list)
+    monkeypatch.setattr(AuditRepository, "list_page", fake_list)
     response = client_as("admin").get(
         "/admin/audit-logs", params={"entity_type": "company", "entity_id": 5, "limit": 10}
     )

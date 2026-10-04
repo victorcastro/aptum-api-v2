@@ -31,7 +31,7 @@ def list_audit_logs(
     """Privileged changes, newest first. Needs `audit:read`.
 
     401 bad token; 403 missing permission; 422 invalid filter."""
-    items, total = AuditService(db).list(
+    items, total = AuditService(db).list_page(
         page,
         entity_type=entity_type,
         entity_id=entity_id,
