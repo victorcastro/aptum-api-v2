@@ -1,4 +1,6 @@
-from pydantic import BaseModel, ConfigDict
+from typing import Annotated
+
+from pydantic import BaseModel, ConfigDict, Field
 
 from aptum.common.types import CountryCode
 
@@ -9,6 +11,16 @@ class IndustryRead(BaseModel):
     id: int
     name: str
     slug: str
+
+
+class IndustryWrite(BaseModel):
+    name: Annotated[str, Field(min_length=1, max_length=120)]
+
+
+class CompanyMerge(BaseModel):
+    """The company that survives; the one in the path is deleted."""
+
+    target_id: int
 
 
 class CompanyCreate(BaseModel):

@@ -28,3 +28,10 @@ class SkillRepository:
         self.db.commit()
         self.db.refresh(skill)
         return skill
+
+    def update(self, skill: Skill, **fields) -> Skill:
+        for key, value in fields.items():
+            setattr(skill, key, value)
+        self.db.commit()
+        self.db.refresh(skill)
+        return skill
