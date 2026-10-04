@@ -3,7 +3,7 @@
 from types import SimpleNamespace
 
 import pytest
-from factories import FakeSession
+from factories import FakeSession, actor
 from fastapi.testclient import TestClient
 from sqlalchemy.exc import IntegrityError
 
@@ -26,7 +26,7 @@ def state(monkeypatch):
 
 
 def as_role(role: str) -> TestClient:
-    app.dependency_overrides[get_current_user] = lambda: SimpleNamespace(id=7, role=role)
+    app.dependency_overrides[get_current_user] = lambda: actor(role, 7)
     return TestClient(app)
 
 
@@ -48,6 +48,16 @@ def skills(monkeypatch):
 
     monkeypatch.setattr(SkillRepository, "update", update)
     return rows
+
+
+def test_any_user_lists_the_skill_catalog_without_a_query(state, monkeypatch):
+    pages = []
+    rows = [Skill(id=1, name="React", slug="react")]
+    monkeypatch.setattr(SkillRepository, "list_page", lambda self, limit, offset: pages.append((limit, offset)) or rows)
+    response = as_role("user").get("/skills", params={"offset": 100})
+    assert response.status_code == 200
+    assert response.json() == [{"id": 1, "name": "React", "slug": "react"}]
+    assert pages == [(100, 100)]
 
 
 def test_moderator_renames_a_skill_and_slug_follows(state, skills):

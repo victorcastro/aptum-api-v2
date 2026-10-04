@@ -3,6 +3,7 @@
 from types import SimpleNamespace
 
 import pytest
+from factories import actor
 
 from aptum.core.exceptions import ForbiddenError, NotFoundError
 from aptum.modules.companies.policy import can_edit_company, check_edit_company
@@ -11,7 +12,7 @@ CREATOR_ID = 1
 
 
 def user(role: str = "user", user_id: int = CREATOR_ID) -> SimpleNamespace:
-    return SimpleNamespace(id=user_id, role=role)
+    return actor(role, user_id)
 
 
 def company(created_by: int | None = CREATOR_ID) -> SimpleNamespace:

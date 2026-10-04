@@ -22,6 +22,9 @@ class SkillRepository:
             .all()
         )
 
+    def list_page(self, limit: int, offset: int) -> list[Skill]:
+        return self.db.query(Skill).order_by(Skill.name, Skill.id).limit(limit).offset(offset).all()
+
     def create(self, **fields) -> Skill:
         """No commit. Flushes, so a slug clash raises IntegrityError here."""
         skill = Skill(**fields)

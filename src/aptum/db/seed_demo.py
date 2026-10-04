@@ -1,6 +1,6 @@
 """Populate the local DB with one test user per role and data to try what each role can do.
 
-    uv run python -m aptum.db.seed [--reset] [--pdf cv.pdf]
+    uv run python -m aptum.db.seed_demo [--reset] [--pdf cv.pdf]
 
 Local development only. Idempotent: rows are looked up by email, uid, slug or normalized name
 before being created, so it can run again at any time.
@@ -13,7 +13,10 @@ before being created, so it can run again at any time.
   the user's CV: the user gets 403 on edit, a moderator may edit it).
 - admin@aptum.test (admin): "BCP" duplicates "Banco de Credito del Peru" and is in use, to
   merge. Two extra users without a Firebase account (one inactive) to change roles and status,
-  and the role changes made here are already in the audit log.
+  and the role changes made here are already in the audit log. A custom role, "catalog_editor"
+  (skills and industries only), to edit, assign or delete from /admin/roles.
+
+Runs the roles sync first, as the container does on start, so permissions and system roles exist.
 
 The three role users must exist in Firebase with these uids (and a verified email) to log in.
 """
@@ -49,11 +52,14 @@ from aptum.modules.profile.models import (
     Project,
 )
 from aptum.modules.profile.repository import ProfileRepository
+from aptum.modules.roles.repository import RoleRepository
+from aptum.modules.roles.sync import sync as sync_roles
 from aptum.modules.skills.categories import classify_skill
 from aptum.modules.skills.models import Skill
 from aptum.modules.users.admin_service import UserAdminService
 from aptum.modules.users.models import User
 from aptum.modules.users.repository import UserRepository
+from aptum.modules.users.service import UserService
 
 
 @dataclass(frozen=True)
@@ -126,7 +132,7 @@ def _user(db: Session, seed_user: SeedUser) -> User:
     user = users.get_by_firebase_uid(seed_user.firebase_uid) if seed_user.firebase_uid else None
     user = user or users.get_by_email(seed_user.email)
     if user is None:
-        user = users.create(seed_user.email, seed_user.firebase_uid)
+        user = users.create(seed_user.email, seed_user.firebase_uid, UserService(db).default_role())
     else:
         user.email = seed_user.email
         user.firebase_uid = seed_user.firebase_uid or user.firebase_uid
@@ -152,6 +158,18 @@ def seed_users(db: Session) -> dict[str, User]:
             db.commit()
         seeded[user.email] = user
     return seeded
+
+
+CUSTOM_ROLE = ("catalog_editor", "Fixes skills and industries", ("industry:manage", "skill:update_any"))
+
+
+def seed_custom_role(db: Session) -> None:
+    """An example custom role, left untouched once it exists."""
+    roles = RoleRepository(db)
+    name, description, codes = CUSTOM_ROLE
+    if roles.get_by_name(name) is None:
+        roles.create(name, description, roles.get_permissions(codes))
+        db.commit()
 
 
 def seed_catalog(db: Session, user: User) -> None:
@@ -377,10 +395,13 @@ def main() -> None:
     args = parser.parse_args()
 
     with SessionLocal() as db:
+        for line in sync_roles(db):
+            print(f"roles sync: {line}")
+        seed_custom_role(db)
         users = seed_users(db)
         for user in users.values():
             state = "active" if user.is_active else "inactive"
-            print(f"user_id={user.id} {user.email} role={user.role} {state}")
+            print(f"user_id={user.id} {user.email} role={user.role_name} {state}")
         cv_user = users["user@aptum.test"]
         seed_catalog(db, cv_user)
         profile = seed_demo_cv(db, cv_user, args.reset)

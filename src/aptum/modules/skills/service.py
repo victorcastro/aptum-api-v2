@@ -20,6 +20,10 @@ class SkillService:
     def search(self, query: str, limit: int = 20) -> list[Skill]:
         return self.repository.search(query.strip(), limit)
 
+    def list_page(self, limit: int, offset: int) -> list[Skill]:
+        """The whole catalog in name order."""
+        return self.repository.list_page(limit, offset)
+
     def get_or_create(self, user_id: int, data: SkillCreate) -> Skill:
         slug = _slug(data.name)
         existing = self.repository.get_by_slug(slug)

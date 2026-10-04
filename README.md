@@ -30,13 +30,35 @@ uv run alembic check                                    # models match migration
 
 ## Roles and permissions
 
-Every user has one role: `user` (default), `moderator` or `admin`. Routers ask for a permission,
-never a role; `src/aptum/core/permissions.py` is the only place that maps roles to permissions.
+Every user has one role. Routers ask for a permission, never a role
+(`require(Permission.x)` in `src/aptum/core/permissions.py`). Roles and what they grant live in
+the database (`roles`, `permissions`, `role_permissions`), so admins can create roles and change
+grants from `/admin/roles` without a deploy.
 
-| Permission | moderator | admin |
+System roles always exist and are never deleted or renamed:
+
+| Role | Default permissions | Editable |
 |---|---|---|
-| `company:update_any`, `company:delete`, `skill:update_any`, `industry:manage`, `user:list_read` | yes | yes |
-| `company:merge`, `user:manage_roles`, `user:deactivate`, `audit:read` | | yes |
+| `user` | none (manages their own CV) | by an admin |
+| `moderator` | `company:update_any`, `company:delete`, `skill:update_any`, `industry:manage`, `user:list_read`, `role:read` | by an admin |
+| `admin` | every permission, always | never |
+
+Custom roles are created, edited and deleted with `role:manage`. Nobody grants, assigns, edits
+or deletes a role holding permissions they lack. A role still assigned to users cannot be
+deleted.
+
+Permissions are born in code: the `Permission` enum is the source, and each one only guards
+something once an endpoint asks for it. On every start, after the migrations, the container runs
+`python -m aptum.modules.roles.sync`. It copies the enum into `permissions`, recreates missing
+system roles and gives `admin` every permission. Run it by hand after `alembic upgrade head`
+when working locally.
+
+To add a permission:
+
+1. Add it to `Permission` and `PERMISSION_DESCRIPTIONS` in `core/permissions.py`.
+2. Guard the endpoint with `require(Permission.new_one)`.
+3. Deploy. The sync inserts it and gives it to `admin`; grant it to other roles with
+   `PATCH /admin/roles/{id}`.
 
 Create the first admin (the user must have logged in once), then manage roles from `/admin/users`:
 
@@ -46,22 +68,22 @@ uv run python -m aptum.modules.users.cli set-role --email you@example.com --role
 
 New users always get the `user` role.
 
-Locally, `uv run python -m aptum.db.seed [--reset]` creates one test user per role, linked to
+Locally, `uv run python -m aptum.db.seed_demo [--reset]` creates one test user per role, linked to
 their Firebase accounts, with data to try each role (see the module docstring):
 
 | Email | Role | Data |
 |---|---|---|
 | `user@aptum.test` | user | Full demo CV; created "Acme Startup" (editable) and "BCP" (in use) |
 | `moderator@aptum.test` | moderator | Catalog to fix: skills "Pyhton", "ReactJS", industry "Bankng" |
-| `admin@aptum.test` | admin | "BCP" to merge into "Banco de Credito del Peru"; `candidate@` and `inactive@` to manage |
+| `admin@aptum.test` | admin | "BCP" to merge into "Banco de Credito del Peru"; `candidate@` and `inactive@` to manage; custom role `catalog_editor` |
 
-Every privileged change (company edit/merge/delete, skill and industry changes, role and
-active changes) is written to `audit_logs` in the same transaction, readable through
+Every privileged change (company edit/merge/delete, skill and industry changes, user role and
+active changes, role create/edit/delete) is written to `audit_logs` in the same transaction, readable through
 `GET /admin/audit-logs`.
 
 ## Docker
 
-The image applies pending migrations on startup and then serves the API on port 8000.
+The image applies pending migrations and the roles sync on startup, then serves the API on port 8000.
 
 ```bash
 docker build -t aptum-api .

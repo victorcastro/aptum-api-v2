@@ -50,7 +50,9 @@ class WorkAuthorization(StrEnum):
 
 
 class UserRole(StrEnum):
-    """One role per user. What each role may do lives only in core/permissions.py."""
+    """Built-in (system) roles, always present in the `roles` table: `roles.sync` creates them.
+    Admins may add custom roles there. `user` is given at registration; `admin` always holds
+    every permission."""
 
     user = "user"
     moderator = "moderator"
@@ -71,6 +73,7 @@ class AuditEntity(StrEnum):
     skill = "skill"
     industry = "industry"
     user = "user"
+    role = "role"
 
 
 class AuditAction(StrEnum):
@@ -83,3 +86,6 @@ class AuditAction(StrEnum):
     user_role_change = "user.role_change"
     user_activate = "user.activate"
     user_deactivate = "user.deactivate"
+    role_create = "role.create"
+    role_update = "role.update"
+    role_delete = "role.delete"

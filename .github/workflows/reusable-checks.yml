@@ -1,6 +1,5 @@
 name: Reusable · Lint, tests and Docker smoke test
 
-# Reusable: lint + tests + image build + container smoke test. Called by pr-staging, pr-main, deploy-staging and deploy-production.
 on:
   workflow_call:
 

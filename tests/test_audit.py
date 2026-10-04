@@ -1,9 +1,8 @@
 """Audit log: diff/redaction helpers, entries written by company edits, and the read endpoint."""
 
-from types import SimpleNamespace
 
 import pytest
-from factories import FakeSession
+from factories import FakeSession, actor
 from fastapi.testclient import TestClient
 
 from aptum.core.dependencies import get_current_user, get_db
@@ -57,7 +56,7 @@ def client_as():
     app.dependency_overrides[get_db] = FakeSession
 
     def factory(role: str = "user", user_id: int = 1) -> TestClient:
-        app.dependency_overrides[get_current_user] = lambda: SimpleNamespace(id=user_id, role=role)
+        app.dependency_overrides[get_current_user] = lambda: actor(role, user_id)
         return TestClient(app)
 
     yield factory

@@ -1,7 +1,6 @@
 from fastapi import APIRouter, Depends
 
 from aptum.core.dependencies import get_current_user
-from aptum.core.permissions import permissions_for
 from aptum.modules.users.models import User
 from aptum.modules.users.schemas import CurrentUserRead
 
@@ -15,6 +14,6 @@ def read_current_user(current_user: User = Depends(get_current_user)) -> Current
         id=current_user.id,
         email=current_user.email,
         is_active=current_user.is_active,
-        role=current_user.role,
-        permissions=sorted(permissions_for(current_user.role)),
+        role=current_user.role_name,
+        permissions=sorted(current_user.permissions),
     )

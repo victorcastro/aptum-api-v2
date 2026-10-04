@@ -3,10 +3,13 @@
 Objects are transient ORM instances (never added to a session), so tests need no database.
 """
 
+from collections.abc import Iterable
 from datetime import date
+from types import SimpleNamespace
 
-from aptum.common.enums import LinkKind
+from aptum.common.enums import LinkKind, UserRole
 from aptum.common.utils import normalize_name, slugify
+from aptum.core.permissions import DEFAULT_ROLE_PERMISSIONS
 from aptum.modules.commons.models import Language
 from aptum.modules.companies.models import Company
 from aptum.modules.profile.models import (
@@ -20,10 +23,43 @@ from aptum.modules.profile.models import (
     ProfileSkill,
     Project,
 )
+from aptum.modules.roles.models import PermissionRecord, Role
 from aptum.modules.skills.categories import classify_skill
 from aptum.modules.skills.models import Skill
 
 _ids = iter(range(1, 1_000_000))
+_role_ids = {UserRole.user: 1, UserRole.moderator: 2, UserRole.admin: 3}
+
+
+def default_codes(role: str) -> frozenset[str]:
+    """What a system role holds out of the box; nothing for any other name."""
+    return frozenset(p.value for p in DEFAULT_ROLE_PERMISSIONS.get(role, frozenset()))
+
+
+def actor(role: str = "user", user_id: int = 1, *, permissions: Iterable[str] | None = None, **fields) -> SimpleNamespace:
+    """An authenticated user as authorization sees it: role name, permissions, admin flag.
+    Permissions default to the system role's defaults."""
+    return SimpleNamespace(
+        id=user_id,
+        email=fields.pop("email", f"u{user_id}@example.com"),
+        is_active=fields.pop("is_active", True),
+        role_name=role,
+        permissions=frozenset(default_codes(role) if permissions is None else permissions),
+        is_admin=role == UserRole.admin,
+        **fields,
+    )
+
+
+def role(name: str, codes: Iterable[str] | None = None, *, role_id: int | None = None, is_system: bool | None = None) -> Role:
+    """A transient Role with its permission rows. System roles get their default permissions."""
+    codes = default_codes(name) if codes is None else codes
+    return Role(
+        id=role_id if role_id is not None else _role_ids.get(name, next(_ids)),
+        name=name,
+        description="",
+        is_system=name in set(UserRole) if is_system is None else is_system,
+        permissions=[PermissionRecord(code=code, description=code) for code in sorted(codes)],
+    )
 
 
 def company(name: str) -> Company:
