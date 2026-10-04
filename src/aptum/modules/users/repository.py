@@ -51,7 +51,7 @@ class UserRepository:
     def get_by_email_for_update(self, email: str) -> User | None:
         return self.db.scalars(select(User).where(User.email == email).with_for_update()).first()
 
-    def create(self, email: str, firebase_uid: str) -> User:
+    def create(self, email: str, firebase_uid: str | None) -> User:
         """No commit. Flushes for the id; a duplicate email or uid raises IntegrityError here."""
         user = User(email=email, firebase_uid=firebase_uid)
         self.db.add(user)

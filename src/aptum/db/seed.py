@@ -1,13 +1,25 @@
-"""Populate the local DB with a demo CV.
+"""Populate the local DB with one test user per role and data to try what each role can do.
 
-    uv run python -m aptum.db.seed [--firebase-uid <uid>] [--email you@example.com] [--reset] [--pdf cv.pdf] [--role admin]
+    uv run python -m aptum.db.seed [--reset] [--pdf cv.pdf]
 
-Attaches the demo CV to the local user linked to that Firebase uid (default: the test user) (created if missing), so logging
-in with that Firebase user shows the data. Pass --email with the Firebase user's email to keep it in sync. Refuses to touch a profile that already has CV data
-unless --reset is passed. --role sets that user's role (audited, like the users CLI). Local development only.
+Local development only. Idempotent: rows are looked up by email, uid, slug or normalized name
+before being created, so it can run again at any time.
+
+- user@aptum.test (user): a full demo CV. Kept as is when the profile already has CV data,
+  unless --reset replaces it.
+- moderator@aptum.test (moderator): catalog rows to moderate. Skills with typos or duplicates
+  ("Pyhton", "ReactJS"), a misspelled industry ("Bankng"), and companies created by the user:
+  "Acme Startup" (unused: the user may edit it, a moderator may delete it) and "BCP" (used by
+  the user's CV: the user gets 403 on edit, a moderator may edit it).
+- admin@aptum.test (admin): "BCP" duplicates "Banco de Credito del Peru" and is in use, to
+  merge. Two extra users without a Firebase account (one inactive) to change roles and status,
+  and the role changes made here are already in the audit log.
+
+The three role users must exist in Firebase with these uids (and a verified email) to log in.
 """
 
 import argparse
+from dataclasses import dataclass
 from datetime import date
 
 from sqlalchemy.orm import Session
@@ -43,11 +55,35 @@ from aptum.modules.users.admin_service import UserAdminService
 from aptum.modules.users.models import User
 from aptum.modules.users.repository import UserRepository
 
-DEFAULT_EMAIL = "victor@castro.com"
-DEFAULT_FIREBASE_UID = "Hez0o0kRJZbHuL5FBvYKD35RcK02"
+
+@dataclass(frozen=True)
+class SeedUser:
+    role: UserRole
+    email: str
+    firebase_uid: str | None
+    first_name: str
+    last_name: str
+    headline: str
+    is_active: bool = True
 
 
-def _company(db: Session, name: str, industry: str | None, *, consultancy: bool = False) -> Company:
+# Firebase accounts of the test project. Admin first, so there is always an active admin.
+ROLE_USERS = (
+    SeedUser(UserRole.admin, "admin@aptum.test", "tNUaTkwhXOMHTdxxhUg9XgtO9ig2", "Lucia", "Vargas", "Platform Admin"),
+    SeedUser(UserRole.moderator, "moderator@aptum.test", "nOkwOStcBocex7EHgeXkcdccKnm2", "Mateo", "Rojas", "Catalog Moderator"),
+    SeedUser(UserRole.user, "user@aptum.test", "cO7ewzLE1tcCWEMsaEZCPyxUHts2", "Ana", "Torres", "Senior Backend Engineer"),
+)  # fmt: skip
+
+# No Firebase account: they only show up in /admin/users, to change their role or status.
+EXTRA_USERS = (
+    SeedUser(UserRole.user, "candidate@aptum.test", None, "Diego", "Paredes", "Data Engineer"),
+    SeedUser(UserRole.user, "inactive@aptum.test", None, "Sofia", "Mendoza", "QA Engineer", is_active=False),
+)
+
+
+def _company(
+    db: Session, name: str, industry: str | None, *, consultancy: bool = False, created_by: int | None = None
+) -> Company:
     normalized = normalize_name(name)
     company = db.query(Company).filter(Company.normalized_name == normalized).first()
     if company is None:
@@ -57,36 +93,74 @@ def _company(db: Session, name: str, industry: str | None, *, consultancy: bool 
             normalized_name=normalized,
             industry_id=industry_row.id if industry_row else None,
             is_consultancy=consultancy,
+            created_by_user_id=created_by,
         )
         db.add(company)
         db.flush()
     return company
 
 
-def _skill(db: Session, name: str) -> Skill:
+def _skill(db: Session, name: str, created_by: int | None = None) -> Skill:
     slug = slugify(name)
     skill = db.query(Skill).filter(Skill.slug == slug).first()
     if skill is None:
-        skill = Skill(name=name, slug=slug)
+        skill = Skill(name=name, slug=slug, created_by_user_id=created_by)
         db.add(skill)
         db.flush()
     return skill
 
 
-def _get_user(db: Session, firebase_uid: str, email: str | None) -> User:
+def _industry(db: Session, name: str) -> Industry:
+    slug = slugify(name)
+    industry = db.query(Industry).filter(Industry.slug == slug).first()
+    if industry is None:
+        industry = Industry(name=name, slug=slug)
+        db.add(industry)
+        db.flush()
+    return industry
+
+
+def _user(db: Session, seed_user: SeedUser) -> User:
+    """Find by Firebase uid, then by email (linking the uid), else create it with its profile."""
     users = UserRepository(db)
-    user = users.get_by_firebase_uid(firebase_uid)
+    user = users.get_by_firebase_uid(seed_user.firebase_uid) if seed_user.firebase_uid else None
+    user = user or users.get_by_email(seed_user.email)
     if user is None:
-        existing = users.get_by_email(email) if email else None
-        if existing:
-            return users.link_firebase_uid(existing, firebase_uid)
-        return users.create(email or DEFAULT_EMAIL, firebase_uid)
-    if email and user.email != email:
-        if users.get_by_email(email) is not None:
-            raise SystemExit(f"Another local user already has the email {email}.")
-        user.email = email
-        db.commit()
+        user = users.create(seed_user.email, seed_user.firebase_uid)
+    else:
+        user.email = seed_user.email
+        user.firebase_uid = seed_user.firebase_uid or user.firebase_uid
+    profiles = ProfileRepository(db)
+    profile = profiles.get_by_user_id(user.id) or profiles.create(user.id)
+    profile.first_name = profile.first_name or seed_user.first_name
+    profile.last_name = profile.last_name or seed_user.last_name
+    profile.headline = profile.headline or seed_user.headline
+    db.commit()
     return user
+
+
+def seed_users(db: Session) -> dict[str, User]:
+    """Every seed user, by email. Roles go through the audited operator path (an entry only on a
+    change); `is_active` is set directly, as a fixture."""
+    admin = UserAdminService(db)
+    seeded = {}
+    for seed_user in (*ROLE_USERS, *EXTRA_USERS):
+        user = _user(db, seed_user)
+        user = admin.set_role_by_operator(user.email, seed_user.role)
+        if user.is_active != seed_user.is_active:
+            user.is_active = seed_user.is_active
+            db.commit()
+        seeded[user.email] = user
+    return seeded
+
+
+def seed_catalog(db: Session, user: User) -> None:
+    """Rows for the moderator to fix. "BCP" is created with the demo CV, which uses it."""
+    _skill(db, "Pyhton", created_by=user.id)
+    _skill(db, "ReactJS", created_by=user.id)
+    _industry(db, "Bankng")
+    _company(db, "Acme Startup", "Software Development", created_by=user.id)
+    db.commit()
 
 
 def _has_data(profile: Profile) -> bool:
@@ -103,12 +177,13 @@ def _has_data(profile: Profile) -> bool:
     )
 
 
-def seed(db: Session, firebase_uid: str, email: str | None, reset: bool) -> Profile:
-    user = _get_user(db, firebase_uid, email)
-    profile = ProfileRepository(db).get_by_user_id(user.id) or ProfileRepository(db).create(user.id)
+def seed_demo_cv(db: Session, user: User, reset: bool) -> Profile | None:
+    """The demo CV on the user's profile. None (nothing touched) when it already has CV data
+    and `reset` is false."""
+    profile = ProfileRepository(db).get_by_user_id(user.id)
     if _has_data(profile):
         if not reset:
-            raise SystemExit("Profile already has CV data. Pass --reset to replace it.")
+            return None
         for collection in (
             profile.experiences,
             profile.educations,
@@ -122,7 +197,9 @@ def seed(db: Session, firebase_uid: str, email: str | None, reset: bool) -> Prof
         db.flush()
 
     ntt = _company(db, "NTT Data", "Information Technology and Services", consultancy=True)
-    bcp = _company(db, "Banco de Credito del Peru", "Banking")
+    _company(db, "Banco de Credito del Peru", "Banking")
+    # Duplicate of the bank, created by the user and used below: the admin merges it.
+    bcp = _company(db, "BCP", "Banking", created_by=user.id)
     rappi = _company(db, "Rappi", "Software Development")
     globant = _company(db, "Globant", "Information Technology and Services", consultancy=True)
     interbank = _company(db, "Interbank", "Banking")
@@ -141,9 +218,6 @@ def seed(db: Session, firebase_uid: str, email: str | None, reset: bool) -> Prof
         _skill(db, "Kafka"),
     )
 
-    profile.first_name = "Ana"
-    profile.last_name = "Torres"
-    profile.headline = "Senior Backend Engineer"
     profile.summary = (
         "Backend engineer with 8 years of experience building APIs and data platforms for "
         "banking and e-commerce. Focused on clean architecture, observability and mentoring."
@@ -298,21 +372,23 @@ def seed(db: Session, firebase_uid: str, email: str | None, reset: bool) -> Prof
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("--firebase-uid", default=DEFAULT_FIREBASE_UID, help=f"Firebase uid of the test user (default {DEFAULT_FIREBASE_UID})")
-    parser.add_argument("--email", help=f"Email of the Firebase user; sets/updates the local user (default {DEFAULT_EMAIL} on create)")
-    parser.add_argument("--reset", action="store_true", help="Replace existing CV data of that profile")
-    parser.add_argument("--pdf", metavar="PATH", help="Also write the rendered CV to this file")
-    parser.add_argument("--role", choices=[role.value for role in UserRole], help="Also set the user's role")
+    parser.add_argument("--reset", action="store_true", help="Replace the demo CV of user@aptum.test")
+    parser.add_argument("--pdf", metavar="PATH", help="Also write the demo CV to this file")
     args = parser.parse_args()
 
     with SessionLocal() as db:
-        profile = seed(db, args.firebase_uid, args.email, args.reset)
-        print(f"Seeded demo CV for user_id={profile.user_id} (profile_id={profile.id})")
-        if args.role:
-            user = UserAdminService(db).set_role_by_operator(
-                UserRepository(db).get_by_id(profile.user_id).email, UserRole(args.role)
-            )
-            print(f"Role of user_id={user.id} set to {user.role}")
+        users = seed_users(db)
+        for user in users.values():
+            state = "active" if user.is_active else "inactive"
+            print(f"user_id={user.id} {user.email} role={user.role} {state}")
+        cv_user = users["user@aptum.test"]
+        seed_catalog(db, cv_user)
+        profile = seed_demo_cv(db, cv_user, args.reset)
+        if profile is None:
+            profile = ProfileRepository(db).get_by_user_id(cv_user.id)
+            print("Demo CV already there (pass --reset to replace it)")
+        else:
+            print(f"Seeded demo CV for user_id={cv_user.id} (profile_id={profile.id})")
         if args.pdf:
             with open(args.pdf, "wb") as file:
                 file.write(render_cv_pdf(profile))

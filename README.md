@@ -42,8 +42,18 @@ Create the first admin (the user must have logged in once), then manage roles fr
 
 ```bash
 uv run python -m aptum.modules.users.cli set-role --email you@example.com --role admin
-uv run python -m aptum.db.seed --role admin             # local: demo CV + admin role
 ```
+
+New users always get the `user` role.
+
+Locally, `uv run python -m aptum.db.seed [--reset]` creates one test user per role, linked to
+their Firebase accounts, with data to try each role (see the module docstring):
+
+| Email | Role | Data |
+|---|---|---|
+| `user@aptum.test` | user | Full demo CV; created "Acme Startup" (editable) and "BCP" (in use) |
+| `moderator@aptum.test` | moderator | Catalog to fix: skills "Pyhton", "ReactJS", industry "Bankng" |
+| `admin@aptum.test` | admin | "BCP" to merge into "Banco de Credito del Peru"; `candidate@` and `inactive@` to manage |
 
 Every privileged change (company edit/merge/delete, skill and industry changes, role and
 active changes) is written to `audit_logs` in the same transaction, readable through
