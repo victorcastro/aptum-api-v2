@@ -13,15 +13,16 @@ from sqlalchemy import (
     Text,
     UniqueConstraint,
     false,
+    text,
     true,
 )
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from aptum.common.constants import EMBEDDING_DIM
 from aptum.common.enums import (
     EmploymentType,
     ExperienceArea,
-    LinkKind,
     SkillCategory,
     SkillLevel,
     WorkAuthorization,
@@ -60,16 +61,15 @@ class Profile(TimestampMixin, Base):
     region: Mapped[str | None] = mapped_column(String(120), default=None)
     country_code: Mapped[str | None] = mapped_column(String(2), default=None)
     preferred_template: Mapped[str | None] = mapped_column(String(40), default=None)
-    linkedin_url: Mapped[str | None] = mapped_column(String(500), default=None)
-    github_url: Mapped[str | None] = mapped_column(String(500), default=None)
-    portfolio_url: Mapped[str | None] = mapped_column(String(500), default=None)
+    # Header links of the CV, in print order: [{"kind", "label", "url", "visible"}].
+    # Validated by `ProfileLink` in the schemas; always written as a whole list.
+    links: Mapped[list[dict]] = mapped_column(JSONB, default=list, server_default=text("'[]'::jsonb"))
     work_authorization: Mapped[str | None] = mapped_column(String(32), default=None)
     # Country the authorization (or the relocation target) refers to; ISO 3166-1 alpha-2.
     work_authorization_country: Mapped[str | None] = mapped_column(String(2), default=None)
     open_to_relocation: Mapped[bool] = mapped_column(Boolean, default=False, server_default=false())
     embedding: Mapped[list[float] | None] = mapped_column(Vector(EMBEDDING_DIM), nullable=True)
 
-    links: Mapped[list["ProfileLink"]] = relationship(back_populates="profile", **_OWNED)
     experiences: Mapped[list["Experience"]] = relationship(
         back_populates="profile",
         order_by="Experience.start_date.desc()",
@@ -88,20 +88,6 @@ class Profile(TimestampMixin, Base):
         back_populates="profile", **_OWNED
     )
     projects: Mapped[list["Project"]] = relationship(back_populates="profile", **_OWNED)
-
-
-class ProfileLink(Base):
-    __tablename__ = "profile_links"
-
-    id: Mapped[int] = mapped_column(primary_key=True)
-    profile_id: Mapped[int] = mapped_column(
-        ForeignKey("profiles.id", ondelete="CASCADE"), index=True
-    )
-    kind: Mapped[LinkKind] = mapped_column(Enum(LinkKind, name="link_kind"))
-    url: Mapped[str] = mapped_column(String(500))
-    label: Mapped[str | None] = mapped_column(String(120), default=None)
-
-    profile: Mapped["Profile"] = relationship(back_populates="links")
 
 
 class ProfileLanguage(Base):

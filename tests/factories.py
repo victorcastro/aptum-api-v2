@@ -7,7 +7,7 @@ from collections.abc import Iterable
 from datetime import date
 from types import SimpleNamespace
 
-from aptum.common.enums import LinkKind, UserRole
+from aptum.common.enums import UserRole
 from aptum.common.utils import normalize_name, slugify
 from aptum.core.permissions import DEFAULT_ROLE_PERMISSIONS
 from aptum.modules.commons.models import Language
@@ -19,7 +19,6 @@ from aptum.modules.profile.models import (
     ExperienceFunction,
     Profile,
     ProfileLanguage,
-    ProfileLink,
     ProfileSkill,
     Project,
 )
@@ -122,6 +121,10 @@ def base_profile(**fields) -> Profile:
         "city": "Toronto",
         "region": "Ontario",
         "country_code": "CA",
+        "links": [
+            {"kind": "linkedin", "label": "LinkedIn", "url": "https://www.linkedin.com/in/example-alex", "visible": True},
+            {"kind": "github", "label": "GitHub", "url": "https://github.com/example-alex", "visible": True},
+        ],
     }
     profile = Profile(id=next(_ids), user_id=next(_ids), **{**defaults, **fields})
     profile.experiences = [
@@ -196,10 +199,6 @@ def base_profile(**fields) -> Profile:
     ]
     profile.projects = [
         Project(id=next(_ids), name="Open-source CLI", description="A small CLI for prompt testing.", is_active=True)
-    ]
-    profile.links = [
-        ProfileLink(id=next(_ids), kind=LinkKind.github, url="https://github.com/example-alex"),
-        ProfileLink(id=next(_ids), kind=LinkKind.linkedin, url="https://www.linkedin.com/in/example-alex"),
     ]
     profile.languages = [
         profile_language("es", "Spanish", "Native"),

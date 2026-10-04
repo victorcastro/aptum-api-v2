@@ -6,7 +6,6 @@ from aptum.modules.profile.models import (
     Certification,
     Education,
     ProfileLanguage,
-    ProfileLink,
     ProfileSkill,
     Project,
 )
@@ -23,9 +22,6 @@ from aptum.modules.profile.schemas import (
     LanguageCreate,
     LanguageRead,
     LanguageUpdate,
-    ProfileLinkCreate,
-    ProfileLinkRead,
-    ProfileLinkUpdate,
     ProfileRead,
     ProfileSkillCreate,
     ProfileSkillRead,
@@ -204,43 +200,6 @@ def delete_project(
     db: Session = Depends(get_db),
 ) -> Response:
     ProfileService(db).delete_row(current_user.id, Project, project_id)
-    return Response(status_code=204)
-
-
-@router.get("/me/links", response_model=list[ProfileLinkRead])
-def list_links(
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db),
-):
-    return ProfileService(db).list_rows(current_user.id, ProfileLink)
-
-
-@router.post("/me/links", response_model=ProfileLinkRead, status_code=201)
-def add_link(
-    data: ProfileLinkCreate,
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db),
-):
-    return ProfileService(db).add_row(current_user.id, ProfileLink, data)
-
-
-@router.patch("/me/links/{link_id}", response_model=ProfileLinkRead)
-def update_link(
-    link_id: int,
-    data: ProfileLinkUpdate,
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db),
-):
-    return ProfileService(db).update_row(current_user.id, ProfileLink, link_id, data)
-
-
-@router.delete("/me/links/{link_id}", status_code=204)
-def delete_link(
-    link_id: int,
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db),
-) -> Response:
-    ProfileService(db).delete_row(current_user.id, ProfileLink, link_id)
     return Response(status_code=204)
 
 

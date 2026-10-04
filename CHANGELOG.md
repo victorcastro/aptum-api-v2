@@ -4,6 +4,40 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 and the project follows [Semantic Versioning](https://semver.org/).
 
+## [1.3.0] - Unreleased
+
+Schema changes are in migration `0004_release_1_3_0`.
+
+### Removed
+
+- Breaking: the profile links feature. Endpoints `GET/POST /profile/me/links` and
+  `PATCH/DELETE /profile/me/links/{link_id}`, the `profile_links` table and the `link_kind`
+  enum. Existing rows are dropped, not migrated.
+- Breaking: `linkedin_url`, `github_url` and `portfolio_url` on the profile. The migration
+  copies them into `links`.
+
+### Added
+
+- `links` on the profile (`PATCH /profile`, `GET /profile`): the CV header links as one JSON
+  list, in print order, `[{"kind", "label", "url", "visible"}]`. `kind` is `portfolio`,
+  `linkedin`, `github` or `other`; `visible: false` hides the link on the CV without losing it.
+  Up to 10 links, http(s) URLs, `linkedin`/`github` must match their host, one link per kind
+  except `other`. The list is replaced as a whole on every update.
+- `basic` CV template (the ATS layout) is now listed by `GET /cv/templates`, first, and can be
+  saved as the default with `PATCH /cv/settings` or requested with `?template=basic`.
+
+### Changed
+
+- `GET /cv/export` without `?template=` now uses the user's saved template, and `basic` when none
+  is saved (before, it always rendered the ATS layout and ignored the saved preference). Users
+  who saved `software-engineer` through `PATCH /cv/settings` now get that layout by default.
+- `GET /cv/settings` reports `basic` as the default template (was `software-engineer`).
+- CV templates (software-engineer and ATS) print the visible `links` in the saved order.
+- software-engineer template: header is now name, tagline, one line of contact data, and a line of
+  full URLs (clickable). Smaller name and a navy accent on the
+  name, links and section headings, softer gray for secondary text and rules. Still standard
+  Helvetica, single column, no images or tables.
+
 ## [1.2.0] - 2026-10-04
 
 Roles and permissions move from code to tables, so admins can create roles and choose what
