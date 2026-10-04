@@ -14,7 +14,6 @@ from pydantic import (
 from aptum.common.enums import (
     EmploymentType,
     ExperienceArea,
-    LinkKind,
     SkillCategory,
     SkillLevel,
     WorkAuthorization,
@@ -210,29 +209,6 @@ class LanguageRead(LanguageCreate):
     id: int
 
 
-class ProfileLinkCreate(BaseModel):
-    kind: LinkKind
-    url: HttpUrlStr
-    label: Annotated[str, Field(max_length=120)] | None = None
-
-
-class ProfileLinkUpdate(PartialUpdate):
-    non_nullable = ("kind", "url")
-
-    kind: LinkKind | None = None
-    url: HttpUrlStr | None = None
-    label: Annotated[str, Field(max_length=120)] | None = None
-
-
-class ProfileLinkRead(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
-
-    id: int
-    kind: LinkKind
-    url: str
-    label: str | None
-
-
 class ProfileSkillCreate(BaseModel):
     skill_id: int
     level: SkillLevel | None = None
@@ -399,7 +375,6 @@ class ProfileRead(BaseModel):
     work_authorization: WorkAuthorization | None = None
     work_authorization_country: str | None = None
     open_to_relocation: bool = False
-    links: list[ProfileLinkRead] = []
     experiences: list[ExperienceRead] = []
     educations: list[EducationRead] = []
     languages: list[LanguageRead] = []

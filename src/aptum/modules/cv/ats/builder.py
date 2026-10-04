@@ -2,7 +2,6 @@
 
 from aptum.common.countries import country_name
 from aptum.common.enums import (
-    LinkKind,
     WorkAuthorization,
 )
 from aptum.modules.cv.ats.document import (
@@ -19,16 +18,8 @@ from aptum.modules.profile.models import Education, Profile
 
 
 def header_links(profile: Profile) -> list[str]:
-    """LinkedIn, GitHub, Portfolio as plain URLs: the profile fields first, then the
-    matching entries of the links list when a field is empty."""
-    by_kind: dict[LinkKind, str] = {}
-    for link in profile.links:
-        by_kind.setdefault(link.kind, link.url)
-    urls = [
-        profile.linkedin_url or by_kind.get(LinkKind.linkedin),
-        profile.github_url or by_kind.get(LinkKind.github),
-        profile.portfolio_url or by_kind.get(LinkKind.portfolio) or by_kind.get(LinkKind.website),
-    ]
+    """LinkedIn, GitHub, Portfolio as plain URLs, from the profile fields."""
+    urls = (profile.linkedin_url, profile.github_url, profile.portfolio_url)
     return list(dict.fromkeys(url for url in urls if url))
 
 

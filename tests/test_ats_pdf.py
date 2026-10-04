@@ -55,12 +55,6 @@ def test_work_authorization_line_absent_when_not_set():
     assert "Authorized" not in text and "sponsorship" not in text and "relocation" not in text
 
 
-def test_profile_link_fields_override_links_list():
-    profile = _profile(github_url="https://github.com/other-handle")
-    text = pdf_text(generate_ats_cv(profile, today=TODAY).pdf)
-    assert "https://github.com/other-handle" in text and "example-alex | https://github.com/example-alex" not in text
-
-
 def test_dates_are_consistent_mon_yyyy():
     lines = _lines(generate_ats_cv(_profile(), today=TODAY).pdf)
     date_lines = [line for line in lines if re.search(r"\b(19|20)\d{2}\b", line) and " - " in line and len(line) < 25]

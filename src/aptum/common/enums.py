@@ -25,14 +25,6 @@ class SkillLevel(StrEnum):
     expert = "expert"
 
 
-class LinkKind(StrEnum):
-    linkedin = "linkedin"
-    github = "github"
-    portfolio = "portfolio"
-    website = "website"
-    other = "other"
-
-
 class SkillCategory(StrEnum):
     """CV skill groups, in the order the CV prints them. Values are what gets stored and printed."""
 

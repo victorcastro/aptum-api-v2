@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from datetime import date
 
 from aptum.common.countries import country_name
-from aptum.common.enums import LinkKind, SkillCategory
+from aptum.common.enums import SkillCategory
 from aptum.modules.cv.ats.builder import language_lines, work_authorization_line
 from aptum.modules.profile.models import Profile
 
@@ -70,14 +70,6 @@ class CVDocument:
     projects: tuple[ProjectEntry, ...]
 
 
-_LINK_LABELS = {
-    LinkKind.linkedin: "LinkedIn",
-    LinkKind.github: "GitHub",
-    LinkKind.portfolio: "Portfolio",
-    LinkKind.website: "Website",
-}
-
-
 def _month(value: date | None) -> str:
     return value.strftime("%b %Y") if value else ""
 
@@ -105,8 +97,13 @@ def build_cv_data(profile: Profile) -> CVDocument:
     full_name = " ".join(part for part in (profile.first_name, profile.last_name) if part)
     location = ", ".join(x for x in (profile.city, profile.region, country_name(profile.country_code)) if x)
     links = tuple(
-        LinkEntry(_LINK_LABELS.get(link.kind) or link.label or "Link", link.url)
-        for link in sorted(profile.links, key=lambda link: link.kind != LinkKind.linkedin)
+        LinkEntry(label, url)
+        for label, url in (
+            ("LinkedIn", profile.linkedin_url),
+            ("GitHub", profile.github_url),
+            ("Portfolio", profile.portfolio_url),
+        )
+        if url
     )
     contact = " | ".join(x for x in (profile.contact_email, profile.phone, location) if x)
 
@@ -149,7 +146,7 @@ def build_cv_data(profile: Profile) -> CVDocument:
         full_name=full_name or "Curriculum Vitae",
         headline=profile.headline or None,
         contact_line=contact or None,
-        links_line=" | ".join(link.url for link in profile.links) if profile.links else None,
+        links_line=" | ".join(link.url for link in links) or None,
         location=", ".join(x for x in (profile.city, country_name(profile.country_code)) if x) or None,
         phone=profile.phone or None,
         email=profile.contact_email or None,

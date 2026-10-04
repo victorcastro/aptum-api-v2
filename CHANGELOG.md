@@ -6,9 +6,18 @@ and the project follows [Semantic Versioning](https://semver.org/).
 
 ## [1.3.0] - Unreleased
 
-### Added
+Schema changes are in migration `0004_release_1_3_0`.
 
-- Pending.
+### Removed
+
+- Breaking: the profile links feature. Endpoints `GET/POST /profile/me/links` and
+  `PATCH/DELETE /profile/me/links/{link_id}`, the `links` field of the profile response, the
+  `profile_links` table and the `link_kind` enum. Use `linkedin_url`, `github_url` and
+  `portfolio_url` on the profile. Existing link rows are dropped, not migrated.
+
+### Changed
+
+- CV templates read LinkedIn, GitHub and Portfolio from the profile fields only.
 
 ## [1.2.0] - 2026-10-04
 

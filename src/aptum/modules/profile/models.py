@@ -21,7 +21,6 @@ from aptum.common.constants import EMBEDDING_DIM
 from aptum.common.enums import (
     EmploymentType,
     ExperienceArea,
-    LinkKind,
     SkillCategory,
     SkillLevel,
     WorkAuthorization,
@@ -69,7 +68,6 @@ class Profile(TimestampMixin, Base):
     open_to_relocation: Mapped[bool] = mapped_column(Boolean, default=False, server_default=false())
     embedding: Mapped[list[float] | None] = mapped_column(Vector(EMBEDDING_DIM), nullable=True)
 
-    links: Mapped[list["ProfileLink"]] = relationship(back_populates="profile", **_OWNED)
     experiences: Mapped[list["Experience"]] = relationship(
         back_populates="profile",
         order_by="Experience.start_date.desc()",
@@ -88,20 +86,6 @@ class Profile(TimestampMixin, Base):
         back_populates="profile", **_OWNED
     )
     projects: Mapped[list["Project"]] = relationship(back_populates="profile", **_OWNED)
-
-
-class ProfileLink(Base):
-    __tablename__ = "profile_links"
-
-    id: Mapped[int] = mapped_column(primary_key=True)
-    profile_id: Mapped[int] = mapped_column(
-        ForeignKey("profiles.id", ondelete="CASCADE"), index=True
-    )
-    kind: Mapped[LinkKind] = mapped_column(Enum(LinkKind, name="link_kind"))
-    url: Mapped[str] = mapped_column(String(500))
-    label: Mapped[str | None] = mapped_column(String(120), default=None)
-
-    profile: Mapped["Profile"] = relationship(back_populates="links")
 
 
 class ProfileLanguage(Base):
