@@ -1,7 +1,7 @@
 [project]
 name = "aptum-api"
 version = "1.2.0"
-description = "Add your description here"
+description = "Aptum backend: CV profiles, ATS-friendly CV generation and job matching, with role-based access control."
 readme = "README.md"
 authors = [
     { name = "Victor Castro", email = "victorcastro.io@icloud.com" }
@@ -35,7 +35,6 @@ dev = [
 ]
 
 [tool.ruff.lint.flake8-bugbear]
-# FastAPI dependency markers are meant to be called in argument defaults.
 extend-immutable-calls = [
     "fastapi.Depends",
     "fastapi.Query",
