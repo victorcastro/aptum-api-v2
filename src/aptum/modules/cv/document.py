@@ -99,7 +99,7 @@ def build_cv_data(profile: Profile) -> CVDocument:
     links = tuple(
         LinkEntry(label, url)
         for label, url in (
-            ("LinkedIn", profile.linkedin_url),
+            (profile.linkedin_url, profile.linkedin_url),
             ("GitHub", profile.github_url),
             ("Portfolio", profile.portfolio_url),
         )

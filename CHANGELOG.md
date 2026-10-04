@@ -18,6 +18,7 @@ Schema changes are in migration `0004_release_1_3_0`.
 ### Changed
 
 - CV templates read LinkedIn, GitHub and Portfolio from the profile fields only.
+- software-engineer template prints the full LinkedIn URL instead of the word "LinkedIn" (still a clickable link).
 
 ## [1.2.0] - 2026-10-04
 
