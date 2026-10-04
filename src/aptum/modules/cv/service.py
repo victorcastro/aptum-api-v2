@@ -19,6 +19,7 @@ from aptum.modules.cv.schemas import (
     YearsOfExperienceOut,
 )
 from aptum.modules.cv.templates.registry import (
+    BASIC_TEMPLATE,
     DEFAULT_TEMPLATE,
     get_template,
     has_template,
@@ -35,15 +36,15 @@ class CVService:
     def export_pdf(self, user_id: int, template_id: str | None = None) -> tuple[bytes, str]:
         """Render the authenticated user's own profile; the profile is always resolved by user_id.
         An explicit template applies to this download only, without touching the saved preference.
-        Returns the PDF bytes and the download filename.
-
-        Without an explicit template the ATS pipeline renders it (the saved template
-        preference no longer applies to the default download)."""
+        Without one, the user's saved preference applies, or the default (basic) when unset.
+        The basic template is rendered by the ATS pipeline. Returns the PDF bytes and the
+        download filename."""
         profile = self.profiles.get_or_create(user_id)
-        if template_id is None:
+        chosen = template_id if template_id is not None else self._effective_template(profile)
+        if chosen == BASIC_TEMPLATE:
             result = generate_ats_cv(profile)
             return result.pdf, self._filename(result.document.full_name)
-        template = get_template(template_id)
+        template = get_template(chosen)
         doc = build_cv_data(profile)
         return template.render(doc), self._filename(doc.full_name)
 

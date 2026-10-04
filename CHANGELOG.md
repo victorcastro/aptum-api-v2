@@ -15,8 +15,17 @@ Schema changes are in migration `0004_release_1_3_0`.
   `profile_links` table and the `link_kind` enum. Use `linkedin_url`, `github_url` and
   `portfolio_url` on the profile. Existing link rows are dropped, not migrated.
 
+### Added
+
+- `basic` CV template (the ATS layout) is now listed by `GET /cv/templates`, first, and can be
+  saved as the default with `PATCH /cv/settings` or requested with `?template=basic`.
+
 ### Changed
 
+- `GET /cv/export` without `?template=` now uses the user's saved template, and `basic` when none
+  is saved (before, it always rendered the ATS layout and ignored the saved preference). Users
+  who saved `software-engineer` through `PATCH /cv/settings` now get that layout by default.
+- `GET /cv/settings` reports `basic` as the default template (was `software-engineer`).
 - CV templates read LinkedIn, GitHub and Portfolio from the profile fields only.
 - software-engineer template: header is now name, tagline, one line of contact data, and a line of
   full URLs (Portfolio | LinkedIn | GitHub, clickable). Smaller name and a navy accent on the

@@ -1,4 +1,4 @@
-"""CV endpoints: the ATS pipeline is the default; legacy templates only on explicit request.
+"""CV endpoints: basic (the ATS pipeline) is the default; the saved preference or `?template=` picks another.
 
 The golden files were produced by the 1.0.0 code from the same synthetic profile, so they pin
 the legacy templates' output for `?template=`. Since 1.1.0 the skills are grouped by
@@ -36,12 +36,54 @@ def client(profile):
     app.dependency_overrides.clear()
 
 
-def test_default_export_is_ats_even_with_a_saved_template(client, profile):
-    profile.preferred_template = "software-engineer"
+def test_default_export_is_basic_without_a_saved_template(client):
     response = client.get("/cv/export")
     assert response.status_code == 200
     text = pdf_text(response.content)
     assert "LLMs & AI: OpenAI API, RAG" in text and "TECHNICAL SKILLS" not in text
+
+
+def test_default_export_uses_the_saved_template(client, profile):
+    profile.preferred_template = "software-engineer"
+    text = pdf_text(client.get("/cv/export").content)
+    assert text == (GOLDEN / "legacy_software-engineer.txt").read_text()
+
+
+def test_explicit_template_overrides_the_saved_one(client, profile):
+    profile.preferred_template = "software-engineer"
+    text = pdf_text(client.get("/cv/export", params={"template": "basic"}).content)
+    assert "LLMs & AI: OpenAI API, RAG" in text and "TECHNICAL SKILLS" not in text
+
+
+def test_templates_list_basic_first_and_selected_by_default(client):
+    templates = client.get("/cv/templates").json()
+    assert [t["id"] for t in templates] == ["basic", "software-engineer"]
+    assert [t["selected"] for t in templates] == [True, False]
+
+
+def test_saved_template_is_the_selected_one(client, profile):
+    profile.preferred_template = "software-engineer"
+    templates = client.get("/cv/templates").json()
+    assert [(t["id"], t["selected"]) for t in templates] == [("basic", False), ("software-engineer", True)]
+    assert client.get("/cv/settings").json() == {"template_id": "software-engineer"}
+
+
+def test_basic_can_be_saved_as_the_default(client, profile, monkeypatch):
+    profile.preferred_template = "software-engineer"
+
+    def save(self, saved_profile, template_id):
+        saved_profile.preferred_template = template_id
+        return saved_profile
+
+    monkeypatch.setattr(ProfileService, "set_preferred_template", save)
+    response = client.patch("/cv/settings", json={"template_id": "basic"})
+    assert response.status_code == 200
+    assert response.json() == {"template_id": "basic"}
+    assert profile.preferred_template == "basic"
+
+
+def test_saving_an_unknown_template_is_404(client):
+    assert client.patch("/cv/settings", json={"template_id": "nope"}).status_code == 404
 
 
 def test_explicit_template_renders_the_legacy_layout_unchanged(client):

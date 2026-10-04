@@ -4,7 +4,8 @@ from aptum.core.exceptions import NotFoundError
 from aptum.modules.cv.templates.base import CVTemplate
 from aptum.modules.cv.templates.software_engineer import SoftwareEngineerTemplate
 
-DEFAULT_TEMPLATE = "software-engineer"
+BASIC_TEMPLATE = "basic"
+DEFAULT_TEMPLATE = BASIC_TEMPLATE
 
 
 @dataclass(frozen=True)
@@ -13,6 +14,13 @@ class TemplateInfo:
     name: str
     description: str
 
+
+_BASIC_INFO = TemplateInfo(
+    BASIC_TEMPLATE,
+    "Basic",
+    "One column, standard headings, at most 2 pages. Reads well in the applicant tracking systems "
+    "used in the US, UK, Canada and Australia.",
+)
 
 _TEMPLATES: dict[str, tuple[TemplateInfo, CVTemplate]] = {
     "software-engineer": (
@@ -27,11 +35,11 @@ _TEMPLATES: dict[str, tuple[TemplateInfo, CVTemplate]] = {
 
 
 def list_templates() -> list[TemplateInfo]:
-    return [info for info, _ in _TEMPLATES.values()]
+    return [_BASIC_INFO, *(info for info, _ in _TEMPLATES.values())]
 
 
 def has_template(template_id: str) -> bool:
-    return template_id in _TEMPLATES
+    return template_id == BASIC_TEMPLATE or template_id in _TEMPLATES
 
 
 def get_template(template_id: str) -> CVTemplate:
