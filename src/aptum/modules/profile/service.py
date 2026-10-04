@@ -12,7 +12,6 @@ from aptum.modules.profile.models import (
     Experience,
     Profile,
     ProfileLanguage,
-    ProfileLink,
     ProfileSkill,
     Project,
 )
@@ -33,7 +32,6 @@ _LABELS = {
     Education: "Education",
     Certification: "Certification",
     Project: "Project",
-    ProfileLink: "Link",
     ProfileLanguage: "Language",
     ProfileSkill: "Skill",
 }
@@ -42,7 +40,6 @@ _ORDER = {
     Education: (Education.end_date.desc().nulls_first(), Education.id),
     Certification: (Certification.issue_date.desc().nulls_last(), Certification.id),
     Project: (Project.start_date.desc().nulls_last(), Project.id),
-    ProfileLink: (ProfileLink.id,),
     ProfileLanguage: (ProfileLanguage.id,),
     ProfileSkill: (ProfileSkill.id,),
 }

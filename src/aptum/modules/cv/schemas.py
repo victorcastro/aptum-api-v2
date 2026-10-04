@@ -11,7 +11,7 @@ class CVTemplateOut(BaseModel):
 
 
 class CVSettingsRead(BaseModel):
-    """`template_id` is the template `/cv/export` uses by default: the saved one, or `software-engineer`."""
+    """`template_id` is the template `/cv/export` uses by default: the saved one, or `basic`."""
 
     template_id: str
 

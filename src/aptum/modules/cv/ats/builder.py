@@ -2,7 +2,6 @@
 
 from aptum.common.countries import country_name
 from aptum.common.enums import (
-    LinkKind,
     WorkAuthorization,
 )
 from aptum.modules.cv.ats.document import (
@@ -15,21 +14,13 @@ from aptum.modules.cv.ats.document import (
     format_year_range,
 )
 from aptum.modules.cv.ats.skills import select_skills, skill_lines
+from aptum.modules.cv.links import visible_link_urls
 from aptum.modules.profile.models import Education, Profile
 
 
 def header_links(profile: Profile) -> list[str]:
-    """LinkedIn, GitHub, Portfolio as plain URLs: the profile fields first, then the
-    matching entries of the links list when a field is empty."""
-    by_kind: dict[LinkKind, str] = {}
-    for link in profile.links:
-        by_kind.setdefault(link.kind, link.url)
-    urls = [
-        profile.linkedin_url or by_kind.get(LinkKind.linkedin),
-        profile.github_url or by_kind.get(LinkKind.github),
-        profile.portfolio_url or by_kind.get(LinkKind.portfolio) or by_kind.get(LinkKind.website),
-    ]
-    return list(dict.fromkeys(url for url in urls if url))
+    """The visible profile links as plain URLs."""
+    return visible_link_urls(profile)
 
 
 def work_authorization_line(profile: Profile) -> str | None:

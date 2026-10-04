@@ -30,7 +30,6 @@ from sqlalchemy.orm import Session
 from aptum.common.enums import (
     EmploymentType,
     ExperienceArea,
-    LinkKind,
     SkillLevel,
     UserRole,
     WorkAuthorization,
@@ -47,7 +46,6 @@ from aptum.modules.profile.models import (
     ExperienceFunction,
     Profile,
     ProfileLanguage,
-    ProfileLink,
     ProfileSkill,
     Project,
 )
@@ -190,7 +188,6 @@ def _has_data(profile: Profile) -> bool:
             profile.languages,
             profile.certifications,
             profile.projects,
-            profile.links,
         )
     )
 
@@ -209,7 +206,6 @@ def seed_demo_cv(db: Session, user: User, reset: bool) -> Profile | None:
             profile.languages,
             profile.certifications,
             profile.projects,
-            profile.links,
         ):
             collection.clear()
         db.flush()
@@ -244,16 +240,14 @@ def seed_demo_cv(db: Session, user: User, reset: bool) -> Profile | None:
     profile.contact_email = "ana.torres@example.com"
     profile.city = "Lima"
     profile.country_code = "PE"
-    profile.linkedin_url = "https://linkedin.com/in/ana-torres-demo"
-    profile.github_url = "https://github.com/ana-torres-demo"
+    profile.links = [
+        {"kind": "linkedin", "label": "LinkedIn", "url": "https://linkedin.com/in/ana-torres-demo", "visible": True},
+        {"kind": "github", "label": "GitHub", "url": "https://github.com/ana-torres-demo", "visible": True},
+    ]
     profile.work_authorization = WorkAuthorization.requires_sponsorship
     profile.work_authorization_country = "CA"
     profile.open_to_relocation = True
 
-    profile.links = [
-        ProfileLink(kind=LinkKind.linkedin, url="https://linkedin.com/in/ana-torres-demo", label="LinkedIn"),
-        ProfileLink(kind=LinkKind.github, url="https://github.com/ana-torres-demo", label="GitHub"),
-    ]
     profile.experiences = [
         Experience(
             position="Senior Backend Engineer",

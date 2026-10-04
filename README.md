@@ -96,11 +96,11 @@ The ATS CV is the default for every user; there is no switch.
 
 ### What it does
 
-- `GET /cv/export` (no `template` query parameter) renders the ATS PDF: one column, Helvetica,
+- `GET /cv/export` renders the user's default template, which is `basic` unless they saved
+  another with `PATCH /cv/settings`. `basic` is the ATS PDF: one column, Helvetica,
   no tables/images/icons/lines, standard headings (Summary, Experience, Skills, Education,
-  Certifications, Projects, Languages), `Mon YYYY - Mon YYYY` dates, at most 2 pages. The saved
-  template preference no longer applies to it; an explicit `?template=software-engineer`
-  still renders that legacy layout.
+  Certifications, Projects, Languages), `Mon YYYY - Mon YYYY` dates, at most 2 pages. An
+  explicit `?template=<id>` applies to that download only (`basic` or `software-engineer`).
 - `POST /cv/ats/export` with `{"job_description": "..."}` (optional) renders the ATS PDF tailored to
   the offer: offer-relevant skills first (max 25), only skills from the profile.
 - `POST /cv/ats/report` with the same body returns the JSON report of that same CV:
