@@ -10,6 +10,7 @@ from scalar_fastapi import get_scalar_api_reference
 from aptum.core.config import get_settings
 from aptum.core.exceptions import register_exception_handlers
 from aptum.core.logging_config import configure_logging
+from aptum.modules.audit.router import router as audit_router
 from aptum.modules.commons.router import router as commons_router
 from aptum.modules.companies.router import router as companies_router
 from aptum.modules.cv.router import router as cv_router
@@ -55,6 +56,7 @@ app.include_router(companies_router)
 app.include_router(skills_router)
 app.include_router(cv_router)
 app.include_router(matching_router)
+app.include_router(audit_router)
 
 
 class HealthRead(BaseModel):

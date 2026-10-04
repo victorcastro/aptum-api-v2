@@ -116,8 +116,18 @@ def test_upgrade_backfills_and_downgrade_round_trips(engine):
     with engine.begin() as conn, pytest.raises(sa.exc.IntegrityError):
         conn.execute(sa.text("UPDATE users SET role = 'root' WHERE id = 1"))
 
+    with engine.connect() as conn:
+        tables = set(conn.execute(sa.text("SELECT tablename FROM pg_tables WHERE schemaname = 'public'")).scalars())
+    assert "audit_logs" in tables
+
     alembic("check")  # models and migrations agree
     alembic("downgrade", "0001")
+    with engine.connect() as conn:
+        tables = set(conn.execute(sa.text("SELECT tablename FROM pg_tables WHERE schemaname = 'public'")).scalars())
+        user_columns = set(conn.execute(sa.text(
+            "SELECT column_name FROM information_schema.columns WHERE table_name = 'users'"
+        )).scalars())
+    assert "audit_logs" not in tables and "role" not in user_columns
     with engine.connect() as conn:
         positions = conn.execute(sa.text("SELECT position FROM profile_skills ORDER BY id")).scalars().all()
     assert positions == list(range(8))  # rolled back without losing rows; position rebuilt from id order

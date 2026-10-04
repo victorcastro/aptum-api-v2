@@ -64,3 +64,22 @@ class ExperienceArea(StrEnum):
     mobile = "mobile"
     ai = "ai"
     other = "other"
+
+
+class AuditEntity(StrEnum):
+    company = "company"
+    skill = "skill"
+    industry = "industry"
+    user = "user"
+
+
+class AuditAction(StrEnum):
+    company_update = "company.update"
+    company_merge = "company.merge"
+    company_delete = "company.delete"
+    skill_update = "skill.update"
+    industry_create = "industry.create"
+    industry_update = "industry.update"
+    user_role_change = "user.role_change"
+    user_activate = "user.activate"
+    user_deactivate = "user.deactivate"

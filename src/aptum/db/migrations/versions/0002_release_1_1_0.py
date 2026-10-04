@@ -1,4 +1,4 @@
-"""release 1.1.0: skill categories, profile ATS fields, language catalogs, user roles, drop profile_skills.position and experience_functions.position
+"""release 1.1.0: skill categories, profile ATS fields, language catalogs, user roles, audit log, drop profile_skills.position and experience_functions.position
 
 Revision ID: 0002
 Revises: 0001
@@ -12,6 +12,9 @@ All schema changes of release 1.1.0 in one revision:
   work_authorization_country, open_to_relocation (default false).
 - users.role ('user' | 'moderator' | 'admin', default 'user', CHECK on allowed values): RBAC;
   what each role may do lives in aptum/core/permissions.py, not in the database.
+- audit_logs: append-only record of privileged changes (catalog moderation, role and active
+  changes). actor_user_id is SET NULL on user delete; entity_id has no foreign key so entries
+  outlive merged or deleted entities. changes is JSONB with before/after of changed fields.
 - experiences.area; educations.start_year / end_year.
 - profile_skills.position dropped: the CV orders skills by evidence instead.
 - experience_functions.position dropped: responsibilities are raw content kept in insertion order (id).
@@ -34,6 +37,7 @@ from collections.abc import Sequence
 
 import sqlalchemy as sa
 from alembic import op
+from sqlalchemy.dialects import postgresql
 
 from aptum.common.enums import (
     ExperienceArea,
@@ -129,6 +133,25 @@ def upgrade() -> None:
     )
     op.create_check_constraint(op.f('ck_users_role_allowed'), 'users', _in('role', UserRole))
 
+    # Audit log
+    op.create_table(
+        'audit_logs',
+        sa.Column('id', sa.BigInteger(), nullable=False),
+        sa.Column('actor_user_id', sa.Integer(), nullable=True),
+        sa.Column('action', sa.String(length=64), nullable=False),
+        sa.Column('entity_type', sa.String(length=32), nullable=False),
+        sa.Column('entity_id', sa.BigInteger(), nullable=False),
+        sa.Column('changes', postgresql.JSONB(), server_default=sa.text("'{}'::jsonb"), nullable=False),
+        sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
+        sa.ForeignKeyConstraint(
+            ['actor_user_id'], ['users.id'], name=op.f('fk_audit_logs_actor_user_id_users'), ondelete='SET NULL'
+        ),
+        sa.PrimaryKeyConstraint('id', name=op.f('pk_audit_logs')),
+    )
+    op.create_index(op.f('ix_audit_logs_actor_user_id'), 'audit_logs', ['actor_user_id'])
+    op.create_index(op.f('ix_audit_logs_created_at'), 'audit_logs', ['created_at'])
+    op.create_index('ix_audit_logs_entity_type_entity_id', 'audit_logs', ['entity_type', 'entity_id'])
+
     # Skill categories
     op.add_column(
         'profile_skills',
@@ -217,6 +240,7 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
+    op.drop_table('audit_logs')
     op.drop_constraint(op.f('ck_users_role_allowed'), 'users', type_='check')
     op.drop_column('users', 'role')
 
