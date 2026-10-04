@@ -3,7 +3,7 @@ from datetime import date
 
 from aptum.common.countries import country_name
 from aptum.common.enums import LinkKind, SkillCategory
-from aptum.modules.cv.ats.builder import language_lines
+from aptum.modules.cv.ats.builder import language_lines, work_authorization_line
 from aptum.modules.profile.models import Profile
 
 
@@ -59,6 +59,7 @@ class CVDocument:
     phone: str | None
     email: str | None
     links: tuple[LinkEntry, ...]
+    work_authorization_line: str | None
     summary: str | None
     experiences: tuple[ExperienceEntry, ...]
     educations: tuple[EducationEntry, ...]
@@ -153,6 +154,7 @@ def build_cv_data(profile: Profile) -> CVDocument:
         phone=profile.phone or None,
         email=profile.contact_email or None,
         links=links,
+        work_authorization_line=work_authorization_line(profile),
         summary=profile.summary or None,
         experiences=experiences,
         educations=educations,

@@ -43,6 +43,9 @@ Schema changes are in migration `0003_release_1_2_0`.
 - `GET /companies` and `GET /skills`: `q` is optional. Without it they list the whole catalog in
   name order, paged by `limit` (1–100, default 100) and `offset`, for any signed-in user. With
   `q` the search is unchanged (top 20).
+- The `software-engineer` CV template prints the work authorization line (for example `Requires
+  visa sponsorship for Peru | Open to relocation`) inside Summary, in gray and left-aligned,
+  as the default ATS CV already did. The country is optional: without it the line is generic.
 
 ## [1.1.0] - 2026-10-03
 
