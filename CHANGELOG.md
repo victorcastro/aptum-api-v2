@@ -55,12 +55,29 @@ All schema changes are in a single migration, `0002_release_1_1_0`.
   `keyword_coverage`).
 - Duplicate education detection (same institution, overlapping titles) as a warning.
 - Test suite (pytest, synthetic data only), run in CI.
+- Role-based access control: `users.role` (`user` by default, `moderator`, `admin`) and
+  permissions (`core/permissions.py`). `GET /users/me` adds `role` and `permissions`.
+- `can_edit` on `/companies` responses (search, create, update), computed for the caller.
+  `PATCH /companies/{id}`: moderators and admins edit any company; the creator only while no
+  experience uses it (403 when in use, 404 for anyone else).
+- Catalog moderation: `PATCH /skills/{id}`, `POST /companies/industries`,
+  `PATCH /companies/industries/{id}`, `POST /companies/{id}/merge` (admin) and
+  `DELETE /companies/{id}` (unused companies only).
+- User management: `GET /admin/users`, `PATCH /admin/users/{id}/role`,
+  `PATCH /admin/users/{id}/active`. Nobody changes their own role or status, only admins
+  manage admins, and the last active admin cannot be demoted or deactivated.
+- Audit log (`audit_logs`) of privileged changes with before/after values, and
+  `GET /admin/audit-logs`.
+- Operator command `python -m aptum.modules.users.cli set-role` and seeder `--role`
+  to create the first admin.
 
 ### Changed
 
 - `GET /cv/export` without a `template` parameter now renders the ATS PDF for everyone, and the
   saved template preference (`/cv/settings`) no longer applies to it; `?template=` still renders
   the legacy templates.
+- Experiences embed `CompanySummary` (same fields as before); `CompanyRead` from `/companies`
+  adds `can_edit`.
 - The matching prompt includes the computed years of experience as locked facts.
 - The OpenAPI metadata now reports the package version (`1.1.0`), read from `pyproject.toml`.
 - CV skill groups come from `profile_skills.category` (six standard groups)

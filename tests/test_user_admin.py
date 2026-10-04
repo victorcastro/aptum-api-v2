@@ -8,9 +8,10 @@ from fastapi.testclient import TestClient
 
 from aptum.common.enums import UserRole
 from aptum.core.dependencies import get_current_user, get_db
-from aptum.core.exceptions import ConflictError, ForbiddenError
+from aptum.core.exceptions import ConflictError, ForbiddenError, NotFoundError
 from aptum.main import app
 from aptum.modules.audit.repository import AuditRepository
+from aptum.modules.users.admin_service import UserAdminService
 from aptum.modules.users.models import User
 from aptum.modules.users.policy import (
     check_active_change,
@@ -214,3 +215,32 @@ def test_moderator_lists_users_with_filters(world, monkeypatch):
 
 def test_plain_user_cannot_list_users(world):
     assert as_user(SimpleNamespace(id=4, role="user", is_active=True)).get("/admin/users").status_code == 403
+
+
+# --- operator bootstrap (CLI / seeder) ---------------------------------------------------------
+
+
+@pytest.fixture
+def operator(world, monkeypatch):
+    by_email = {u.email: u for u in world.users.values()}
+    monkeypatch.setattr(UserRepository, "get_by_email_for_update", lambda self, email: by_email.get(email))
+    return UserAdminService(world.session)
+
+
+def test_operator_promotes_the_first_admin_with_no_actor(world, operator):
+    user = operator.set_role_by_operator("u4@example.com", UserRole.admin)
+    assert user.role == "admin"
+    [entry] = world.audit
+    assert entry.actor_user_id is None
+    assert entry.changes == {"role": {"before": "user", "after": "admin"}, "via": "operator"}
+
+
+def test_operator_cannot_remove_the_last_active_admin(world, operator):
+    world.users[2].is_active = False
+    with pytest.raises(ConflictError):
+        operator.set_role_by_operator("u1@example.com", UserRole.user)
+
+
+def test_operator_unknown_email_is_not_found(world, operator):
+    with pytest.raises(NotFoundError):
+        operator.set_role_by_operator("ghost@example.com", UserRole.admin)

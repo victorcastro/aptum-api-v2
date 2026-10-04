@@ -2,11 +2,15 @@ from sqlalchemy.orm import Session
 
 from aptum.common.enums import AuditAction, AuditEntity, UserRole
 from aptum.common.pagination import PageParams
-from aptum.core.exceptions import NotFoundError
+from aptum.core.exceptions import ConflictError, NotFoundError
 from aptum.core.permissions import Actor
 from aptum.modules.audit.service import AuditService
 from aptum.modules.users.models import User
-from aptum.modules.users.policy import check_active_change, check_role_change
+from aptum.modules.users.policy import (
+    check_active_change,
+    check_role_change,
+    is_last_active_admin,
+)
 from aptum.modules.users.repository import UserRepository
 
 
@@ -47,6 +51,28 @@ class UserAdminService:
             )
             target.role = role.value
         self.db.commit()  # also releases the locks on a no-op
+        self.db.refresh(target)
+        return target
+
+    def set_role_by_operator(self, email: str, role: UserRole) -> User:
+        """Operator path (CLI/seeder) to bootstrap the first admin, with shell access as the only
+        authorization. Audited with no actor. Still refuses to remove the last active admin."""
+        active_admins = len(self.repository.lock_active_admin_ids())
+        target = self.repository.get_by_email_for_update(email)
+        if target is None:
+            raise NotFoundError("User not found")
+        if role != UserRole.admin and is_last_active_admin(target, active_admins):
+            raise ConflictError("Cannot remove the last active admin")
+        if target.role != role:
+            self.audit.record(
+                None,
+                AuditAction.user_role_change,
+                AuditEntity.user,
+                target.id,
+                {"role": {"before": target.role, "after": role.value}, "via": "operator"},
+            )
+            target.role = role.value
+        self.db.commit()
         self.db.refresh(target)
         return target
 

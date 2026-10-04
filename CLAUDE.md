@@ -30,6 +30,7 @@ One folder per feature under `src/aptum/modules/<x>/` with `models.py`, `reposit
 - `companies`, `industries` and `skills` are shared catalogs with no owner. `created_by_user_id` is `SET NULL` on user delete.
 - Services always take the authenticated `user_id`, resolve that user's profile and filter by `profile_id`. Never accept `profile_id`/`user_id` from the client. Rows that belong to someone else return 404.
 - CV dates are month/year only: the API speaks `YYYY-MM` (`common/types.YearMonth`), the DB stores the first day of the month and enforces it with a CHECK.
+- Authorization: routers depend on `core/permissions.require(Permission.x)`, never on role names; `ROLE_PERMISSIONS` there is the only role→permission mapping. Data-dependent rules are pure functions in `modules/<x>/policy.py` (e.g. `can_edit_company`), unit-tested without a DB. Privileged writes call `AuditService.record` before the commit so the entry shares the transaction; never put secrets in `changes`.
 - Hiring through a consultancy: `experiences.employer_id` is who hires (NTT Data), `experiences.client_id` is where the work happens (Banco BCP). The client's industry is the relevant one for matching.
 
 <!-- engly:start v1.5.0 -->

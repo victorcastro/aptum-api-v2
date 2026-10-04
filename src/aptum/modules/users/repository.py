@@ -48,6 +48,9 @@ class UserRepository:
     def get_for_update(self, user_id: int) -> User | None:
         return self.db.scalars(select(User).where(User.id == user_id).with_for_update()).first()
 
+    def get_by_email_for_update(self, email: str) -> User | None:
+        return self.db.scalars(select(User).where(User.email == email).with_for_update()).first()
+
     def create(self, email: str, firebase_uid: str) -> User:
         user = User(email=email, firebase_uid=firebase_uid)
         self.db.add(user)

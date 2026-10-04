@@ -1,10 +1,10 @@
 """Populate the local DB with a demo CV.
 
-    uv run python -m aptum.db.seed [--firebase-uid <uid>] [--email you@example.com] [--reset] [--pdf cv.pdf]
+    uv run python -m aptum.db.seed [--firebase-uid <uid>] [--email you@example.com] [--reset] [--pdf cv.pdf] [--role admin]
 
 Attaches the demo CV to the local user linked to that Firebase uid (default: the test user) (created if missing), so logging
 in with that Firebase user shows the data. Pass --email with the Firebase user's email to keep it in sync. Refuses to touch a profile that already has CV data
-unless --reset is passed. Local development only.
+unless --reset is passed. --role sets that user's role (audited, like the users CLI). Local development only.
 """
 
 import argparse
@@ -17,6 +17,7 @@ from aptum.common.enums import (
     ExperienceArea,
     LinkKind,
     SkillLevel,
+    UserRole,
     WorkAuthorization,
     WorkMode,
 )
@@ -38,6 +39,7 @@ from aptum.modules.profile.models import (
 from aptum.modules.profile.repository import ProfileRepository
 from aptum.modules.skills.categories import classify_skill
 from aptum.modules.skills.models import Skill
+from aptum.modules.users.admin_service import UserAdminService
 from aptum.modules.users.models import User
 from aptum.modules.users.repository import UserRepository
 
@@ -300,11 +302,17 @@ def main() -> None:
     parser.add_argument("--email", help=f"Email of the Firebase user; sets/updates the local user (default {DEFAULT_EMAIL} on create)")
     parser.add_argument("--reset", action="store_true", help="Replace existing CV data of that profile")
     parser.add_argument("--pdf", metavar="PATH", help="Also write the rendered CV to this file")
+    parser.add_argument("--role", choices=[role.value for role in UserRole], help="Also set the user's role")
     args = parser.parse_args()
 
     with SessionLocal() as db:
         profile = seed(db, args.firebase_uid, args.email, args.reset)
         print(f"Seeded demo CV for user_id={profile.user_id} (profile_id={profile.id})")
+        if args.role:
+            user = UserAdminService(db).set_role_by_operator(
+                UserRepository(db).get_by_id(profile.user_id).email, UserRole(args.role)
+            )
+            print(f"Role of user_id={user.id} set to {user.role}")
         if args.pdf:
             with open(args.pdf, "wb") as file:
                 file.write(render_cv_pdf(profile))

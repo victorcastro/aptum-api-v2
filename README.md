@@ -28,6 +28,27 @@ uv run alembic revision --autogenerate -m "<message>"   # new migration
 uv run alembic check                                    # models match migrations
 ```
 
+## Roles and permissions
+
+Every user has one role: `user` (default), `moderator` or `admin`. Routers ask for a permission,
+never a role; `src/aptum/core/permissions.py` is the only place that maps roles to permissions.
+
+| Permission | moderator | admin |
+|---|---|---|
+| `company:update_any`, `company:delete`, `skill:update_any`, `industry:manage`, `user:list_read` | yes | yes |
+| `company:merge`, `user:manage_roles`, `user:deactivate`, `audit:read` | | yes |
+
+Create the first admin (the user must have logged in once), then manage roles from `/admin/users`:
+
+```bash
+uv run python -m aptum.modules.users.cli set-role --email you@example.com --role admin
+uv run python -m aptum.db.seed --role admin             # local: demo CV + admin role
+```
+
+Every privileged change (company edit/merge/delete, skill and industry changes, role and
+active changes) is written to `audit_logs` in the same transaction, readable through
+`GET /admin/audit-logs`.
+
 ## Docker
 
 The image applies pending migrations on startup and then serves the API on port 8000.
