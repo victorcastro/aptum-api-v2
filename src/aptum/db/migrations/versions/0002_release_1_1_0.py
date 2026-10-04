@@ -1,4 +1,4 @@
-"""release 1.1.0: skill categories, profile ATS fields, language catalogs, drop profile_skills.position
+"""release 1.1.0: skill categories, profile ATS fields, language catalogs, drop profile_skills.position and experience_functions.position
 
 Revision ID: 0002
 Revises: 0001
@@ -10,8 +10,10 @@ All schema changes of release 1.1.0 in one revision:
   the deterministic dictionary aptum/modules/skills/data/skill_dictionary.json.
 - profiles: linkedin_url, github_url, portfolio_url, work_authorization,
   work_authorization_country, open_to_relocation (default false).
+- users.is_admin (default false): admins can edit companies already used by experiences.
 - experiences.area; educations.start_year / end_year.
 - profile_skills.position dropped: the CV orders skills by evidence instead.
+- experience_functions.position dropped: responsibilities are raw content kept in insertion order (id).
 - Language catalogs `languages` (ISO 639-1 code, English name) and `language_levels` (CEFR
   A1-C2 plus Native, ranked), seeded here. profile_languages.language_code and .proficiency
   become foreign keys to them; `proficiency` changes from the native enum
@@ -22,7 +24,7 @@ All schema changes of release 1.1.0 in one revision:
 
 New columns are nullable or have a constant default, so existing rows stay valid and Postgres
 adds them without rewriting the tables. Downgrade restores the 1.0.0 schema; position is
-rebuilt from the creation order (id) of each profile's skills; language levels fold back as
+rebuilt from the creation order (id) of each profile's skills and of each experience's functions; language levels fold back as
 A1/A2 -> elementary, B1 -> limited_working, B2 -> professional_working, C1/C2 ->
 full_professional, Native -> native_or_bilingual.
 """
@@ -119,6 +121,9 @@ def _backfill_skill_categories() -> None:
 
 
 def upgrade() -> None:
+    # Admins can edit catalog companies already used by experiences
+    op.add_column('users', sa.Column('is_admin', sa.Boolean(), server_default=sa.false(), nullable=False))
+
     # Skill categories
     op.add_column(
         'profile_skills',
@@ -129,6 +134,7 @@ def upgrade() -> None:
         op.f('ck_profile_skills_category_allowed'), 'profile_skills', _in('category', SkillCategory)
     )
     op.drop_column('profile_skills', 'position')
+    op.drop_column('experience_functions', 'position')
 
     # Profile ATS fields
     op.add_column('profiles', sa.Column('linkedin_url', sa.String(length=500), nullable=True))
@@ -206,6 +212,8 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
+    op.drop_column('users', 'is_admin')
+
     op.drop_constraint(op.f('fk_profile_languages_proficiency_language_levels'), 'profile_languages', type_='foreignkey')
     op.drop_constraint(op.f('fk_profile_languages_language_code_languages'), 'profile_languages', type_='foreignkey')
 
@@ -251,5 +259,14 @@ def downgrade() -> None:
         ") ranked WHERE ranked.id = ps.id"
     )
     op.alter_column('profile_skills', 'position', server_default=None)
+    op.add_column(
+        'experience_functions', sa.Column('position', sa.SmallInteger(), server_default='0', nullable=False)
+    )
+    op.execute(
+        "UPDATE experience_functions ef SET position = ranked.pos FROM ("
+        " SELECT id, row_number() OVER (PARTITION BY experience_id ORDER BY id) - 1 AS pos"
+        " FROM experience_functions) ranked WHERE ranked.id = ef.id"
+    )
+    op.alter_column('experience_functions', 'position', server_default=None)
     op.drop_constraint(op.f('ck_profile_skills_category_allowed'), 'profile_skills', type_='check')
     op.drop_column('profile_skills', 'category')

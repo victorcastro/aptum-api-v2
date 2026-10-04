@@ -88,6 +88,4 @@ class ProfileRepository:
 
 
 def _build_functions(functions: list[str]) -> list[ExperienceFunction]:
-    return [
-        ExperienceFunction(description=text, position=index) for index, text in enumerate(functions)
-    ]
+    return [ExperienceFunction(description=text) for text in functions]

@@ -1,6 +1,8 @@
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from aptum.modules.companies.models import Company, Industry
+from aptum.modules.profile.models import Experience
 
 
 class CompanyRepository:
@@ -24,6 +26,14 @@ class CompanyRepository:
             .all()
         )
 
+    def is_used_by_experiences(self, company_id: int) -> bool:
+        return (
+            self.db.query(Experience.id)
+            .filter(or_(Experience.employer_id == company_id, Experience.client_id == company_id))
+            .first()
+            is not None
+        )
+
     def get_industry(self, industry_id: int) -> Industry | None:
         return self.db.get(Industry, industry_id)
 
@@ -33,6 +43,13 @@ class CompanyRepository:
     def create(self, **fields) -> Company:
         company = Company(**fields)
         self.db.add(company)
+        self.db.commit()
+        self.db.refresh(company)
+        return company
+
+    def update(self, company: Company, **fields) -> Company:
+        for key, value in fields.items():
+            setattr(company, key, value)
         self.db.commit()
         self.db.refresh(company)
         return company

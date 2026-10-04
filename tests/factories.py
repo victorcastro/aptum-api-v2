@@ -66,7 +66,7 @@ def experience(
         end_date=end,
         is_current=end is None,
         is_active=fields.pop("is_active", True),
-        functions=[ExperienceFunction(description=text, position=i) for i, text in enumerate(bullets)],
+        functions=[ExperienceFunction(description=text) for text in bullets],
         skills=[skill(name) for name in skills],
         **fields,
     )

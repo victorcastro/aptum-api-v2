@@ -180,7 +180,7 @@ class Experience(TimestampMixin, Base):
     employer: Mapped["Company"] = relationship(foreign_keys=[employer_id], lazy="joined")
     client: Mapped["Company | None"] = relationship(foreign_keys=[client_id], lazy="joined")
     functions: Mapped[list["ExperienceFunction"]] = relationship(
-        back_populates="experience", order_by="ExperienceFunction.position", **_OWNED
+        back_populates="experience", order_by="ExperienceFunction.id", **_OWNED
     )
     skills: Mapped[list["Skill"]] = relationship(secondary="experience_skills")
 
@@ -195,7 +195,6 @@ class ExperienceFunction(Base):
         ForeignKey("experiences.id", ondelete="CASCADE"), index=True
     )
     description: Mapped[str] = mapped_column(Text)
-    position: Mapped[int] = mapped_column(SmallInteger, default=0)
 
     experience: Mapped["Experience"] = relationship(back_populates="functions")
 

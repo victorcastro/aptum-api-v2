@@ -1,10 +1,11 @@
 from sqlalchemy.orm import Session
 
 from aptum.common.utils import normalize_name
-from aptum.core.exceptions import NotFoundError
+from aptum.core.exceptions import ConflictError, ForbiddenError, NotFoundError
 from aptum.modules.companies.models import Company, Industry
 from aptum.modules.companies.repository import CompanyRepository
-from aptum.modules.companies.schemas import CompanyCreate
+from aptum.modules.companies.schemas import CompanyCreate, CompanyUpdate
+from aptum.modules.users.models import User
 
 
 class CompanyService:
@@ -23,6 +24,32 @@ class CompanyService:
             normalized_name=normalized,
             created_by_user_id=user_id,
         )
+
+    def update(self, user: User, company_id: int, data: CompanyUpdate) -> Company:
+        """Admins edit any company. The creator edits only while no experience uses it."""
+        company = self.repository.get(company_id)
+        if company is None:
+            raise NotFoundError("Company not found")
+        if not user.is_admin:
+            if company.created_by_user_id != user.id:
+                raise NotFoundError("Company not found")
+            if self.repository.is_used_by_experiences(company.id):
+                raise ForbiddenError("Company is in use by experiences; only an admin can edit it")
+        fields = data.model_dump(exclude_unset=True)
+        for required in ("name", "is_consultancy"):
+            if required in fields and fields[required] is None:
+                raise ConflictError(f"{required} cannot be null")
+        if fields.get("industry_id") is not None and (
+            self.repository.get_industry(fields["industry_id"]) is None
+        ):
+            raise NotFoundError("Industry not found")
+        if "name" in fields:
+            normalized = normalize_name(fields["name"])
+            clash = self.repository.get_by_normalized_name(normalized)
+            if clash is not None and clash.id != company.id:
+                raise ConflictError("A company with that name already exists")
+            fields["normalized_name"] = normalized
+        return self.repository.update(company, **fields)
 
     def search(self, query: str, limit: int = 20) -> list[Company]:
         return self.repository.search(normalize_name(query), limit)

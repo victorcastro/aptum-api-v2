@@ -94,7 +94,6 @@ class ExperienceFunctionRead(BaseModel):
 
     id: int
     description: str
-    position: int
 
 
 class ExperienceRead(BaseModel):

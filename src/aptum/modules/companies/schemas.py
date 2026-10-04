@@ -20,6 +20,17 @@ class CompanyCreate(BaseModel):
     is_consultancy: bool = False
 
 
+class CompanyUpdate(BaseModel):
+    """Partial update: only the fields sent are changed."""
+
+    name: str | None = None
+    industry_id: int | None = None
+    city: str | None = None
+    country_code: CountryCode | None = None
+    website: str | None = None
+    is_consultancy: bool | None = None
+
+
 class CompanyRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
