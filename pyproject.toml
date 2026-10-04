@@ -45,6 +45,7 @@ extend-immutable-calls = [
     "fastapi.File",
     "fastapi.Form",
     "fastapi.Security",
+    "aptum.core.permissions.require",
 ]
 
 [tool.pytest.ini_options]
