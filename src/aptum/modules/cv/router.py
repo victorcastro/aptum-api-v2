@@ -2,11 +2,32 @@ from fastapi import APIRouter, Depends, Query, Response
 from sqlalchemy.orm import Session
 
 from aptum.core.dependencies import get_current_user, get_db
-from aptum.modules.cv.schemas import CVSettingsRead, CVSettingsUpdate, CVTemplateOut
+from aptum.modules.cv.schemas import (
+    ATSGenerateRequest,
+    ATSReport,
+    CVSettingsRead,
+    CVSettingsUpdate,
+    CVTemplateOut,
+)
 from aptum.modules.cv.service import CVService
 from aptum.modules.users.models import User
 
 router = APIRouter(prefix="/cv", tags=["cv"])
+
+_PDF_RESPONSE = {
+    200: {
+        "description": "CV as a PDF file",
+        "content": {"application/pdf": {"schema": {"type": "string", "format": "binary"}}},
+    }
+}
+
+
+def _pdf(content: bytes, filename: str) -> Response:
+    return Response(
+        content=content,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
 
 
 @router.get("/templates", response_model=list[CVTemplateOut])
@@ -63,3 +84,32 @@ def export_cv(
         media_type="application/pdf",
         headers={"Content-Disposition": f'attachment; filename="{filename}"'},
     )
+
+
+@router.post(
+    "/ats/export",
+    response_class=Response,
+    responses=_PDF_RESPONSE,
+)
+def export_ats_cv(
+    data: ATSGenerateRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> Response:
+    """ATS-friendly PDF (release 1.1.0), optionally tailored to `job_description`."""
+    result, filename = CVService(db).generate_ats(current_user.id, data.job_description)
+    return _pdf(result.pdf, filename)
+
+
+@router.post("/ats/report", response_model=ATSReport)
+def ats_cv_report(
+    data: ATSGenerateRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> ATSReport:
+    """Report for the same CV that POST /cv/ats/export renders with the same body: warnings
+    (missing metrics, removed duplicates/filler, trimming), fidelity issues, years of
+    experience, selected skills and, with `job_description`, the keyword coverage."""
+    service = CVService(db)
+    result, _ = service.generate_ats(current_user.id, data.job_description)
+    return service.report(result)

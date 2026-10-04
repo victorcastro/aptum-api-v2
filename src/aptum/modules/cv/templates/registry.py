@@ -2,10 +2,9 @@ from dataclasses import dataclass
 
 from aptum.core.exceptions import NotFoundError
 from aptum.modules.cv.templates.base import CVTemplate
-from aptum.modules.cv.templates.classic import ClassicTemplate
 from aptum.modules.cv.templates.software_engineer import SoftwareEngineerTemplate
 
-DEFAULT_TEMPLATE = "classic"
+DEFAULT_TEMPLATE = "software-engineer"
 
 
 @dataclass(frozen=True)
@@ -16,10 +15,6 @@ class TemplateInfo:
 
 
 _TEMPLATES: dict[str, tuple[TemplateInfo, CVTemplate]] = {
-    "classic": (
-        TemplateInfo("classic", "Classic", "Single column with standard headings."),
-        ClassicTemplate(),
-    ),
     "software-engineer": (
         TemplateInfo(
             "software-engineer",

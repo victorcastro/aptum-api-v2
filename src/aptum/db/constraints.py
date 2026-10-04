@@ -1,3 +1,5 @@
+from enum import StrEnum
+
 from sqlalchemy import CheckConstraint
 
 
@@ -17,3 +19,9 @@ def date_range_check(start: str = "start_date", end: str = "end_date") -> CheckC
         f"{start} IS NULL OR {end} IS NULL OR {end} >= {start}",
         name="date_range",
     )
+
+
+def in_values_check(column: str, values: type[StrEnum]) -> CheckConstraint:
+    """Closed set of string values without a native enum type (cheaper to extend and to roll back)."""
+    allowed = ", ".join("'" + value.replace("'", "''") + "'" for value in values)
+    return CheckConstraint(f"{column} IS NULL OR {column} IN ({allowed})", name=f"{column}_allowed")

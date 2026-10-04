@@ -8,9 +8,9 @@ class EmbeddingsRepository:
         self.db = db
 
     def set_profile_embedding(self, profile_id: int, embedding: list[float]) -> None:
+        """No commit."""
         profile = self.db.get(Profile, profile_id)
         profile.embedding = embedding
-        self.db.commit()
 
     def find_similar_profiles(self, embedding: list[float], limit: int = 10) -> list[Profile]:
         return (

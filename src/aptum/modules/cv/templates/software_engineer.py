@@ -57,9 +57,12 @@ class SoftwareEngineerTemplate:
             story.append(p(title.upper(), section))
             story.append(HRFlowable(width="100%", thickness=0.5, color=black, spaceBefore=1, spaceAfter=4))
 
-        if doc.summary:
+        if doc.summary or doc.work_authorization_line:
             heading("Summary")
-            story.append(p(doc.summary, body))
+            if doc.work_authorization_line:
+                story.append(p(doc.work_authorization_line, muted))
+            if doc.summary:
+                story.append(p(doc.summary, body))
 
         if doc.skill_groups:
             heading("Technical Skills")
@@ -100,8 +103,8 @@ class SoftwareEngineerTemplate:
 
         if doc.languages:
             heading("Languages")
-            for lang in doc.languages:
-                story.append(p(f"{lang.name} - {lang.level}", body))
+            for language in doc.languages:
+                story.append(p(language, body))
 
         buffer = BytesIO()
         SimpleDocTemplate(
