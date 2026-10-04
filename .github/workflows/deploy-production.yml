@@ -1,6 +1,5 @@
 name: Deploy · Production
 
-# Push covers both a fast-forward from staging and a merged PR with a single event.
 on:
   push:
     branches: [main]
@@ -13,7 +12,6 @@ permissions:
   contents: read
 
 jobs:
-  # Same gates as the PR: the repo has no branch protection, so they run again here.
   validate-version:
     runs-on: ubuntu-24.04
     timeout-minutes: 5
@@ -71,7 +69,6 @@ jobs:
           git tag "$TAG"
           git push origin "$TAG"
 
-  # Never depends on tag: a failed tag push must not block a deploy.
   deploy:
     needs: [validate-version, checks]
     runs-on: ubuntu-24.04
@@ -83,7 +80,6 @@ jobs:
           CI_WEBHOOK_URL: ${{ secrets.CI_WEBHOOK_URL }}
         run: |
           set -euo pipefail
-          # Dokploy only reads the branch from the body when it sees the GitHub push header.
           response=$(curl -sS -o /tmp/body -w '%{http_code}' -X POST "$CI_WEBHOOK_URL" \
             -H "Content-Type: application/json" \
             -H "X-GitHub-Event: push" \

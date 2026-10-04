@@ -26,7 +26,6 @@ jobs:
           CI_WEBHOOK_URL: ${{ secrets.CI_WEBHOOK_URL }}
         run: |
           set -euo pipefail
-          # Dokploy only reads the branch from the body when it sees the GitHub push header.
           response=$(curl -sS -o /tmp/body -w '%{http_code}' -X POST "$CI_WEBHOOK_URL" \
             -H "Content-Type: application/json" \
             -H "X-GitHub-Event: push" \
