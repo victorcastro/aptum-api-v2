@@ -52,14 +52,13 @@ class UserRepository:
         return self.db.scalars(select(User).where(User.email == email).with_for_update()).first()
 
     def create(self, email: str, firebase_uid: str) -> User:
+        """No commit. Flushes for the id; a duplicate email or uid raises IntegrityError here."""
         user = User(email=email, firebase_uid=firebase_uid)
         self.db.add(user)
-        self.db.commit()
-        self.db.refresh(user)
+        self.db.flush()
         return user
 
     def link_firebase_uid(self, user: User, firebase_uid: str) -> User:
+        """No commit."""
         user.firebase_uid = firebase_uid
-        self.db.commit()
-        self.db.refresh(user)
         return user

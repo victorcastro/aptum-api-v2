@@ -7,9 +7,10 @@ from datetime import date
 from functools import cache
 from pathlib import Path
 
+from aptum.common.utils import normalize_text
 from aptum.modules.cv.ats.document import ATSDocument, ATSExperience
 from aptum.modules.cv.ats.report import CVWarning
-from aptum.modules.cv.ats.text import normalize_text, similarity
+from aptum.modules.cv.ats.text import similarity
 from aptum.modules.cv.ats.years import (
     YEARS_CLAIM,
     YearsOfExperience,

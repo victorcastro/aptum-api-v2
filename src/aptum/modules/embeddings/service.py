@@ -16,8 +16,10 @@ class NullEmbeddingClient:
 
 class EmbeddingsService:
     def __init__(self, db: Session, client: EmbeddingClient) -> None:
+        self.db = db
         self.repository = EmbeddingsRepository(db)
         self.client = client
 
     def embed_profile(self, profile_id: int, text: str) -> None:
         self.repository.set_profile_embedding(profile_id, self.client.embed(text))
+        self.db.commit()

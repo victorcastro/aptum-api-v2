@@ -22,7 +22,7 @@ Python 3.12 + uv, FastAPI, SQLAlchemy 2.0 (typed `Mapped`, sync `Session`), Alem
 
 ## Layout
 
-One folder per feature under `src/aptum/modules/<x>/` with `models.py`, `repository.py`, `service.py`, `router.py`, `schemas.py`. The ORM model doubles as the entity. Shared code lives in `core/` (config, security, dependencies, exceptions), `common/` (enums, constants, types, utils) and `db/` (`Base`, `TimestampMixin`, constraint helpers, migrations).
+One folder per feature under `src/aptum/modules/<x>/` with `models.py`, `repository.py`, `service.py`, `router.py`, `schemas.py`. The ORM model doubles as the entity. Repositories never commit (they may `flush` for ids or early unique errors); the service commits once per operation and turns `IntegrityError` on unique names into 409 (or, in get-or-create, returns the row created meanwhile). Explicit `rollback()` only when the session is used again afterwards; otherwise `get_db` closing the session rolls back. Shared code lives in `core/` (config, security, dependencies, exceptions), `common/` (enums, constants, types, utils) and `db/` (`Base`, `TimestampMixin`, constraint helpers, migrations).
 
 ## CV data model
 

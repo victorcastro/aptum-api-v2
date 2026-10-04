@@ -1,10 +1,11 @@
-"""Deterministic text helpers shared by the ATS pipeline: normalization, term search, similarity."""
+"""Deterministic text helpers of the ATS pipeline: term search and similarity. Generic
+normalization lives in `common/utils.py`."""
 
 import re
-import unicodedata
 from difflib import SequenceMatcher
 from functools import cache
 
+from aptum.common.utils import normalize_text, strip_accents
 from aptum.modules.skills.categories import skill_key
 
 # Dictionary terms that are also everyday English words. They only count as a match when the
@@ -15,18 +16,6 @@ AMBIGUOUS_TERMS = frozenset({
     "ml", "dl", "js", "ts", "eda", "iac", "cdk", "dart", "expo", "flask", "jest", "claude", "gpt",
     "bash", "helm", "serverless", "evals", "prompting", "lora", "torch", "keras", "laravel",
 })  # fmt: skip
-
-
-def strip_accents(value: str) -> str:
-    decomposed = unicodedata.normalize("NFKD", value)
-    return "".join(c for c in decomposed if not unicodedata.combining(c))
-
-
-def normalize_text(value: str) -> str:
-    """Lowercase, no accents, punctuation (except + # .) as spaces, collapsed whitespace."""
-    value = strip_accents(value).lower()
-    value = re.sub(r"[^\w+#.%]+", " ", value)
-    return re.sub(r"\s+", " ", value).strip(" .")
 
 
 @cache

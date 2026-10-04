@@ -20,6 +20,7 @@ from aptum.modules.profile.models import (
     ProfileSkill,
     Project,
 )
+from aptum.modules.skills.categories import classify_skill
 from aptum.modules.skills.models import Skill
 
 _ids = iter(range(1, 1_000_000))
@@ -29,8 +30,8 @@ def company(name: str) -> Company:
     return Company(id=next(_ids), name=name, normalized_name=normalize_name(name), is_consultancy=False)
 
 
-def skill(name: str, category: str | None = None) -> Skill:
-    return Skill(id=next(_ids), name=name, slug=slugify(name), category=category)
+def skill(name: str) -> Skill:
+    return Skill(id=next(_ids), name=name, slug=slugify(name))
 
 
 def profile_language(code: str, name: str, level: str) -> ProfileLanguage:
@@ -39,6 +40,7 @@ def profile_language(code: str, name: str, level: str) -> ProfileLanguage:
 
 def profile_skill(name: str, **fields) -> ProfileSkill:
     s = skill(name)
+    fields.setdefault("category", classify_skill(name).value)  # as the API does when omitted
     return ProfileSkill(id=next(_ids), skill_id=s.id, skill=s, **fields)
 
 
@@ -172,3 +174,25 @@ def base_profile(**fields) -> Profile:
         for name in ["Python", "FastAPI", "OpenAI API", "RAG", "Docker", "AWS", "Swift", "Hexagonal Architecture", "Excel"]
     ]
     return profile
+
+
+class FakeSession:
+    """Stand-in for the SQLAlchemy session when repositories are stubbed: counts commits and
+    rollbacks so tests can check who owns the transaction. `fail_commit` raises on the next commit."""
+
+    def __init__(self) -> None:
+        self.commits = 0
+        self.rollbacks = 0
+        self.fail_commit: Exception | None = None
+
+    def commit(self) -> None:
+        if self.fail_commit is not None:
+            exc, self.fail_commit = self.fail_commit, None
+            raise exc
+        self.commits += 1
+
+    def rollback(self) -> None:
+        self.rollbacks += 1
+
+    def refresh(self, _) -> None:
+        pass

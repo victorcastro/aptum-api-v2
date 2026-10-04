@@ -63,11 +63,11 @@ def _company(db: Session, name: str, industry: str | None, *, consultancy: bool 
     return company
 
 
-def _skill(db: Session, name: str, category: str) -> Skill:
+def _skill(db: Session, name: str) -> Skill:
     slug = slugify(name)
     skill = db.query(Skill).filter(Skill.slug == slug).first()
     if skill is None:
-        skill = Skill(name=name, slug=slug, category=category)
+        skill = Skill(name=name, slug=slug)
         db.add(skill)
         db.flush()
     return skill
@@ -130,15 +130,15 @@ def seed(db: Session, firebase_uid: str, email: str | None, reset: bool) -> Prof
     telefonica = _company(db, "Telefonica del Peru", "Information Technology and Services")
 
     python, fastapi, postgres, docker, aws, react, java, redis, kafka = (
-        _skill(db, "Python", "Language"),
-        _skill(db, "FastAPI", "Framework"),
-        _skill(db, "PostgreSQL", "Database"),
-        _skill(db, "Docker", "DevOps"),
-        _skill(db, "AWS", "Cloud"),
-        _skill(db, "React", "Framework"),
-        _skill(db, "Java", "Language"),
-        _skill(db, "Redis", "Database"),
-        _skill(db, "Kafka", "Messaging"),
+        _skill(db, "Python"),
+        _skill(db, "FastAPI"),
+        _skill(db, "PostgreSQL"),
+        _skill(db, "Docker"),
+        _skill(db, "AWS"),
+        _skill(db, "React"),
+        _skill(db, "Java"),
+        _skill(db, "Redis"),
+        _skill(db, "Kafka"),
     )
 
     profile.first_name = "Ana"

@@ -3,6 +3,7 @@
 from types import SimpleNamespace
 
 import pytest
+from factories import FakeSession
 from fastapi.testclient import TestClient
 
 from aptum.core.dependencies import get_current_user, get_db
@@ -27,6 +28,11 @@ def test_redact_drops_secret_keys_at_any_depth():
     assert redact(changes) == {"role": {"before": "user", "after": "admin"}, "ctx": {"ok": 1}}
 
 
+def test_redact_looks_inside_lists():
+    changes = {"items": [{"api_key": "k", "name": "a"}, "plain"], "tokens": ["t"]}
+    assert redact(changes) == {"items": [{"name": "a"}, "plain"]}
+
+
 @pytest.fixture
 def entries(monkeypatch):
     """Stub repositories: one company created by user 1, unused. Collects audit entries."""
@@ -48,7 +54,7 @@ def entries(monkeypatch):
 
 @pytest.fixture
 def client_as():
-    app.dependency_overrides[get_db] = lambda: None
+    app.dependency_overrides[get_db] = FakeSession
 
     def factory(role: str = "user", user_id: int = 1) -> TestClient:
         app.dependency_overrides[get_current_user] = lambda: SimpleNamespace(id=user_id, role=role)

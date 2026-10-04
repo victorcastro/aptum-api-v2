@@ -84,15 +84,14 @@ class CompanyRepository:
         return self.db.query(Industry).order_by(Industry.name).all()
 
     def create(self, **fields) -> Company:
+        """No commit. Flushes, so a name clash raises IntegrityError here."""
         company = Company(**fields)
         self.db.add(company)
-        self.db.commit()
-        self.db.refresh(company)
+        self.db.flush()
         return company
 
     def update(self, company: Company, **fields) -> Company:
+        """No commit."""
         for key, value in fields.items():
             setattr(company, key, value)
-        self.db.commit()
-        self.db.refresh(company)
         return company

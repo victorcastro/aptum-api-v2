@@ -26,12 +26,21 @@ def diff(before: Mapping[str, Any], after: Mapping[str, Any]) -> dict[str, dict[
     }
 
 
+def _is_secret(key: str) -> bool:
+    return any(marker in key.lower() for marker in _SECRET_MARKERS)
+
+
+def _redact_value(value: Any) -> Any:
+    if isinstance(value, Mapping):
+        return redact(value)
+    if isinstance(value, list | tuple):
+        return [_redact_value(item) for item in value]
+    return value
+
+
 def redact(changes: Mapping[str, Any]) -> dict[str, Any]:
-    return {
-        key: redact(value) if isinstance(value, Mapping) else value
-        for key, value in changes.items()
-        if not any(marker in key.lower() for marker in _SECRET_MARKERS)
-    }
+    """Drop secret keys at any depth, including inside lists."""
+    return {key: _redact_value(value) for key, value in changes.items() if not _is_secret(str(key))}
 
 
 class AuditService:

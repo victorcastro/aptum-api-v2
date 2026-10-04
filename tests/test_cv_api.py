@@ -1,7 +1,8 @@
 """CV endpoints: the ATS pipeline is the default; legacy templates only on explicit request.
 
 The golden files were produced by the 1.0.0 code from the same synthetic profile, so they pin
-the legacy templates' output for `?template=`."""
+the legacy templates' output for `?template=`. Since 1.1.0 the skills are grouped by
+`profile_skills.category` (the catalog `skills.category` is gone)."""
 
 from io import BytesIO
 from pathlib import Path
@@ -96,7 +97,7 @@ def test_matching_prompt_has_locked_years():
     prompts = []
     service = MatchingService.__new__(MatchingService)
     service.repository = type(
-        "R", (), {"get_profile_embedding": lambda s, u: None, "get_profile": lambda s, u: base_profile()}
+        "R", (), {"get_profile": lambda s, u: base_profile()}
     )()
     service.embedding_client = type("E", (), {"embed": lambda s, t: []})()
     service.llm_client = type("L", (), {"generate": lambda s, p: prompts.append(p) or ""})()

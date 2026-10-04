@@ -1,6 +1,7 @@
 from types import SimpleNamespace
 
 import pytest
+from factories import FakeSession
 from fastapi.testclient import TestClient
 
 from aptum.core.dependencies import get_db
@@ -37,6 +38,7 @@ class _FakeRepo:
 
 def _service() -> ProfileService:
     service = ProfileService.__new__(ProfileService)
+    service.db = FakeSession()
     service.repository = _FakeRepo()
     service.commons = SimpleNamespace(
         has_language=lambda code: code in LANGUAGES,

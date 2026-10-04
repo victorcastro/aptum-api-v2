@@ -39,11 +39,21 @@ class CompanyService:
             return existing
         if data.industry_id is not None and self.repository.get_industry(data.industry_id) is None:
             raise NotFoundError("Industry not found")
-        return self.repository.create(
-            **data.model_dump(),
-            normalized_name=normalized,
-            created_by_user_id=user_id,
-        )
+        try:
+            company = self.repository.create(
+                **data.model_dump(),
+                normalized_name=normalized,
+                created_by_user_id=user_id,
+            )
+            self.db.commit()
+        except IntegrityError:  # someone created the same company meanwhile: return theirs
+            self.db.rollback()
+            existing = self.repository.get_by_normalized_name(normalized)
+            if existing is None:
+                raise
+            return existing
+        self.db.refresh(company)
+        return company
 
     def update(self, user: User, company_id: int, data: CompanyUpdate) -> Company:
         """See policy.check_edit_company for who may edit."""
@@ -68,7 +78,14 @@ class CompanyService:
             fields["normalized_name"] = normalized
         if changes:
             self.audit.record(user.id, AuditAction.company_update, AuditEntity.company, company.id, changes)
-        return self.repository.update(company, **fields)
+        self.repository.update(company, **fields)
+        try:
+            self.db.commit()
+        except IntegrityError as exc:  # concurrent rename to the same name
+            self.db.rollback()
+            raise ConflictError("A company with that name already exists") from exc
+        self.db.refresh(company)
+        return company
 
     def merge(self, actor: Actor, source_id: int, target_id: int) -> Company:
         """Fold a duplicate into `target`: repoint experiences, then delete the duplicate, in one
@@ -78,8 +95,7 @@ class CompanyService:
         locked = self.repository.lock_pair(source_id, target_id)
         source, target = locked.get(source_id), locked.get(target_id)
         if source is None or target is None:
-            self.db.rollback()
-            raise NotFoundError("Company not found")
+            raise NotFoundError("Company not found")  # get_db's close rolls back and frees the locks
         moved = self.repository.repoint_experiences(source.id, target.id)
         self.audit.record(
             actor.id,

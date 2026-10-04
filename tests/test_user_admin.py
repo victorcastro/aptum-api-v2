@@ -4,6 +4,7 @@ from datetime import UTC, datetime
 from types import SimpleNamespace
 
 import pytest
+from factories import FakeSession
 from fastapi.testclient import TestClient
 
 from aptum.common.enums import UserRole
@@ -70,17 +71,6 @@ def test_keeping_the_admin_role_is_never_blocked():
 
 
 # --- endpoints -------------------------------------------------------------------------------
-
-
-class FakeSession:
-    def __init__(self) -> None:
-        self.commits = 0
-
-    def commit(self) -> None:
-        self.commits += 1
-
-    def refresh(self, _) -> None:
-        pass
 
 
 def db_user(user_id: int, role: str, is_active: bool = True) -> User:

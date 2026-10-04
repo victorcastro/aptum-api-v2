@@ -2,6 +2,7 @@ import json
 from types import SimpleNamespace
 
 import pytest
+from factories import FakeSession
 
 from aptum.common.enums import SkillCategory
 from aptum.modules.profile.models import ProfileSkill
@@ -82,6 +83,7 @@ class _FakeRepo:
 
 def _service(skill_name: str) -> ProfileService:
     service = ProfileService.__new__(ProfileService)
+    service.db = FakeSession()
     service.repository = _FakeRepo(SimpleNamespace(skills=[], languages=[]))
     service.skills = SimpleNamespace(get=lambda skill_id: SimpleNamespace(id=skill_id, name=skill_name))
     return service

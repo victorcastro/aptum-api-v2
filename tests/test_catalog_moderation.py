@@ -3,7 +3,9 @@
 from types import SimpleNamespace
 
 import pytest
+from factories import FakeSession
 from fastapi.testclient import TestClient
+from sqlalchemy.exc import IntegrityError
 
 from aptum.core.dependencies import get_current_user, get_db
 from aptum.main import app
@@ -12,21 +14,6 @@ from aptum.modules.companies.models import Company, Industry
 from aptum.modules.companies.repository import CompanyRepository
 from aptum.modules.skills.models import Skill
 from aptum.modules.skills.repository import SkillRepository
-
-
-class FakeSession:
-    def __init__(self) -> None:
-        self.commits = 0
-        self.rollbacks = 0
-
-    def commit(self) -> None:
-        self.commits += 1
-
-    def rollback(self) -> None:
-        self.rollbacks += 1
-
-    def refresh(self, _) -> None:
-        pass
 
 
 @pytest.fixture
@@ -48,7 +35,7 @@ def as_role(role: str) -> TestClient:
 
 @pytest.fixture
 def skills(monkeypatch):
-    rows = {1: Skill(id=1, name="React", slug="react", category="Framework"), 2: Skill(id=2, name="ReactJS", slug="reactjs")}
+    rows = {1: Skill(id=1, name="React", slug="react"), 2: Skill(id=2, name="ReactJS", slug="reactjs")}
     monkeypatch.setattr(SkillRepository, "get", lambda self, skill_id: rows.get(skill_id))
     monkeypatch.setattr(
         SkillRepository, "get_by_slug", lambda self, slug: next((s for s in rows.values() if s.slug == slug), None)
@@ -66,7 +53,7 @@ def skills(monkeypatch):
 def test_moderator_renames_a_skill_and_slug_follows(state, skills):
     response = as_role("moderator").patch("/skills/2", json={"name": " React Native "})
     assert response.status_code == 200
-    assert response.json() == {"id": 2, "name": "React Native", "slug": "react-native", "category": None}
+    assert response.json() == {"id": 2, "name": "React Native", "slug": "react-native"}
     [entry] = state.audit
     assert entry.action == "skill.update"
     assert entry.changes == {
@@ -86,13 +73,20 @@ def test_skill_rename_to_its_own_name_in_other_case_is_allowed(state, skills):
     assert as_role("moderator").patch("/skills/1", json={"name": "REACT"}).status_code == 200
 
 
-def test_skill_category_can_be_cleared(state, skills):
-    response = as_role("admin").patch("/skills/1", json={"category": None})
-    assert response.json()["category"] is None
-    assert state.audit[0].changes == {"category": {"before": "Framework", "after": None}}
+def test_skill_rename_commits_once_with_its_audit_entry(state, skills):
+    as_role("moderator").patch("/skills/2", json={"name": "Vue"})
+    assert state.session.commits == 1 and len(state.audit) == 1
 
 
-@pytest.mark.parametrize(("body", "status"), [({"name": "!!!"}, 400), ({"name": None}, 409)])
+def test_concurrent_skill_rename_to_the_same_slug_is_409(state, skills):
+    state.session.fail_commit = IntegrityError("UPDATE skills", {}, Exception("unique"))
+    assert as_role("moderator").patch("/skills/2", json={"name": "Vue"}).status_code == 409
+    assert state.session.rollbacks == 1
+
+
+@pytest.mark.parametrize(
+    ("body", "status"), [({"name": "!!!"}, 400), ({"name": None}, 422), ({}, 422), ({"category": "Backend"}, 422)]
+)
 def test_skill_rename_validation(state, skills, body, status):
     assert as_role("moderator").patch("/skills/1", json=body).status_code == status
 
@@ -210,3 +204,40 @@ def test_deleting_a_used_company_is_409(state, companies):
 
 def test_users_cannot_delete_companies(state, companies):
     assert as_role("user").delete("/companies/3").status_code == 403
+
+
+# --- races on the unique names -----------------------------------------------------------------
+
+
+def _unique_violation() -> IntegrityError:
+    return IntegrityError("INSERT/UPDATE", {}, Exception("duplicate key"))
+
+
+def test_concurrent_company_rename_to_the_same_name_is_409(state, companies, monkeypatch):
+    monkeypatch.setattr(CompanyRepository, "get_by_normalized_name", lambda self, name: None)
+    state.session.fail_commit = _unique_violation()
+    response = as_role("admin").patch("/companies/3", json={"name": "Contoso"})
+    assert response.status_code == 409 and state.session.rollbacks == 1
+
+
+def test_company_created_meanwhile_by_someone_else_is_returned(state, monkeypatch):
+    theirs = Company(id=8, name="Contoso", normalized_name="contoso", is_consultancy=False)
+    lookups = iter([None, theirs])  # absent on the first check, present after the rollback
+    monkeypatch.setattr(CompanyRepository, "get_by_normalized_name", lambda self, name: next(lookups))
+    monkeypatch.setattr(CompanyRepository, "create", lambda self, **fields: Company(**fields))
+    monkeypatch.setattr(CompanyRepository, "used_ids", lambda self, ids: set())
+    state.session.fail_commit = _unique_violation()
+    response = as_role("user").post("/companies", json={"name": "Contoso", "is_consultancy": False})
+    assert response.status_code == 201 and response.json()["id"] == 8
+    assert state.session.rollbacks == 1
+
+
+def test_skill_created_meanwhile_by_someone_else_is_returned(state, monkeypatch):
+    theirs = Skill(id=9, name="Vue", slug="vue")
+    lookups = iter([None, theirs])
+    monkeypatch.setattr(SkillRepository, "get_by_slug", lambda self, slug: next(lookups))
+    monkeypatch.setattr(SkillRepository, "create", lambda self, **fields: Skill(**fields))
+    state.session.fail_commit = _unique_violation()
+    response = as_role("user").post("/skills", json={"name": "Vue"})
+    assert response.status_code == 201 and response.json()["id"] == 9
+    assert state.session.rollbacks == 1

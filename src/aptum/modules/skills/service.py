@@ -21,42 +21,49 @@ class SkillService:
         return self.repository.search(query.strip(), limit)
 
     def get_or_create(self, user_id: int, data: SkillCreate) -> Skill:
-        slug = slugify(data.name)
-        if not slug:
-            raise AptumError("Skill name must contain letters or numbers")
+        slug = _slug(data.name)
         existing = self.repository.get_by_slug(slug)
         if existing is not None:
             return existing
-        return self.repository.create(
-            name=data.name.strip(),
-            slug=slug,
-            category=data.category,
-            created_by_user_id=user_id,
-        )
+        try:
+            skill = self.repository.create(name=data.name.strip(), slug=slug, created_by_user_id=user_id)
+            self.db.commit()
+        except IntegrityError:  # someone created the same skill meanwhile: return theirs
+            self.db.rollback()
+            existing = self.repository.get_by_slug(slug)
+            if existing is None:
+                raise
+            return existing
+        self.db.refresh(skill)
+        return skill
 
     def update(self, actor: Actor, skill_id: int, data: SkillUpdate) -> Skill:
-        """Rename or recategorize a catalog skill (`skill:update_any`, checked by the router)."""
+        """Rename a catalog skill; the slug follows (`skill:update_any`, checked by the router)."""
         skill = self.repository.get(skill_id)
         if skill is None:
             raise NotFoundError("Skill not found")
-        fields = data.model_dump(exclude_unset=True)
-        if "name" in fields:
-            if fields["name"] is None:
-                raise ConflictError("name cannot be null")
-            fields["name"] = fields["name"].strip()
-            slug = slugify(fields["name"])
-            if not slug:
-                raise AptumError("Skill name must contain letters or numbers")
-            clash = self.repository.get_by_slug(slug)
-            if clash is not None and clash.id != skill.id:
-                raise ConflictError("A skill with that name already exists")
-            fields["slug"] = slug
+        name = data.name.strip()
+        slug = _slug(name)
+        clash = self.repository.get_by_slug(slug)
+        if clash is not None and clash.id != skill.id:
+            raise ConflictError("A skill with that name already exists")
+        fields = {"name": name, "slug": slug}
         changes = diff(snapshot(skill, fields), fields)
         if not changes:
             return skill
         self.audit.record(actor.id, AuditAction.skill_update, AuditEntity.skill, skill.id, changes)
+        self.repository.update(skill, **fields)
         try:
-            return self.repository.update(skill, **fields)
+            self.db.commit()
         except IntegrityError as exc:  # concurrent rename to the same slug
             self.db.rollback()
             raise ConflictError("A skill with that name already exists") from exc
+        self.db.refresh(skill)
+        return skill
+
+
+def _slug(name: str) -> str:
+    slug = slugify(name)
+    if not slug:
+        raise AptumError("Skill name must contain letters or numbers")
+    return slug

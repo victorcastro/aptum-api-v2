@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from datetime import date
 
 from aptum.common.countries import country_name
-from aptum.common.enums import LinkKind
+from aptum.common.enums import LinkKind, SkillCategory
 from aptum.modules.cv.ats.builder import language_lines
 from aptum.modules.profile.models import Profile
 
@@ -88,11 +88,16 @@ def _range(start: date | None, end: date | None, current: bool = False) -> str:
 
 
 def _group_skills(profile: Profile) -> tuple[SkillGroup, ...]:
-    """Group by Skill.category in order of first appearance; uncategorized skills go to "Other"."""
+    """Group by the profile skill's CV category, in `SkillCategory` order like the ATS CV;
+    empty groups are left out."""
     groups: dict[str, list[str]] = {}
     for ps in profile.skills:
-        groups.setdefault(ps.skill.category or "Other", []).append(ps.skill.name)
-    return tuple(SkillGroup(label, tuple(names)) for label, names in groups.items())
+        groups.setdefault(ps.category, []).append(ps.skill.name)
+    return tuple(
+        SkillGroup(category.value, tuple(groups[category.value]))
+        for category in SkillCategory
+        if category.value in groups
+    )
 
 
 def build_cv_data(profile: Profile) -> CVDocument:

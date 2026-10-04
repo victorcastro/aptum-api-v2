@@ -84,6 +84,7 @@ class ProfileService:
     so a client can never reach another user's CV rows."""
 
     def __init__(self, db: Session) -> None:
+        self.db = db
         self.repository = ProfileRepository(db)
         self.companies = CompanyRepository(db)
         self.commons = CommonsRepository(db)
@@ -91,11 +92,19 @@ class ProfileService:
 
     def get_or_create(self, user_id: int) -> Profile:
         profile = self.repository.get_by_user_id(user_id)
-        return profile if profile is not None else self.repository.create(user_id)
+        return profile if profile is not None else self._save(self.repository.create(user_id))
+
+    def set_preferred_template(self, profile: Profile, template_id: str | None) -> Profile:
+        return self._save(self.repository.update(profile, preferred_template=template_id))
+
+    def _save(self, row):
+        self.db.commit()
+        self.db.refresh(row)
+        return row
 
     def update(self, user_id: int, data: ProfileUpdate) -> Profile:
         profile = self._get_owned(user_id)
-        return self.repository.update(profile, **data.model_dump(exclude_unset=True))
+        return self._save(self.repository.update(profile, **data.model_dump(exclude_unset=True)))
 
     def list_experiences(self, user_id: int):
         profile = self._get_owned(user_id)
@@ -104,10 +113,12 @@ class ProfileService:
     def add_experience(self, user_id: int, data: ExperienceCreate):
         profile = self._get_owned(user_id)
         self._check_companies(data.employer_id, data.client_id)
-        return self.repository.add_experience(
-            profile,
-            is_current=data.end_date is None,
-            **data.model_dump(),
+        return self._save(
+            self.repository.add_experience(
+                profile,
+                is_current=data.end_date is None,
+                **data.model_dump(),
+            )
         )
 
     def update_experience(self, user_id: int, experience_id: int, data: ExperienceUpdate):
@@ -122,7 +133,7 @@ class ProfileService:
         self._check_companies(fields.get("employer_id"), fields.get("client_id"))
         if "end_date" in fields:
             fields["is_current"] = fields["end_date"] is None
-        return self.repository.update_experience(experience, functions, **fields)
+        return self._save(self.repository.update_experience(experience, functions, **fields))
 
     def delete_experience(self, user_id: int, experience_id: int) -> None:
         self.delete_row(user_id, Experience, experience_id)
@@ -151,7 +162,7 @@ class ProfileService:
                 raise ConflictError("Skill already added")
             if fields.get("category") is None:
                 fields["category"] = classify_skill(catalog_skill.name)
-        return self.repository.add_row(model, profile, **fields)
+        return self._save(self.repository.add_row(model, profile, **fields))
 
     def update_row(self, user_id: int, model: type[Base], row_id: int, data: BaseModel):
         row = self._get_owned_row(user_id, model, row_id)
@@ -164,11 +175,12 @@ class ProfileService:
             self._check_language_catalog(fields)
         if model is ProfileSkill and "category" in fields and fields["category"] is None:
             fields["category"] = classify_skill(row.skill.name)
-        return self.repository.update_row(row, **fields)
+        return self._save(self.repository.update_row(row, **fields))
 
     def delete_row(self, user_id: int, model: type[Base], row_id: int) -> None:
         row = self._get_owned_row(user_id, model, row_id)
         self.repository.delete_row(row)
+        self.db.commit()
 
     def _check_language_catalog(self, fields: dict) -> None:
         code = fields.get("language_code")

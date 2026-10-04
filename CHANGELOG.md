@@ -60,7 +60,7 @@ All schema changes are in a single migration, `0002_release_1_1_0`.
 - `can_edit` on `/companies` responses (search, create, update), computed for the caller.
   `PATCH /companies/{id}`: moderators and admins edit any company; the creator only while no
   experience uses it (403 when in use, 404 for anyone else).
-- Catalog moderation: `PATCH /skills/{id}`, `POST /companies/industries`,
+- Catalog moderation: `PATCH /skills/{id}` (rename), `POST /companies/industries`,
   `PATCH /companies/industries/{id}`, `POST /companies/{id}/merge` (admin) and
   `DELETE /companies/{id}` (unused companies only).
 - User management: `GET /admin/users`, `PATCH /admin/users/{id}/role`,
@@ -81,7 +81,13 @@ All schema changes are in a single migration, `0002_release_1_1_0`.
 - The matching prompt includes the computed years of experience as locked facts.
 - The OpenAPI metadata now reports the package version (`1.1.0`), read from `pyproject.toml`.
 - CV skill groups come from `profile_skills.category` (six standard groups)
-  instead of the free-text catalog category (`skills.category`).
+  instead of the free-text catalog category (`skills.category`), in every template and in the
+  same order as the ATS CV.
+- Registration creates the user and their profile in one transaction.
+- Repositories no longer commit; each service commits once per operation, so audit entries
+  always share the transaction of the change they record.
+- Creating a company or skill that someone else creates at the same moment returns the
+  existing one instead of a 500; renaming a company to a name taken meanwhile returns 409.
 - All CV templates render on A4 (the ATS PDF was US Letter), and every template prints the
   same Languages lines: language name and level code (`Spanish - Native`, `English - C1`).
 - **Breaking:** `proficiency` on `/profile/me/languages` takes a level code from
@@ -99,6 +105,9 @@ All schema changes are in a single migration, `0002_release_1_1_0`.
 - `classic` CV template: removed from the template registry. `?template=classic` now returns 404,
   and the default template (`/cv/settings`, `/cv/templates`) is `software-engineer`. A saved
   `preferred_template` of `classic` falls back to the default.
+- **Breaking:** `category` on catalog skills: the `skills.category` column is dropped (the
+  migration downgrade restores it empty), and `category` is gone from `SkillRead`,
+  `POST /skills` and `PATCH /skills/{id}`, which now takes only `name` (required; 422 otherwise).
 
 ## [1.0.0] - 2026-10-02
 

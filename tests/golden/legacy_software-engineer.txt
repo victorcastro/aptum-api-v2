@@ -4,7 +4,12 @@ Alex Rivera
 SUMMARY
 Engineer building backend services and LLM features.
 TECHNICAL SKILLS
-Other: Python, FastAPI, OpenAI API, RAG, Docker, AWS, Swift, Hexagonal Architecture, Excel
+LLMs & AI: OpenAI API, RAG
+Backend: Python, FastAPI
+Cloud & DevOps: Docker, AWS
+Architecture: Hexagonal Architecture
+Mobile: Swift
+Other: Excel
 EXPERIENCE
 AI Engineer - Northwind Labs
 Jan 2023 - Present
@@ -33,10 +38,10 @@ PROJECTS
 Open-source CLI
 A small CLI for prompt testing.
 EDUCATION
+
 BSc, Computer Science - Lakeside University
 Mar 2008 - Dec 2012
 CERTIFICATIONS
-
 Cloud Practitioner - Example Cloud Institute
 May 2022
 LANGUAGES

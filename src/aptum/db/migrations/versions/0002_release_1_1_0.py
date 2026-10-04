@@ -8,6 +8,8 @@ All schema changes of release 1.1.0 in one revision:
 
 - profile_skills.category (NOT NULL, default 'Other', CHECK on allowed values), backfilled from
   the deterministic dictionary aptum/modules/skills/data/skill_dictionary.json.
+- skills.category dropped: free text the CV no longer reads (profile_skills.category replaces
+  it). Downgrade restores it empty.
 - profiles: linkedin_url, github_url, portfolio_url, work_authorization,
   work_authorization_country, open_to_relocation (default false).
 - users.role ('user' | 'moderator' | 'admin', default 'user', CHECK on allowed values): RBAC;
@@ -161,6 +163,7 @@ def upgrade() -> None:
     op.create_check_constraint(
         op.f('ck_profile_skills_category_allowed'), 'profile_skills', _in('category', SkillCategory)
     )
+    op.drop_column('skills', 'category')
     op.drop_column('profile_skills', 'position')
     op.drop_column('experience_functions', 'position')
 
@@ -300,3 +303,4 @@ def downgrade() -> None:
     op.alter_column('experience_functions', 'position', server_default=None)
     op.drop_constraint(op.f('ck_profile_skills_category_allowed'), 'profile_skills', type_='check')
     op.drop_column('profile_skills', 'category')
+    op.add_column('skills', sa.Column('category', sa.String(length=80), nullable=True))

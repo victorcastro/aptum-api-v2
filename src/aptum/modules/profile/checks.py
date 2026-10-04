@@ -3,8 +3,7 @@
 from collections.abc import Sequence
 from dataclasses import dataclass
 
-from aptum.common.utils import normalize_name
-from aptum.modules.cv.ats.text import normalize_text
+from aptum.common.utils import normalize_name, normalize_text
 from aptum.modules.profile.models import Education
 
 # Words that say nothing about which degree it is.

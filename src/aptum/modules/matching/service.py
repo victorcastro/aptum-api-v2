@@ -32,7 +32,8 @@ class MatchingService:
         self.llm_client = llm_client
 
     def match(self, user_id: int, job_description: str) -> MatchResult:
-        profile_embedding = self.repository.get_profile_embedding(user_id)
+        profile = self.repository.get_profile(user_id)
+        profile_embedding = profile.embedding if profile is not None else None
         job_embedding = self.embedding_client.embed(job_description)
 
         score = (
@@ -40,7 +41,6 @@ class MatchingService:
         )
         prompt = f"Tailor this candidate's CV for the following job:\n{job_description}"
         # Years of experience are computed in code and locked: the model must not change them.
-        profile = self.repository.get_profile(user_id)
         if profile is not None:
             today = datetime.now(UTC).date()
             prompt += "\n\n" + locked_facts_prompt(years_of_experience(profile.experiences, today))

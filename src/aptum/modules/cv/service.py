@@ -1,9 +1,9 @@
 import re
-import unicodedata
 from datetime import UTC, datetime
 
 from sqlalchemy.orm import Session
 
+from aptum.common.utils import strip_accents
 from aptum.core.exceptions import NotFoundError
 from aptum.modules.cv.ats.pipeline import ATSResult, generate_ats_cv
 from aptum.modules.cv.document import build_cv_data
@@ -69,7 +69,7 @@ class CVService:
     def _filename(full_name: str) -> str:
         """CV-YYYY.MM-First_Last-YYYYMMDDHHMMSS.pdf, ASCII only so it is safe in a header."""
         now = datetime.now(UTC)
-        ascii_name = unicodedata.normalize("NFKD", full_name).encode("ascii", "ignore").decode()
+        ascii_name = strip_accents(full_name)
         name = "_".join(re.findall(r"[A-Za-z0-9]+", ascii_name)) or "CV"
         return f"CV-{now:%Y.%m}-{name}-{now:%Y%m%d%H%M%S}.pdf"
 
@@ -91,13 +91,13 @@ class CVService:
             raise NotFoundError(f"Template '{template_id}' not found")
         profile = self.profiles.get_or_create(user_id)
         if "template_id" in fields:
-            profile = self.profiles.repository.update(profile, preferred_template=template_id)
+            profile = self.profiles.set_preferred_template(profile, template_id)
         return CVSettingsRead(template_id=self._effective_template(profile))
 
     def reset_settings(self, user_id: int) -> None:
         """Back to defaults for every CV setting."""
         profile = self.profiles.get_or_create(user_id)
-        self.profiles.repository.update(profile, preferred_template=None)
+        self.profiles.set_preferred_template(profile, None)
 
     @staticmethod
     def _effective_template(profile: Profile) -> str:

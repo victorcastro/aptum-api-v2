@@ -35,8 +35,8 @@ def update_skill(
     current_user: User = Depends(require(Permission.skill_update_any)),
     db: Session = Depends(get_db),
 ):
-    """Rename or recategorize a catalog skill. Needs `skill:update_any`. Audited.
+    """Rename a catalog skill; the slug follows. Needs `skill:update_any`. Audited.
 
     400 name without letters or digits; 401 bad token; 403 missing permission; 404 unknown skill;
-    409 another skill has the same normalized name (slug), or name sent as null."""
+    409 another skill has the same normalized name (slug); 422 name missing or null."""
     return SkillService(db).update(current_user, skill_id, data)
