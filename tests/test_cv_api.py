@@ -3,12 +3,14 @@
 The golden files were produced by the 1.0.0 code from the same synthetic profile, so they pin
 the legacy templates' output for `?template=`."""
 
+from io import BytesIO
 from pathlib import Path
 
 import pytest
 from conftest import pdf_text
 from factories import base_profile
 from fastapi.testclient import TestClient
+from pypdf import PdfReader
 
 from aptum.core.dependencies import get_current_user, get_db
 from aptum.main import app
@@ -44,6 +46,21 @@ def test_default_export_is_ats_even_with_a_saved_template(client, profile):
 def test_explicit_template_renders_the_legacy_layout_unchanged(client):
     response = client.get("/cv/export", params={"template": "software-engineer"})
     assert pdf_text(response.content) == (GOLDEN / "legacy_software-engineer.txt").read_text()
+
+
+def test_languages_section_matches_between_templates(client, profile):
+    profile.english_level = "C1"
+    default = pdf_text(client.get("/cv/export").content)
+    explicit = pdf_text(client.get("/cv/export", params={"template": "software-engineer"}).content)
+    for text in (default, explicit):
+        assert "Spanish - Native or bilingual proficiency" in text
+        assert "English - C1 (Full professional proficiency)" in text
+
+
+@pytest.mark.parametrize("params", [{}, {"template": "software-engineer"}])
+def test_every_template_is_a4(client, params):
+    page = PdfReader(BytesIO(client.get("/cv/export", params=params).content)).pages[0]
+    assert (round(float(page.mediabox.width)), round(float(page.mediabox.height))) == (595, 842)
 
 
 def test_classic_template_is_gone(client):

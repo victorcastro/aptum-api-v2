@@ -61,6 +61,9 @@ All schema changes are in a single migration, `0002_release_1_1_0`.
 - The OpenAPI metadata now reports the package version (`1.1.0`), read from `pyproject.toml`.
 - CV skill groups come from `profile_skills.category` (six standard groups)
   instead of the free-text catalog category (`skills.category`).
+- All CV templates render on A4 (the ATS PDF was US Letter), and the `software-engineer`
+  Languages section is built the same way as the ATS one (same lines, `english_level`
+  included).
 
 ### Removed
 

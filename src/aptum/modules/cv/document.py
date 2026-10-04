@@ -1,9 +1,9 @@
 from dataclasses import dataclass
 from datetime import date
 
-from aptum.common.constants import LANGUAGE_NAMES
 from aptum.common.countries import country_name
-from aptum.common.enums import LanguageProficiency, LinkKind
+from aptum.common.enums import LinkKind
+from aptum.modules.cv.ats.builder import language_lines
 from aptum.modules.profile.models import Profile
 
 
@@ -48,12 +48,6 @@ class LinkEntry:
 
 
 @dataclass(frozen=True)
-class LanguageEntry:
-    name: str
-    level: str
-
-
-@dataclass(frozen=True)
 class CVDocument:
     """Presentation-ready CV: every value is already formatted, templates only lay it out."""
 
@@ -70,18 +64,10 @@ class CVDocument:
     educations: tuple[EducationEntry, ...]
     skills_line: str | None
     skill_groups: tuple[SkillGroup, ...]
-    languages: tuple[LanguageEntry, ...]
+    languages: tuple[str, ...]
     certifications: tuple[CertificationEntry, ...]
     projects: tuple[ProjectEntry, ...]
 
-
-_PROFICIENCY_LABELS = {
-    LanguageProficiency.elementary: "Elementary proficiency",
-    LanguageProficiency.limited_working: "Limited working proficiency",
-    LanguageProficiency.professional_working: "Professional working proficiency",
-    LanguageProficiency.full_professional: "Full professional proficiency",
-    LanguageProficiency.native_or_bilingual: "Native or bilingual proficiency",
-}
 
 _LINK_LABELS = {
     LinkKind.linkedin: "LinkedIn",
@@ -167,13 +153,7 @@ def build_cv_data(profile: Profile) -> CVDocument:
         educations=educations,
         skills_line=", ".join(ps.skill.name for ps in profile.skills) if profile.skills else None,
         skill_groups=_group_skills(profile),
-        languages=tuple(
-            LanguageEntry(
-                LANGUAGE_NAMES.get(lang.language_code.lower(), lang.language_code.upper()),
-                _PROFICIENCY_LABELS[lang.proficiency],
-            )
-            for lang in profile.languages
-        ),
+        languages=tuple(language_lines(profile)),
         certifications=certifications,
         projects=projects,
     )

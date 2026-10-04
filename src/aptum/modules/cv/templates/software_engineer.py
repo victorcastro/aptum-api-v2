@@ -100,8 +100,8 @@ class SoftwareEngineerTemplate:
 
         if doc.languages:
             heading("Languages")
-            for lang in doc.languages:
-                story.append(p(f"{lang.name} - {lang.level}", body))
+            for language in doc.languages:
+                story.append(p(language, body))
 
         buffer = BytesIO()
         SimpleDocTemplate(

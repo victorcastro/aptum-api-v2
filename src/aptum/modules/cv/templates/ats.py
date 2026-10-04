@@ -3,7 +3,7 @@ from io import BytesIO
 from xml.sax.saxutils import escape
 
 from reportlab.lib.colors import black
-from reportlab.lib.pagesizes import LETTER
+from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import ParagraphStyle
 from reportlab.lib.units import cm
 from reportlab.platypus import KeepTogether, Paragraph, SimpleDocTemplate, Spacer
@@ -24,7 +24,7 @@ class RenderedPDF:
 class ATSTemplate:
     """ATS-safe layout: one column of plain text in a standard font (Helvetica), black on white.
     No tables, images, icons, charts, drawn lines, text boxes or photo; links are printed as
-    visible URLs. US Letter, the common size for US/Canada (also prints fine on A4)."""
+    visible URLs. A4, like every other template."""
 
     def render(self, doc: ATSDocument) -> RenderedPDF:
         body = ParagraphStyle("Body", fontName="Helvetica", fontSize=10, leading=12.5, spaceAfter=1, textColor=black)
@@ -96,7 +96,7 @@ class ATSTemplate:
         buffer = BytesIO()
         pdf = SimpleDocTemplate(
             buffer,
-            pagesize=LETTER,
+            pagesize=A4,
             leftMargin=1.8 * cm,
             rightMargin=1.8 * cm,
             topMargin=1.5 * cm,
