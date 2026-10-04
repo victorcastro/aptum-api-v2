@@ -23,8 +23,14 @@ class SkillRepository:
         )
 
     def create(self, **fields) -> Skill:
+        """No commit. Flushes, so a slug clash raises IntegrityError here."""
         skill = Skill(**fields)
         self.db.add(skill)
-        self.db.commit()
-        self.db.refresh(skill)
+        self.db.flush()
+        return skill
+
+    def update(self, skill: Skill, **fields) -> Skill:
+        """No commit."""
+        for key, value in fields.items():
+            setattr(skill, key, value)
         return skill

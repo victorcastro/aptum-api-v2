@@ -12,7 +12,6 @@ class Skill(TimestampMixin, Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(120))
     slug: Mapped[str] = mapped_column(String(120), unique=True)
-    category: Mapped[str | None] = mapped_column(String(80), default=None)
     created_by_user_id: Mapped[int | None] = mapped_column(
         ForeignKey("users.id", ondelete="SET NULL"), default=None
     )

@@ -1,0 +1,30 @@
+# Filler phrases flagged in CV bullets. One per line, case-insensitive; lines starting with # are ignored.
+# A bullet that is only filler (fewer than 3 meaningful words left once the phrase is removed)
+# is dropped from the generated CV; otherwise it is kept and returned as a warning.
+collaborated with product, design and qa
+collaborated with product design and qa
+collaborated with cross-functional teams
+worked closely with stakeholders
+worked with the team
+worked on various projects
+responsible for
+in charge of
+duties included
+tasks included
+participated in meetings
+participated in daily meetings
+attended daily stand-ups
+attended meetings
+helped with
+assisted with
+team player
+detail-oriented
+hard-working
+results-driven
+fast learner
+self-motivated
+go-getter
+think outside the box
+synergy
+various tasks
+other duties as assigned

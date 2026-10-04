@@ -1,0 +1,49 @@
+Alex Rivera
+ Toronto, Canada | +1 555 0100 | alex.rivera@example.com | LinkedIn | GitHub
+ Senior Software Engineer
+SUMMARY
+Engineer building backend services and LLM features.
+TECHNICAL SKILLS
+LLMs & AI: OpenAI API, RAG
+Backend: Python, FastAPI
+Cloud & DevOps: Docker, AWS
+Architecture: Hexagonal Architecture
+Mobile: Swift
+Other: Excel
+EXPERIENCE
+AI Engineer - Northwind Labs
+Jan 2023 - Present
+ Built a RAG assistant with the OpenAI API and pgvector serving 12,000 monthly users.
+ Reduced answer latency by 35% by caching embeddings.
+ Responsible for code reviews.
+Technologies: Python, OpenAI API, RAG
+Backend Engineer - Contoso Bank (via Acme Consulting)
+Jun 2019 - Mar 2023
+ Designed FastAPI microservices handling 2 million requests per day.
+ Collaborated with product, design and QA.
+ Migrated batch jobs to Docker on AWS.
+Technologies: FastAPI, Docker, AWS
+iOS Developer - Fabrikam Mobile
+Feb 2016 - May 2019
+ Shipped a Swift banking app rated 4.7 stars.
+ Designed FastAPI microservices handling 2 million requests per day!
+ Maintained the release pipeline.
+Technologies: Swift
+Junior Developer - Tailspin Toys
+Jan 2012 - Dec 2015
+ Wrote internal tools in Java.
+ Supported the QA team during releases.
+ Documented the deployment process.
+PROJECTS
+Open-source CLI
+A small CLI for prompt testing.
+EDUCATION
+
+BSc, Computer Science - Lakeside University
+Mar 2008 - Dec 2012
+CERTIFICATIONS
+Cloud Practitioner - Example Cloud Institute
+May 2022
+LANGUAGES
+Spanish - Native
+English - C1

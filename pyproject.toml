@@ -1,6 +1,6 @@
 [project]
 name = "aptum-api"
-version = "1.0.0"
+version = "1.1.0"
 description = "Add your description here"
 readme = "README.md"
 authors = [
@@ -29,6 +29,8 @@ build-backend = "uv_build"
 
 [dependency-groups]
 dev = [
+    "pypdf>=6.19.0",
+    "pytest>=9.1.1",
     "ruff>=0.16.10",
 ]
 
@@ -43,4 +45,8 @@ extend-immutable-calls = [
     "fastapi.File",
     "fastapi.Form",
     "fastapi.Security",
+    "aptum.core.permissions.require",
 ]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

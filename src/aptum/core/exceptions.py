@@ -13,6 +13,10 @@ class NotFoundError(AptumError):
     status_code = status.HTTP_404_NOT_FOUND
 
 
+class ForbiddenError(AptumError):
+    status_code = status.HTTP_403_FORBIDDEN
+
+
 class ConflictError(AptumError):
     status_code = status.HTTP_409_CONFLICT
 

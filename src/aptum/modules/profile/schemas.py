@@ -1,4 +1,5 @@
 from typing import Annotated, ClassVar
+from urllib.parse import urlsplit
 
 from pydantic import (
     AfterValidator,
@@ -12,13 +13,15 @@ from pydantic import (
 
 from aptum.common.enums import (
     EmploymentType,
-    LanguageProficiency,
+    ExperienceArea,
     LinkKind,
+    SkillCategory,
     SkillLevel,
+    WorkAuthorization,
     WorkMode,
 )
 from aptum.common.types import CountryCode, LanguageCode, YearMonth
-from aptum.modules.companies.schemas import CompanyRead
+from aptum.modules.companies.schemas import CompanySummary
 from aptum.modules.skills.schemas import SkillRead
 
 
@@ -36,6 +39,26 @@ def _check_http_url(value: str) -> str:
 
 
 HttpUrlStr = Annotated[str, Field(max_length=500), AfterValidator(_check_http_url)]
+
+
+def _host_check(*domains: str):
+    def check(value: str) -> str:
+        host = (urlsplit(value).hostname or "").lower()
+        if not any(host == domain or host.endswith("." + domain) for domain in domains):
+            raise ValueError(f"Expected a {' or '.join(domains)} URL")
+        return value
+
+    return AfterValidator(check)
+
+
+LinkedInUrl = Annotated[HttpUrlStr, _host_check("linkedin.com")]
+GitHubUrl = Annotated[HttpUrlStr, _host_check("github.com")]
+Year = Annotated[int, Field(ge=1900, le=2100)]
+
+
+def _check_years(start: int | None, end: int | None) -> None:
+    if start is not None and end is not None and end < start:
+        raise ValueError("end_year must not be before start_year")
 
 
 def _check_dates(issue, expiration) -> None:
@@ -56,6 +79,7 @@ class ExperienceCreate(BaseModel):
     is_active: bool = True
     description: str | None = None
     functions: list[str] = Field(default_factory=list)
+    area: ExperienceArea | None = Field(default=None, description="Used for per-area years of experience.")
 
     @model_validator(mode="after")
     def _validate(self):
@@ -70,7 +94,6 @@ class ExperienceFunctionRead(BaseModel):
 
     id: int
     description: str
-    position: int
 
 
 class ExperienceRead(BaseModel):
@@ -78,8 +101,8 @@ class ExperienceRead(BaseModel):
 
     id: int
     position: str
-    employer: CompanyRead
-    client: CompanyRead | None
+    employer: CompanySummary
+    client: CompanySummary | None
     employment_type: EmploymentType | None
     work_mode: WorkMode | None
     location_city: str | None
@@ -89,6 +112,7 @@ class ExperienceRead(BaseModel):
     is_current: bool
     is_active: bool
     description: str | None
+    area: ExperienceArea | None = None
     functions: list[ExperienceFunctionRead] = []
 
 
@@ -120,6 +144,7 @@ class ExperienceUpdate(PartialUpdate):
     is_active: bool | None = None
     description: str | None = None
     functions: list[str] | None = None
+    area: ExperienceArea | None = None
 
 
 class EducationCreate(BaseModel):
@@ -128,6 +153,8 @@ class EducationCreate(BaseModel):
     field_of_study: str | None = None
     start_date: YearMonth | None = None
     end_date: YearMonth | None = None
+    start_year: Year | None = Field(default=None, description="Year-only start, when the month is unknown.")
+    end_year: Year | None = Field(default=None, description="Year-only end (or expected graduation year).")
     grade: str | None = None
     is_active: bool = True
     description: str | None = None
@@ -135,6 +162,7 @@ class EducationCreate(BaseModel):
     @model_validator(mode="after")
     def _validate(self):
         _check_range(self.start_date, self.end_date)
+        _check_years(self.start_year, self.end_year)
         return self
 
 
@@ -146,6 +174,8 @@ class EducationUpdate(PartialUpdate):
     field_of_study: str | None = None
     start_date: YearMonth | None = None
     end_date: YearMonth | None = None
+    start_year: Year | None = None
+    end_year: Year | None = None
     grade: str | None = None
     is_active: bool | None = None
     description: str | None = None
@@ -157,15 +187,21 @@ class EducationRead(EducationCreate):
     id: int
 
 
+LanguageLevelCode = Annotated[
+    str,
+    Field(min_length=1, max_length=8, description="Code from `GET /commons/language-levels` (A1-C2, Native)."),
+]
+
+
 class LanguageCreate(BaseModel):
-    language_code: LanguageCode
-    proficiency: LanguageProficiency
+    language_code: LanguageCode = Field(description="Code from `GET /commons/languages` (ISO 639-1).")
+    proficiency: LanguageLevelCode
 
 
 class LanguageUpdate(PartialUpdate):
     non_nullable = ("proficiency",)
 
-    proficiency: LanguageProficiency | None = None
+    proficiency: LanguageLevelCode | None = None
 
 
 class LanguageRead(LanguageCreate):
@@ -201,14 +237,17 @@ class ProfileSkillCreate(BaseModel):
     skill_id: int
     level: SkillLevel | None = None
     years_experience: Annotated[int, Field(ge=0, le=80)] | None = None
+    category: SkillCategory | None = Field(
+        default=None, description="CV group. Omitted or null: classified from the skill dictionary."
+    )
 
 
 class ProfileSkillUpdate(PartialUpdate):
-    non_nullable = ("position",)
-
     level: SkillLevel | None = None
     years_experience: Annotated[int, Field(ge=0, le=80)] | None = None
-    position: Annotated[int, Field(ge=0)] | None = None
+    category: SkillCategory | None = Field(
+        default=None, description="CV group. `null` re-classifies it from the skill dictionary."
+    )
 
 
 class ProfileSkillRead(BaseModel):
@@ -218,7 +257,27 @@ class ProfileSkillRead(BaseModel):
     skill: SkillRead
     level: SkillLevel | None
     years_experience: int | None
-    position: int
+    category: SkillCategory
+
+
+class ProfileSkillItem(BaseModel):
+    """`id` is the profile skill (PATCH/DELETE); `skill_id` is the shared catalog skill."""
+
+    id: int
+    skill_id: int
+    name: str
+    level: SkillLevel | None
+    years_experience: int | None
+
+
+class ProfileSkillGroup(BaseModel):
+    category: SkillCategory
+    skills: list[ProfileSkillItem]
+
+
+class ProfileSkillsGrouped(BaseModel):
+    total: int
+    groups: list[ProfileSkillGroup]
 
 
 class CertificationCreate(BaseModel):
@@ -298,7 +357,9 @@ class ProjectRead(BaseModel):
     is_active: bool
 
 
-class ProfileUpdate(BaseModel):
+class ProfileUpdate(PartialUpdate):
+    non_nullable = ("open_to_relocation",)
+
     first_name: str | None = None
     last_name: str | None = None
     headline: str | None = None
@@ -308,6 +369,14 @@ class ProfileUpdate(BaseModel):
     city: str | None = None
     region: str | None = None
     country_code: CountryCode | None = None
+    linkedin_url: LinkedInUrl | None = None
+    github_url: GitHubUrl | None = None
+    portfolio_url: HttpUrlStr | None = None
+    work_authorization: WorkAuthorization | None = None
+    work_authorization_country: CountryCode | None = Field(
+        default=None, description="Country the authorization or relocation refers to."
+    )
+    open_to_relocation: bool | None = None
 
 
 class ProfileRead(BaseModel):
@@ -324,6 +393,12 @@ class ProfileRead(BaseModel):
     city: str | None
     region: str | None
     country_code: str | None
+    linkedin_url: str | None = None
+    github_url: str | None = None
+    portfolio_url: str | None = None
+    work_authorization: WorkAuthorization | None = None
+    work_authorization_country: str | None = None
+    open_to_relocation: bool = False
     links: list[ProfileLinkRead] = []
     experiences: list[ExperienceRead] = []
     educations: list[EducationRead] = []

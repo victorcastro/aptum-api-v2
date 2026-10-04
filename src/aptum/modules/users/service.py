@@ -20,15 +20,20 @@ class UserService:
 
         existing = self.repository.get_by_email(email)
         if existing is not None:
-            return self.repository.link_firebase_uid(existing, firebase_uid)
+            self.repository.link_firebase_uid(existing, firebase_uid)
+            self.db.commit()
+            self.db.refresh(existing)
+            return existing
 
         try:
             user = self.repository.create(email, firebase_uid)
-        except IntegrityError:
+            self.profiles.create(user.id)  # same transaction: never a user without a profile
+            self.db.commit()
+        except IntegrityError:  # concurrent first login of the same user
             self.db.rollback()
             user = self.repository.get_by_firebase_uid(firebase_uid)
             if user is None:
                 raise
             return user
-        self.profiles.create(user.id)
+        self.db.refresh(user)
         return user
