@@ -13,8 +13,10 @@ from sqlalchemy import (
     Text,
     UniqueConstraint,
     false,
+    text,
     true,
 )
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from aptum.common.constants import EMBEDDING_DIM
@@ -59,9 +61,9 @@ class Profile(TimestampMixin, Base):
     region: Mapped[str | None] = mapped_column(String(120), default=None)
     country_code: Mapped[str | None] = mapped_column(String(2), default=None)
     preferred_template: Mapped[str | None] = mapped_column(String(40), default=None)
-    linkedin_url: Mapped[str | None] = mapped_column(String(500), default=None)
-    github_url: Mapped[str | None] = mapped_column(String(500), default=None)
-    portfolio_url: Mapped[str | None] = mapped_column(String(500), default=None)
+    # Header links of the CV, in print order: [{"kind", "label", "url", "visible"}].
+    # Validated by `ProfileLink` in the schemas; always written as a whole list.
+    links: Mapped[list[dict]] = mapped_column(JSONB, default=list, server_default=text("'[]'::jsonb"))
     work_authorization: Mapped[str | None] = mapped_column(String(32), default=None)
     # Country the authorization (or the relocation target) refers to; ISO 3166-1 alpha-2.
     work_authorization_country: Mapped[str | None] = mapped_column(String(2), default=None)

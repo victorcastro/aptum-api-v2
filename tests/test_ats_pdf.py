@@ -15,7 +15,11 @@ def _profile(**fields):
     defaults = {
         "work_authorization": "authorized",
         "work_authorization_country": "CA",
-        "portfolio_url": "https://alex.example.dev",
+        "links": [
+            {"kind": "portfolio", "label": "Portfolio", "url": "https://alex.example.dev", "visible": True},
+            {"kind": "linkedin", "label": "LinkedIn", "url": "https://www.linkedin.com/in/example-alex", "visible": True},
+            {"kind": "github", "label": "GitHub", "url": "https://github.com/example-alex", "visible": True},
+        ],
     }
     return base_profile(**{**defaults, **fields})
 
@@ -45,7 +49,7 @@ def test_nothing_is_an_image_table_or_link_box():
 
 def test_header_prints_urls_and_work_authorization_line():
     lines = _lines(generate_ats_cv(_profile(open_to_relocation=True), today=TODAY).pdf)
-    assert "https://www.linkedin.com/in/example-alex | https://github.com/example-alex | https://alex.example.dev" in lines
+    assert "https://alex.example.dev | https://www.linkedin.com/in/example-alex | https://github.com/example-alex" in lines
     assert "Authorized to work in Canada | Open to relocation" in lines
     assert lines.index("Authorized to work in Canada | Open to relocation") < lines.index("SUMMARY")
 

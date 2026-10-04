@@ -36,6 +36,13 @@ class SkillCategory(StrEnum):
     other = "Other"
 
 
+class LinkKind(StrEnum):
+    portfolio = "portfolio"
+    linkedin = "linkedin"
+    github = "github"
+    other = "other"
+
+
 class WorkAuthorization(StrEnum):
     authorized = "authorized"
     requires_sponsorship = "requires_sponsorship"

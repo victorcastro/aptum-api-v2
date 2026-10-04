@@ -14,6 +14,7 @@ from pydantic import (
 from aptum.common.enums import (
     EmploymentType,
     ExperienceArea,
+    LinkKind,
     SkillCategory,
     SkillLevel,
     WorkAuthorization,
@@ -50,8 +51,8 @@ def _host_check(*domains: str):
     return AfterValidator(check)
 
 
-LinkedInUrl = Annotated[HttpUrlStr, _host_check("linkedin.com")]
-GitHubUrl = Annotated[HttpUrlStr, _host_check("github.com")]
+_KIND_HOSTS = {LinkKind.linkedin: ("linkedin.com",), LinkKind.github: ("github.com",)}
+MAX_LINKS = 10
 Year = Annotated[int, Field(ge=1900, le=2100)]
 
 
@@ -63,6 +64,33 @@ def _check_years(start: int | None, end: int | None) -> None:
 def _check_dates(issue, expiration) -> None:
     if issue is not None and expiration is not None and expiration < issue:
         raise ValueError("expiration_date must not be before issue_date")
+
+
+class ProfileLink(BaseModel):
+    """One header link of the CV. `visible` only controls the CV: the URL stays on the profile."""
+
+    kind: LinkKind
+    label: Annotated[str, Field(max_length=120)] | None = None
+    url: HttpUrlStr
+    visible: bool = True
+
+    @model_validator(mode="after")
+    def _check_host(self):
+        if self.kind in _KIND_HOSTS:
+            _host_check(*_KIND_HOSTS[self.kind]).func(self.url)
+        return self
+
+
+def _check_links(links: list[ProfileLink]) -> list[ProfileLink]:
+    kinds = [link.kind for link in links if link.kind != LinkKind.other]
+    if len(kinds) != len(set(kinds)):
+        raise ValueError("Only one link per kind (use 'other' for extra ones)")
+    return links
+
+
+ProfileLinks = Annotated[
+    list[ProfileLink], Field(max_length=MAX_LINKS), AfterValidator(_check_links)
+]
 
 
 class ExperienceCreate(BaseModel):
@@ -334,7 +362,7 @@ class ProjectRead(BaseModel):
 
 
 class ProfileUpdate(PartialUpdate):
-    non_nullable = ("open_to_relocation",)
+    non_nullable = ("open_to_relocation", "links")
 
     first_name: str | None = None
     last_name: str | None = None
@@ -345,9 +373,7 @@ class ProfileUpdate(PartialUpdate):
     city: str | None = None
     region: str | None = None
     country_code: CountryCode | None = None
-    linkedin_url: LinkedInUrl | None = None
-    github_url: GitHubUrl | None = None
-    portfolio_url: HttpUrlStr | None = None
+    links: ProfileLinks | None = None
     work_authorization: WorkAuthorization | None = None
     work_authorization_country: CountryCode | None = Field(
         default=None, description="Country the authorization or relocation refers to."
@@ -369,9 +395,7 @@ class ProfileRead(BaseModel):
     city: str | None
     region: str | None
     country_code: str | None
-    linkedin_url: str | None = None
-    github_url: str | None = None
-    portfolio_url: str | None = None
+    links: list[ProfileLink] = []
     work_authorization: WorkAuthorization | None = None
     work_authorization_country: str | None = None
     open_to_relocation: bool = False

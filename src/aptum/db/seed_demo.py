@@ -240,8 +240,10 @@ def seed_demo_cv(db: Session, user: User, reset: bool) -> Profile | None:
     profile.contact_email = "ana.torres@example.com"
     profile.city = "Lima"
     profile.country_code = "PE"
-    profile.linkedin_url = "https://linkedin.com/in/ana-torres-demo"
-    profile.github_url = "https://github.com/ana-torres-demo"
+    profile.links = [
+        {"kind": "linkedin", "label": "LinkedIn", "url": "https://linkedin.com/in/ana-torres-demo", "visible": True},
+        {"kind": "github", "label": "GitHub", "url": "https://github.com/ana-torres-demo", "visible": True},
+    ]
     profile.work_authorization = WorkAuthorization.requires_sponsorship
     profile.work_authorization_country = "CA"
     profile.open_to_relocation = True

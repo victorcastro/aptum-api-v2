@@ -4,6 +4,7 @@ from datetime import date
 from aptum.common.countries import country_name
 from aptum.common.enums import SkillCategory
 from aptum.modules.cv.ats.builder import language_lines, work_authorization_line
+from aptum.modules.cv.links import visible_link_urls
 from aptum.modules.profile.models import Profile
 
 
@@ -96,9 +97,7 @@ def _group_skills(profile: Profile) -> tuple[SkillGroup, ...]:
 def build_cv_data(profile: Profile) -> CVDocument:
     full_name = " ".join(part for part in (profile.first_name, profile.last_name) if part)
     location = ", ".join(x for x in (profile.city, profile.region, country_name(profile.country_code)) if x)
-    links = tuple(
-        LinkEntry(url, url) for url in (profile.portfolio_url, profile.linkedin_url, profile.github_url) if url
-    )
+    links = tuple(LinkEntry(url, url) for url in visible_link_urls(profile))
     contact = " | ".join(x for x in (profile.contact_email, profile.phone, location) if x)
 
     experiences = tuple(

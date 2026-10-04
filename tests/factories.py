@@ -121,8 +121,10 @@ def base_profile(**fields) -> Profile:
         "city": "Toronto",
         "region": "Ontario",
         "country_code": "CA",
-        "linkedin_url": "https://www.linkedin.com/in/example-alex",
-        "github_url": "https://github.com/example-alex",
+        "links": [
+            {"kind": "linkedin", "label": "LinkedIn", "url": "https://www.linkedin.com/in/example-alex", "visible": True},
+            {"kind": "github", "label": "GitHub", "url": "https://github.com/example-alex", "visible": True},
+        ],
     }
     profile = Profile(id=next(_ids), user_id=next(_ids), **{**defaults, **fields})
     profile.experiences = [

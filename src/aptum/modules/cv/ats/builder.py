@@ -14,13 +14,13 @@ from aptum.modules.cv.ats.document import (
     format_year_range,
 )
 from aptum.modules.cv.ats.skills import select_skills, skill_lines
+from aptum.modules.cv.links import visible_link_urls
 from aptum.modules.profile.models import Education, Profile
 
 
 def header_links(profile: Profile) -> list[str]:
-    """LinkedIn, GitHub, Portfolio as plain URLs, from the profile fields."""
-    urls = (profile.linkedin_url, profile.github_url, profile.portfolio_url)
-    return list(dict.fromkeys(url for url in urls if url))
+    """The visible profile links as plain URLs."""
+    return visible_link_urls(profile)
 
 
 def work_authorization_line(profile: Profile) -> str | None:
