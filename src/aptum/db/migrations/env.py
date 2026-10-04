@@ -9,6 +9,7 @@ from aptum.modules.audit import models as _audit  # noqa: F401
 from aptum.modules.commons import models as _commons  # noqa: F401
 from aptum.modules.companies import models as _companies  # noqa: F401
 from aptum.modules.profile import models as _profile  # noqa: F401
+from aptum.modules.roles import models as _roles  # noqa: F401
 from aptum.modules.skills import models as _skills  # noqa: F401
 from aptum.modules.users import models as _users  # noqa: F401
 

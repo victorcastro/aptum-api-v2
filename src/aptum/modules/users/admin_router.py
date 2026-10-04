@@ -3,7 +3,6 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
-from aptum.common.enums import UserRole
 from aptum.common.pagination import Page, PageParams, page_params
 from aptum.core.dependencies import get_db
 from aptum.core.permissions import Permission, require
@@ -20,7 +19,7 @@ router = APIRouter(prefix="/admin/users", tags=["admin"])
     dependencies=[Depends(require(Permission.user_list_read))],
 )
 def list_users(
-    role: UserRole | None = None,
+    role: Annotated[str | None, Query(min_length=1, max_length=32, description="Role name")] = None,
     is_active: bool | None = None,
     q: Annotated[str | None, Query(min_length=1, max_length=255, description="Email contains")] = None,
     page: PageParams = Depends(page_params),
@@ -40,10 +39,11 @@ def change_role(
     current_user: User = Depends(require(Permission.user_manage_roles)),
     db: Session = Depends(get_db),
 ):
-    """Set the user's role. Needs `user:manage_roles`. Audited.
+    """Set the user's role, by name. Needs `user:manage_roles`. Audited.
 
-    401 bad token; 403 missing permission or acting on an admin without being one;
-    404 unknown user; 409 your own account, or it would leave no active admin."""
+    401 bad token; 403 missing permission, acting on an admin without being one, or on a user or
+    role holding permissions you lack; 404 unknown user or role; 409 your own account, or it
+    would leave no active admin."""
     return UserAdminService(db).change_role(current_user, user_id, data.role)
 
 
@@ -57,6 +57,7 @@ def set_active(
     """Activate or deactivate the user; inactive users get 403 on every request. Needs
     `user:deactivate`. Audited.
 
-    401 bad token; 403 missing permission or acting on an admin without being one;
-    404 unknown user; 409 your own account, or it would leave no active admin."""
+    401 bad token; 403 missing permission, acting on an admin without being one, or on a user
+    holding permissions you lack; 404 unknown user; 409 your own account, or it would leave no
+    active admin."""
     return UserAdminService(db).set_active(current_user, user_id, data.is_active)

@@ -2,6 +2,7 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from aptum.common.enums import UserRole
+from aptum.modules.roles.models import Role
 from aptum.modules.users.models import User
 
 
@@ -23,7 +24,7 @@ class UserRepository:
     ) -> tuple[list[User], int]:
         query = select(User)
         if role is not None:
-            query = query.where(User.role == role)
+            query = query.join(User.role).where(Role.name == role)
         if is_active is not None:
             query = query.where(User.is_active == is_active)
         if email_query:
@@ -39,21 +40,22 @@ class UserRepository:
         return list(
             self.db.scalars(
                 select(User.id)
-                .where(User.role == UserRole.admin.value, User.is_active.is_(True))
+                .join(User.role)
+                .where(Role.name == UserRole.admin.value, User.is_active.is_(True))
                 .order_by(User.id)
-                .with_for_update()
+                .with_for_update(of=User)
             )
         )
 
     def get_for_update(self, user_id: int) -> User | None:
-        return self.db.scalars(select(User).where(User.id == user_id).with_for_update()).first()
+        return self.db.scalars(select(User).where(User.id == user_id).with_for_update(of=User)).first()
 
     def get_by_email_for_update(self, email: str) -> User | None:
-        return self.db.scalars(select(User).where(User.email == email).with_for_update()).first()
+        return self.db.scalars(select(User).where(User.email == email).with_for_update(of=User)).first()
 
-    def create(self, email: str, firebase_uid: str | None) -> User:
+    def create(self, email: str, firebase_uid: str | None, role: Role) -> User:
         """No commit. Flushes for the id; a duplicate email or uid raises IntegrityError here."""
-        user = User(email=email, firebase_uid=firebase_uid)
+        user = User(email=email, firebase_uid=firebase_uid, role=role)
         self.db.add(user)
         self.db.flush()
         return user

@@ -3,6 +3,7 @@
 from types import SimpleNamespace
 
 import pytest
+from factories import actor
 from fastapi.testclient import TestClient
 
 from aptum.core.dependencies import get_current_user, get_db
@@ -11,8 +12,8 @@ from aptum.modules.companies.models import Company
 from aptum.modules.companies.repository import CompanyRepository
 
 
-def make_user(role: str = "user", user_id: int = 1) -> SimpleNamespace:
-    return SimpleNamespace(id=user_id, email=f"u{user_id}@example.com", is_active=True, role=role)
+def make_user(role: str = "user", user_id: int = 1, **fields) -> SimpleNamespace:
+    return actor(role, user_id, **fields)
 
 
 @pytest.fixture
@@ -34,7 +35,7 @@ def test_me_for_a_plain_user(client_as):
 
 def test_me_accepts_a_reserved_email_domain(client_as):
     """Seeded test accounts use .test, which email-validator rejects; the API must not 500."""
-    user = SimpleNamespace(id=3, email="admin@aptum.test", is_active=True, role="admin")
+    user = actor("admin", 3, email="admin@aptum.test")
     response = client_as(user).get("/users/me")
     assert response.status_code == 200 and response.json()["email"] == "admin@aptum.test"
 
@@ -46,9 +47,16 @@ def test_me_for_a_moderator_lists_permissions_sorted(client_as):
         "company:delete",
         "company:update_any",
         "industry:manage",
+        "role:read",
         "skill:update_any",
         "user:list_read",
     ]
+
+
+def test_me_for_a_custom_role_shows_its_name_and_permissions(client_as):
+    body = client_as(make_user("catalog_editor", permissions={"skill:update_any", "industry:manage"})).get("/users/me").json()
+    assert body["role"] == "catalog_editor"
+    assert body["permissions"] == ["industry:manage", "skill:update_any"]
 
 
 @pytest.fixture

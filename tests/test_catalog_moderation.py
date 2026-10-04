@@ -3,7 +3,7 @@
 from types import SimpleNamespace
 
 import pytest
-from factories import FakeSession
+from factories import FakeSession, actor
 from fastapi.testclient import TestClient
 from sqlalchemy.exc import IntegrityError
 
@@ -26,7 +26,7 @@ def state(monkeypatch):
 
 
 def as_role(role: str) -> TestClient:
-    app.dependency_overrides[get_current_user] = lambda: SimpleNamespace(id=7, role=role)
+    app.dependency_overrides[get_current_user] = lambda: actor(role, 7)
     return TestClient(app)
 
 

@@ -1,19 +1,18 @@
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict
-
-from aptum.common.enums import UserRole
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class UserRead(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
+    model_config = ConfigDict(from_attributes=True, validate_by_name=True, validate_by_alias=True)
 
     id: int
     # Plain str: Firebase already verified it, and re-validating on output turns any address
     # email-validator dislikes (reserved domains like .test) into a 500 for that user.
     email: str
     is_active: bool
-    role: UserRole
+    # The role's name (read from `User.role_name`): system or custom, so a plain string.
+    role: str = Field(validation_alias="role_name")
 
 
 class CurrentUserRead(UserRead):
@@ -26,7 +25,7 @@ class AdminUserRead(UserRead):
 
 
 class RoleUpdate(BaseModel):
-    role: UserRole
+    role: str = Field(min_length=1, max_length=32, description="Role name")
 
 
 class ActiveUpdate(BaseModel):

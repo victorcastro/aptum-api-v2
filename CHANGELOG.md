@@ -4,6 +4,43 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 and the project follows [Semantic Versioning](https://semver.org/).
 
+## [1.2.0] - 2026-10-04
+
+Roles and permissions move from code to tables, so admins can create roles and choose what
+each one grants without a deploy. Permissions themselves are still born in code: one only
+guards something once an endpoint asks for it.
+
+Schema changes are in migration `0003_release_1_2_0`.
+
+### Added
+
+- Tables `permissions`, `roles` (`is_system` for `user`, `moderator`, `admin`) and
+  `role_permissions`. The migration seeds them with the grants that lived in code, so every
+  user keeps exactly what they could do.
+- `python -m aptum.modules.roles.sync`, run by the container on every start after the
+  migrations: adds permissions new in code, updates descriptions, deletes the ones gone from
+  code, recreates missing system roles, and keeps `admin` holding every permission.
+  Idempotent, one transaction, serialized with an advisory lock; changes to roles are audited
+  with `"via": "sync"`. If it fails, the API does not start.
+- `GET /admin/permissions`, `GET /admin/roles` (`role:read`) and `POST/PATCH/DELETE
+  /admin/roles` (`role:manage`), audited as `role.create`, `role.update` (permission diff as
+  `added`/`removed`) and `role.delete`.
+- Permissions `role:read` (moderator, admin) and `role:manage` (admin).
+- Local seeder: a custom role `catalog_editor` to try the role endpoints.
+
+### Changed
+
+- `users.role` (string) becomes `users.role_id` (foreign key, `RESTRICT`). The API still
+  speaks role names: `role` in user responses, `PATCH /admin/users/{id}/role` and the `role`
+  filter of `GET /admin/users` accept any role name, system or custom. An unknown name returns
+  404 (it was 422).
+- Anti-escalation: nobody grants, assigns, edits or deletes a role holding permissions they
+  lack, nor manages a user holding permissions they lack. Admin, holding them all, is never
+  limited by it.
+- The `admin` role cannot be edited or deleted. `user` and `moderator` can only be edited by an
+  admin, and are never renamed or deleted. A role still assigned to users cannot be deleted.
+- `set-role` CLI takes any role name in the table.
+
 ## [1.1.0] - 2026-10-03
 
 ATS-friendly CV generation for English-speaking markets. The ATS CV is the default for every

@@ -28,5 +28,6 @@ COPY alembic.ini ./
 USER aptum
 EXPOSE 8000
 
-# Migrations run on startup; if they fail, the API must not start.
-CMD ["sh", "-c", "alembic upgrade head && exec uvicorn aptum.main:app --host 0.0.0.0 --port 8000 --proxy-headers --forwarded-allow-ips='*'"]
+# Migrations and the roles sync (permissions from code, system roles) run on startup; if either
+# fails, the API must not start.
+CMD ["sh", "-c", "alembic upgrade head && python -m aptum.modules.roles.sync && exec uvicorn aptum.main:app --host 0.0.0.0 --port 8000 --proxy-headers --forwarded-allow-ips='*'"]

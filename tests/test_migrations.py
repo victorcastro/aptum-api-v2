@@ -9,6 +9,7 @@ The database is wiped (downgrade to base) at the start: never point this at real
 
 import os
 import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -20,9 +21,17 @@ ROOT = Path(__file__).resolve().parent.parent
 pytestmark = pytest.mark.skipif(not URL, reason="MIGRATION_TEST_DATABASE_URL not set")
 
 
-def alembic(*args: str) -> None:
+def _run(*command: str) -> None:
     env = {**os.environ, "DATABASE_URL": URL, "FIREBASE_PROJECT_ID": "test"}
-    subprocess.run(["alembic", *args], cwd=ROOT, env=env, check=True, capture_output=True)
+    subprocess.run(command, cwd=ROOT, env=env, check=True, capture_output=True)
+
+
+def alembic(*args: str) -> None:
+    _run("alembic", *args)
+
+
+def roles_sync() -> None:
+    _run(sys.executable, "-m", "aptum.modules.roles.sync")
 
 
 @pytest.fixture
@@ -68,6 +77,15 @@ def test_upgrade_backfills_and_downgrade_round_trips(engine):
     with engine.begin() as conn:
         _seed_v1(conn)
 
+    alembic("upgrade", "0002")
+    with engine.connect() as conn:
+        roles = conn.execute(sa.text("SELECT role FROM users ORDER BY id")).scalars().all()
+    assert roles == ["user", "user"]  # existing users get the safe default
+    with engine.begin() as conn, pytest.raises(sa.exc.IntegrityError):
+        conn.execute(sa.text("UPDATE users SET role = 'root' WHERE id = 1"))
+    with engine.begin() as conn:
+        conn.execute(sa.text("UPDATE users SET role = 'moderator' WHERE id = 2"))
+
     alembic("upgrade", "head")
     with engine.connect() as conn:
         categories = dict(conn.execute(sa.text(
@@ -110,17 +128,44 @@ def test_upgrade_backfills_and_downgrade_round_trips(engine):
     with engine.begin() as conn, pytest.raises(sa.exc.IntegrityError):
         conn.execute(sa.text("UPDATE profile_languages SET proficiency = 'B3' WHERE profile_id = 2"))
 
+    # 0003: roles in tables, every user keeps theirs.
     with engine.connect() as conn:
-        roles = conn.execute(sa.text("SELECT role FROM users ORDER BY id")).scalars().all()
-    assert roles == ["user", "user"]  # existing users get the safe default
+        user_roles = conn.execute(sa.text(
+            "SELECT r.name FROM users u JOIN roles r ON r.id = u.role_id ORDER BY u.id"
+        )).scalars().all()
+        grants = conn.execute(sa.text(
+            "SELECT r.name, count(rp.permission_id) FROM roles r "
+            "LEFT JOIN role_permissions rp ON rp.role_id = r.id GROUP BY r.name"
+        )).all()
+        permission_count = conn.execute(sa.text("SELECT count(*) FROM permissions")).scalar()
+    assert user_roles == ["user", "moderator"]
+    assert dict(grants) == {"user": 0, "moderator": 6, "admin": permission_count}
     with engine.begin() as conn, pytest.raises(sa.exc.IntegrityError):
-        conn.execute(sa.text("UPDATE users SET role = 'root' WHERE id = 1"))
+        conn.execute(sa.text("DELETE FROM roles WHERE name = 'moderator'"))  # still assigned
+
+    # The migration seeds what the code wants: the first sync has nothing to do.
+    roles_sync()
+    with engine.connect() as conn:
+        assert conn.execute(sa.text("SELECT count(*) FROM audit_logs")).scalar() == 0
+        assert conn.execute(sa.text("SELECT count(*) FROM permissions")).scalar() == permission_count
+
+    # A custom role, to check the downgrade folds its users back to 'user'.
+    with engine.begin() as conn:
+        conn.execute(sa.text("INSERT INTO roles (name, description) VALUES ('auditor', '')"))
+        conn.execute(sa.text("UPDATE users SET role_id = (SELECT id FROM roles WHERE name = 'auditor') WHERE id = 1"))
 
     with engine.connect() as conn:
         tables = set(conn.execute(sa.text("SELECT tablename FROM pg_tables WHERE schemaname = 'public'")).scalars())
     assert "audit_logs" in tables
 
     alembic("check")  # models and migrations agree
+    alembic("downgrade", "0002")
+    with engine.connect() as conn:
+        roles = conn.execute(sa.text("SELECT role FROM users ORDER BY id")).scalars().all()
+        tables = set(conn.execute(sa.text("SELECT tablename FROM pg_tables WHERE schemaname = 'public'")).scalars())
+    assert roles == ["user", "moderator"]  # the custom role folds back to the default
+    assert not {"roles", "permissions", "role_permissions"} & tables
+
     alembic("downgrade", "0001")
     with engine.connect() as conn:
         tables = set(conn.execute(sa.text("SELECT tablename FROM pg_tables WHERE schemaname = 'public'")).scalars())
