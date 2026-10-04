@@ -4,6 +4,12 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 and the project follows [Semantic Versioning](https://semver.org/).
 
+## [1.3.0] - Unreleased
+
+### Added
+
+- Pending.
+
 ## [1.2.0] - 2026-10-04
 
 Roles and permissions move from code to tables, so admins can create roles and choose what
