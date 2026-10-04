@@ -45,5 +45,9 @@ def update_company(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """Partial edit. Admin: any company. Creator: only while no experience uses it."""
+    """Partial edit. `company:update_any` (moderator, admin): any company. Creator: only while
+    no experience uses it.
+
+    401 bad token; 403 creator but the company is in use; 404 unknown company or not yours;
+    409 name clashes with another company or a required field sent as null."""
     return CompanyService(db).update(current_user, company_id, data)
