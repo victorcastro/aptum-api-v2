@@ -110,6 +110,12 @@ def test_upgrade_backfills_and_downgrade_round_trips(engine):
     with engine.begin() as conn, pytest.raises(sa.exc.IntegrityError):
         conn.execute(sa.text("UPDATE profile_languages SET proficiency = 'B3' WHERE profile_id = 2"))
 
+    with engine.connect() as conn:
+        roles = conn.execute(sa.text("SELECT role FROM users ORDER BY id")).scalars().all()
+    assert roles == ["user", "user"]  # existing users get the safe default
+    with engine.begin() as conn, pytest.raises(sa.exc.IntegrityError):
+        conn.execute(sa.text("UPDATE users SET role = 'root' WHERE id = 1"))
+
     alembic("check")  # models and migrations agree
     alembic("downgrade", "0001")
     with engine.connect() as conn:

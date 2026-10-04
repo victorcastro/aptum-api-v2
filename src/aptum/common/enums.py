@@ -49,6 +49,14 @@ class WorkAuthorization(StrEnum):
     requires_sponsorship = "requires_sponsorship"
 
 
+class UserRole(StrEnum):
+    """One role per user. What each role may do lives only in core/permissions.py."""
+
+    user = "user"
+    moderator = "moderator"
+    admin = "admin"
+
+
 class ExperienceArea(StrEnum):
     """Used to compute per-area years of experience."""
 

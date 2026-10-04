@@ -1,4 +1,4 @@
-"""release 1.1.0: skill categories, profile ATS fields, language catalogs, drop profile_skills.position and experience_functions.position
+"""release 1.1.0: skill categories, profile ATS fields, language catalogs, user roles, drop profile_skills.position and experience_functions.position
 
 Revision ID: 0002
 Revises: 0001
@@ -10,7 +10,8 @@ All schema changes of release 1.1.0 in one revision:
   the deterministic dictionary aptum/modules/skills/data/skill_dictionary.json.
 - profiles: linkedin_url, github_url, portfolio_url, work_authorization,
   work_authorization_country, open_to_relocation (default false).
-- users.is_admin (default false): admins can edit companies already used by experiences.
+- users.role ('user' | 'moderator' | 'admin', default 'user', CHECK on allowed values): RBAC;
+  what each role may do lives in aptum/core/permissions.py, not in the database.
 - experiences.area; educations.start_year / end_year.
 - profile_skills.position dropped: the CV orders skills by evidence instead.
 - experience_functions.position dropped: responsibilities are raw content kept in insertion order (id).
@@ -37,6 +38,7 @@ from alembic import op
 from aptum.common.enums import (
     ExperienceArea,
     SkillCategory,
+    UserRole,
     WorkAuthorization,
 )
 from aptum.modules.skills.categories import classify_skill
@@ -121,8 +123,11 @@ def _backfill_skill_categories() -> None:
 
 
 def upgrade() -> None:
-    # Admins can edit catalog companies already used by experiences
-    op.add_column('users', sa.Column('is_admin', sa.Boolean(), server_default=sa.false(), nullable=False))
+    # Roles (RBAC)
+    op.add_column(
+        'users', sa.Column('role', sa.String(length=16), server_default=UserRole.user.value, nullable=False)
+    )
+    op.create_check_constraint(op.f('ck_users_role_allowed'), 'users', _in('role', UserRole))
 
     # Skill categories
     op.add_column(
@@ -212,7 +217,8 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
-    op.drop_column('users', 'is_admin')
+    op.drop_constraint(op.f('ck_users_role_allowed'), 'users', type_='check')
+    op.drop_column('users', 'role')
 
     op.drop_constraint(op.f('fk_profile_languages_proficiency_language_levels'), 'profile_languages', type_='foreignkey')
     op.drop_constraint(op.f('fk_profile_languages_language_code_languages'), 'profile_languages', type_='foreignkey')
