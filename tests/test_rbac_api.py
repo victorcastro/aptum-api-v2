@@ -32,6 +32,13 @@ def test_me_for_a_plain_user(client_as):
     assert body == {"id": 1, "email": "u1@example.com", "is_active": True, "role": "user", "permissions": []}
 
 
+def test_me_accepts_a_reserved_email_domain(client_as):
+    """Seeded test accounts use .test, which email-validator rejects; the API must not 500."""
+    user = SimpleNamespace(id=3, email="admin@aptum.test", is_active=True, role="admin")
+    response = client_as(user).get("/users/me")
+    assert response.status_code == 200 and response.json()["email"] == "admin@aptum.test"
+
+
 def test_me_for_a_moderator_lists_permissions_sorted(client_as):
     body = client_as(make_user("moderator")).get("/users/me").json()
     assert body["role"] == "moderator"
