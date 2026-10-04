@@ -1,7 +1,7 @@
 from io import BytesIO
 from xml.sax.saxutils import escape, quoteattr
 
-from reportlab.lib.colors import black
+from reportlab.lib.colors import HexColor
 from reportlab.lib.enums import TA_CENTER
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import ParagraphStyle
@@ -17,7 +17,10 @@ from reportlab.platypus import (
 from aptum.modules.cv.document import CVDocument
 from aptum.modules.cv.templates.common import p
 
-_GRAY = "#444444"
+_INK = "#1F2933"
+_ACCENT = "#1F3A5F"
+_GRAY = "#52606D"
+_RULE = "#B8C2CC"
 
 
 def _labeled(label: str, value: str, style: ParagraphStyle) -> Paragraph:
@@ -25,37 +28,64 @@ def _labeled(label: str, value: str, style: ParagraphStyle) -> Paragraph:
 
 
 class SoftwareEngineerTemplate:
-    """Single column, black text on white, no images or tables: plain text flow for ATS parsers.
-    Skills come before Experience so keywords sit at the top."""
+    """Single column, dark text on white, one navy accent, standard fonts, no images or tables:
+    plain text flow for ATS parsers. Skills come before Experience so keywords sit at the top."""
 
     def render(self, doc: CVDocument) -> bytes:
-        body = ParagraphStyle("Body", fontName="Helvetica", fontSize=10, leading=13, spaceAfter=2)
-        muted = ParagraphStyle("Muted", parent=body, fontSize=9, textColor=_GRAY)
+        body = ParagraphStyle(
+            "Body", fontName="Helvetica", fontSize=10, leading=13.5, spaceAfter=2, textColor=HexColor(_INK)
+        )
+        muted = ParagraphStyle("Muted", parent=body, fontSize=9, leading=12, textColor=HexColor(_GRAY))
         name = ParagraphStyle(
-            "Name", parent=body, fontName="Helvetica-Bold", fontSize=26, leading=30, alignment=TA_CENTER, spaceAfter=4
+            "Name",
+            parent=body,
+            fontName="Helvetica-Bold",
+            fontSize=21,
+            leading=25,
+            alignment=TA_CENTER,
+            spaceAfter=2,
+            textColor=HexColor(_ACCENT),
         )
-        contact = ParagraphStyle("Contact", parent=muted, fontSize=9.5, alignment=TA_CENTER, spaceAfter=4)
         headline = ParagraphStyle(
-            "Headline", parent=body, fontName="Helvetica-Bold", fontSize=14, leading=17, alignment=TA_CENTER
+            "Headline",
+            parent=body,
+            fontName="Helvetica",
+            fontSize=11.5,
+            leading=15,
+            alignment=TA_CENTER,
+            spaceAfter=4,
+            textColor=HexColor(_GRAY),
         )
+        contact = ParagraphStyle("Contact", parent=muted, fontSize=9.5, alignment=TA_CENTER, spaceAfter=2)
+        links = ParagraphStyle("Links", parent=contact, textColor=HexColor(_ACCENT))
         section = ParagraphStyle(
-            "Section", parent=body, fontName="Helvetica-Bold", fontSize=10.5, spaceBefore=18, spaceAfter=1
+            "Section",
+            parent=body,
+            fontName="Helvetica-Bold",
+            fontSize=10.5,
+            spaceBefore=16,
+            spaceAfter=1,
+            textColor=HexColor(_ACCENT),
         )
         item = ParagraphStyle("Item", parent=body, fontName="Helvetica-Bold", spaceBefore=5, spaceAfter=0)
         bullet = ParagraphStyle("Bullet", parent=body, leftIndent=12, bulletIndent=0)
 
         story: list = [p(doc.full_name, name)]
-        contact_parts = [escape(x) for x in (doc.location, doc.phone, doc.email) if x]
-        contact_parts += [f"<link href={quoteattr(link.url)}>{escape(link.label)}</link>" for link in doc.links]
-        if contact_parts:
-            story.append(Paragraph(" | ".join(contact_parts), contact))
         if doc.headline:
             story.append(p(doc.headline, headline))
-        story.append(Spacer(1, 0.5 * cm))
+        contact_parts = [escape(x) for x in (doc.location, doc.phone, doc.email) if x]
+        if contact_parts:
+            story.append(Paragraph(" | ".join(contact_parts), contact))
+        link_parts = [
+            f"<a href={quoteattr(link.url)}>{escape(link.label)}</a>" for link in doc.links
+        ]
+        if link_parts:
+            story.append(Paragraph(" | ".join(link_parts), links))
+        story.append(Spacer(1, 0.4 * cm))
 
         def heading(title: str) -> None:
             story.append(p(title.upper(), section))
-            story.append(HRFlowable(width="100%", thickness=0.5, color=black, spaceBefore=1, spaceAfter=4))
+            story.append(HRFlowable(width="100%", thickness=0.5, color=HexColor(_RULE), spaceBefore=1, spaceAfter=4))
 
         if doc.summary or doc.work_authorization_line:
             heading("Summary")

@@ -97,13 +97,7 @@ def build_cv_data(profile: Profile) -> CVDocument:
     full_name = " ".join(part for part in (profile.first_name, profile.last_name) if part)
     location = ", ".join(x for x in (profile.city, profile.region, country_name(profile.country_code)) if x)
     links = tuple(
-        LinkEntry(label, url)
-        for label, url in (
-            (profile.linkedin_url, profile.linkedin_url),
-            ("GitHub", profile.github_url),
-            ("Portfolio", profile.portfolio_url),
-        )
-        if url
+        LinkEntry(url, url) for url in (profile.portfolio_url, profile.linkedin_url, profile.github_url) if url
     )
     contact = " | ".join(x for x in (profile.contact_email, profile.phone, location) if x)
 
