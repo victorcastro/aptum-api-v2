@@ -21,7 +21,7 @@ from aptum.common.enums import (
     WorkMode,
 )
 from aptum.common.types import CountryCode, LanguageCode, YearMonth
-from aptum.modules.companies.schemas import CompanyRead
+from aptum.modules.companies.schemas import CompanySummary
 from aptum.modules.skills.schemas import SkillRead
 
 
@@ -101,8 +101,8 @@ class ExperienceRead(BaseModel):
 
     id: int
     position: str
-    employer: CompanyRead
-    client: CompanyRead | None
+    employer: CompanySummary
+    client: CompanySummary | None
     employment_type: EmploymentType | None
     work_mode: WorkMode | None
     location_city: str | None

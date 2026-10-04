@@ -1,4 +1,6 @@
-from sqlalchemy import or_
+from collections.abc import Collection
+
+from sqlalchemy import select, union
 from sqlalchemy.orm import Session
 
 from aptum.modules.companies.models import Company, Industry
@@ -26,13 +28,16 @@ class CompanyRepository:
             .all()
         )
 
+    def used_ids(self, company_ids: Collection[int]) -> set[int]:
+        """Which of these companies some experience uses, as employer or client. One query."""
+        if not company_ids:
+            return set()
+        as_employer = select(Experience.employer_id).where(Experience.employer_id.in_(company_ids))
+        as_client = select(Experience.client_id).where(Experience.client_id.in_(company_ids))
+        return set(self.db.scalars(union(as_employer, as_client)))
+
     def is_used_by_experiences(self, company_id: int) -> bool:
-        return (
-            self.db.query(Experience.id)
-            .filter(or_(Experience.employer_id == company_id, Experience.client_id == company_id))
-            .first()
-            is not None
-        )
+        return company_id in self.used_ids([company_id])
 
     def get_industry(self, industry_id: int) -> Industry | None:
         return self.db.get(Industry, industry_id)

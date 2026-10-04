@@ -3,9 +3,9 @@ from sqlalchemy.orm import Session
 from aptum.common.utils import normalize_name
 from aptum.core.exceptions import ConflictError, NotFoundError
 from aptum.modules.companies.models import Company, Industry
-from aptum.modules.companies.policy import check_edit_company
+from aptum.modules.companies.policy import can_edit_company, check_edit_company
 from aptum.modules.companies.repository import CompanyRepository
-from aptum.modules.companies.schemas import CompanyCreate, CompanyUpdate
+from aptum.modules.companies.schemas import CompanyCreate, CompanyRead, CompanyUpdate
 from aptum.modules.users.models import User
 
 
@@ -50,6 +50,16 @@ class CompanyService:
 
     def search(self, query: str, limit: int = 20) -> list[Company]:
         return self.repository.search(normalize_name(query), limit)
+
+    def to_read(self, user: User, companies: list[Company]) -> list[CompanyRead]:
+        """API view with `can_edit` for this caller. "In use" is fetched in one query for all."""
+        used = self.repository.used_ids([company.id for company in companies])
+        return [
+            CompanyRead.model_validate(company).model_copy(
+                update={"can_edit": can_edit_company(user, company, company.id in used)}
+            )
+            for company in companies
+        ]
 
     def get(self, company_id: int) -> Company:
         company = self.repository.get(company_id)

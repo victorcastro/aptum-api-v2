@@ -31,7 +31,9 @@ class CompanyUpdate(BaseModel):
     is_consultancy: bool | None = None
 
 
-class CompanyRead(BaseModel):
+class CompanySummary(BaseModel):
+    """A company as embedded in other resources (experiences)."""
+
     model_config = ConfigDict(from_attributes=True)
 
     id: int
@@ -42,3 +44,10 @@ class CompanyRead(BaseModel):
     website: str | None
     logo_url: str | None
     is_consultancy: bool
+
+
+class CompanyRead(CompanySummary):
+    """A company from /companies, with what the caller may do with it."""
+
+    # Whether the caller may PATCH this company. UI hint only: every write is checked again.
+    can_edit: bool = False
