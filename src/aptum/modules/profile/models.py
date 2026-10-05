@@ -99,6 +99,7 @@ class ProfileLanguage(Base):
     language_code: Mapped[str] = mapped_column(String(2), ForeignKey("languages.code"))
     # Code of a `language_levels` row: CEFR (A1-C2) or Native.
     proficiency: Mapped[str] = mapped_column(String(8), ForeignKey("language_levels.code"))
+    is_active: Mapped[bool] = mapped_column(default=True, server_default=true())
 
     profile: Mapped["Profile"] = relationship(back_populates="languages")
     language: Mapped[Language] = relationship(lazy="joined")
@@ -220,7 +221,6 @@ class Education(TimestampMixin, Base):
     end_year: Mapped[int | None] = mapped_column(SmallInteger, default=None)
     grade: Mapped[str | None] = mapped_column(String(80), default=None)
     is_active: Mapped[bool] = mapped_column(default=True, server_default=true())
-    description: Mapped[str | None] = mapped_column(Text, default=None)
 
     profile: Mapped["Profile"] = relationship(back_populates="educations")
 
@@ -242,6 +242,7 @@ class Certification(TimestampMixin, Base):
     expiration_date: Mapped[date | None] = mapped_column(Date, default=None)
     credential_id: Mapped[str | None] = mapped_column(String(255), default=None)
     credential_url: Mapped[str | None] = mapped_column(String(500), default=None)
+    show_credential_url: Mapped[bool] = mapped_column(default=True, server_default=true())
     is_active: Mapped[bool] = mapped_column(default=True, server_default=true())
 
     profile: Mapped["Profile"] = relationship(back_populates="certifications")

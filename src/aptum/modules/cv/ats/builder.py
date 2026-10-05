@@ -38,7 +38,7 @@ def work_authorization_line(profile: Profile) -> str | None:
 
 def language_lines(profile: Profile) -> list[str]:
     """`Spanish - Native`, `English - C1`: language name and level code from the catalogs."""
-    return [f"{lang.language.name} - {lang.proficiency}" for lang in profile.languages]
+    return [f"{lang.language.name} - {lang.proficiency}" for lang in profile.languages if lang.is_active]
 
 
 def _education_dates(edu: Education) -> str:
@@ -82,7 +82,6 @@ def build_ats_document(profile: Profile, offer: str | None = None) -> ATSDocumen
                 title=f"{edu.degree}{f', {edu.field_of_study}' if edu.field_of_study else ''} - {edu.institution}",
                 institution=edu.institution,
                 dates=_education_dates(edu),
-                description=edu.description or None,
             )
             for edu in profile.educations
             if edu.is_active

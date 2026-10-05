@@ -71,8 +71,6 @@ class ATSTemplate:
             heading("Education")
             for edu in doc.educations:
                 story.append(KeepTogether([p(edu.title, item), *([p(edu.dates, body)] if edu.dates else [])]))
-                if edu.description:
-                    story.append(p(edu.description, body))
 
         if doc.certifications:
             heading("Certifications")

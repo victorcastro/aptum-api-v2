@@ -70,7 +70,7 @@ def skill(name: str) -> Skill:
 
 
 def profile_language(code: str, name: str, level: str) -> ProfileLanguage:
-    return ProfileLanguage(id=next(_ids), language_code=code, language=Language(code=code, name=name), proficiency=level)
+    return ProfileLanguage(id=next(_ids), language_code=code, language=Language(code=code, name=name), proficiency=level, is_active=True)
 
 
 def profile_skill(name: str, **fields) -> ProfileSkill:
@@ -194,6 +194,7 @@ def base_profile(**fields) -> Profile:
             name="Cloud Practitioner",
             issuing_organization="Example Cloud Institute",
             issue_date=date(2022, 5, 1),
+            show_credential_url=True,
             is_active=True,
         )
     ]
