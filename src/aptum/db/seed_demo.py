@@ -368,6 +368,8 @@ def seed_demo_cv(db: Session, user: User, reset: bool) -> Profile | None:
             issuing_organization="Amazon Web Services",
             issue_date=date(2023, 5, 1),
             expiration_date=date(2026, 5, 1),
+            credential_id="AWS-DEV-ASSOC-2023-0001",
+            credential_url="https://www.credly.com/badges/aws-certified-developer-associate",
         )
     ]
     profile.projects = [

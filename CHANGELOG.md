@@ -4,6 +4,17 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 and the project follows [Semantic Versioning](https://semver.org/).
 
+## [1.3.3] - 2026-10-05
+
+### Added
+
+- `software-engineer` CV template: the certification's `credential_url` is printed after the issuer
+  as a clickable link, when the certification has one.
+
+### Changed
+
+- `software-engineer` CV: the institution (education) and issuer (certification) now sit on their own line below the title, not bold.
+
 ## [1.3.2] - 2026-10-05
 
 ### Fixed

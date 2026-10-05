@@ -44,3 +44,23 @@ def test_dated_line_draws_for_plain_wrapped_and_escaped_titles():
         line.wrap(400, 800)
         line.canv = Canvas(BytesIO())
         line.draw()
+
+
+def test_institution_and_issuer_sit_below_their_title():
+    lines = _lines(base_profile())
+    degree = next(i for i, line in enumerate(lines) if line.startswith("BSc, Computer Science"))
+    assert "Lakeside University" not in lines[degree]
+    assert "Lakeside University" in lines[degree + 1 : degree + 3]
+    cert = next(i for i, line in enumerate(lines) if line.startswith("Cloud Practitioner"))
+    assert "Example Cloud Institute" not in lines[cert]
+    assert "Example Cloud Institute" in lines[cert + 1 : cert + 3]
+
+
+def test_certification_link_is_printed_after_the_issuer():
+    profile = base_profile()
+    profile.certifications[0].credential_url = "https://verify.example.dev/abc123"
+    lines = _lines(profile)
+    cert = next(i for i, line in enumerate(lines) if line.startswith("Cloud Practitioner"))
+    assert any(
+        line == "Example Cloud Institute | https://verify.example.dev/abc123" for line in lines[cert + 1 : cert + 3]
+    )
