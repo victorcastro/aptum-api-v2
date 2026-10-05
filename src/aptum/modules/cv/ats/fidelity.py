@@ -41,7 +41,7 @@ def profile_text_blocks(profile: Profile) -> list[str]:
         blocks += [exp.position, exp.description, *(f.description for f in exp.functions)]
         blocks += [skill.name for skill in exp.skills]
     for edu in profile.educations:
-        blocks += [edu.degree, edu.field_of_study, edu.institution, edu.grade, edu.description]
+        blocks += [edu.degree, edu.field_of_study, edu.institution, edu.grade]
     for cert in profile.certifications:
         blocks += [cert.name, cert.issuing_organization]
     for project in profile.projects:

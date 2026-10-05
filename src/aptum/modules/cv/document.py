@@ -22,7 +22,6 @@ class EducationEntry:
     title: str
     institution: str
     dates: str
-    description: str | None
 
 
 @dataclass(frozen=True)
@@ -120,7 +119,6 @@ def build_cv_data(profile: Profile) -> CVDocument:
             title=f"{edu.degree}{f', {edu.field_of_study}' if edu.field_of_study else ''}",
             institution=edu.institution,
             dates=_range(edu.start_date, edu.end_date),
-            description=edu.description or None,
         )
         for edu in profile.educations
         if edu.is_active
@@ -130,7 +128,7 @@ def build_cv_data(profile: Profile) -> CVDocument:
             title=cert.name,
             issuer=cert.issuing_organization,
             dates=_range(cert.issue_date, cert.expiration_date),
-            url=cert.credential_url or None,
+            url=(cert.credential_url if cert.show_credential_url else None),
         )
         for cert in profile.certifications
         if cert.is_active

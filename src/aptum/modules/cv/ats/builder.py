@@ -82,7 +82,6 @@ def build_ats_document(profile: Profile, offer: str | None = None) -> ATSDocumen
                 title=f"{edu.degree}{f', {edu.field_of_study}' if edu.field_of_study else ''} - {edu.institution}",
                 institution=edu.institution,
                 dates=_education_dates(edu),
-                description=edu.description or None,
             )
             for edu in profile.educations
             if edu.is_active

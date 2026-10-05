@@ -194,6 +194,7 @@ def base_profile(**fields) -> Profile:
             name="Cloud Practitioner",
             issuing_organization="Example Cloud Institute",
             issue_date=date(2022, 5, 1),
+            show_credential_url=True,
             is_active=True,
         )
     ]
