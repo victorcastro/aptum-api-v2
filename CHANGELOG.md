@@ -4,6 +4,14 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 and the project follows [Semantic Versioning](https://semver.org/).
 
+## [1.3.2] - 2026-10-05
+
+### Fixed
+
+- CV preview/download failed with `AttributeError: 'ParaLines' object has no attribute 'ascent'` in the
+  `software-engineer` template when an experience, education or certification title contained `&`
+  (e.g. "R&D Engineer"). The date baseline now falls back to the title font size.
+
 ## [1.3.1] - 2026-10-05
 
 ### Added

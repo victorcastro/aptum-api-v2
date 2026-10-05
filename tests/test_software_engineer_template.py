@@ -1,3 +1,5 @@
+from io import BytesIO
+
 from conftest import pdf_text
 from factories import base_profile
 
@@ -28,3 +30,17 @@ def test_links_line_follows_the_saved_order():
     assert _lines(base_profile(links=reordered))[3] == (
         "https://github.com/example-alex | https://www.linkedin.com/in/example-alex"
     )
+
+
+def test_dated_line_draws_for_plain_wrapped_and_escaped_titles():
+    from reportlab.lib.styles import ParagraphStyle
+    from reportlab.pdfgen.canvas import Canvas
+
+    from aptum.modules.cv.templates.software_engineer import _DatedLine
+
+    style = ParagraphStyle("t", fontName="Helvetica-Bold", fontSize=10, leading=13)
+    for title in ("Engineer", "R&D Engineer", "Senior Engineer & Lead at a very long company name " * 6):
+        line = _DatedLine(title, "2020-01 - 2022-03", style, style)
+        line.wrap(400, 800)
+        line.canv = Canvas(BytesIO())
+        line.draw()
