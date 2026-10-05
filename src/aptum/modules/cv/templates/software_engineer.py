@@ -161,6 +161,7 @@ class SoftwareEngineerTemplate:
             heading("Education")
             for edu in doc.educations:
                 story.append(_DatedLine(edu.title, edu.dates, item, muted))
+                story.append(p(edu.institution, body))
                 if edu.description:
                     story.append(p(edu.description, body))
 
@@ -168,6 +169,10 @@ class SoftwareEngineerTemplate:
             heading("Certifications")
             for cert in doc.certifications:
                 story.append(_DatedLine(cert.title, cert.dates, item, muted))
+                markup = escape(cert.issuer)
+                if cert.url:
+                    markup += f" | <a href={quoteattr(cert.url)}><font color=\"{_ACCENT}\">{escape(cert.url)}</font></a>"
+                story.append(Paragraph(markup, body))
 
         if doc.languages:
             heading("Languages")
