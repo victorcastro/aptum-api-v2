@@ -34,12 +34,9 @@ class _DatedLine(Flowable):
 
     _GAP = 8
 
-    def __init__(
-        self, title: str, dates: str, title_style: ParagraphStyle, date_style: ParagraphStyle, suffix: str = ""
-    ) -> None:
+    def __init__(self, title: str, dates: str, title_style: ParagraphStyle, date_style: ParagraphStyle) -> None:
         super().__init__()
-        markup = escape(title) + (f" - <font name=\"Helvetica\">{escape(suffix)}</font>" if suffix else "")
-        self._title = Paragraph(markup, title_style)
+        self._title = p(title, title_style)
         self._title_style = title_style
         self._date_style = date_style
         self._dates = dates
@@ -163,14 +160,19 @@ class SoftwareEngineerTemplate:
         if doc.educations:
             heading("Education")
             for edu in doc.educations:
-                story.append(_DatedLine(edu.title, edu.dates, item, muted, edu.institution))
+                story.append(_DatedLine(edu.title, edu.dates, item, muted))
+                story.append(p(edu.institution, body))
                 if edu.description:
                     story.append(p(edu.description, body))
 
         if doc.certifications:
             heading("Certifications")
             for cert in doc.certifications:
-                story.append(_DatedLine(cert.title, cert.dates, item, muted, cert.issuer))
+                story.append(_DatedLine(cert.title, cert.dates, item, muted))
+                markup = escape(cert.issuer)
+                if cert.url:
+                    markup += f" | <a href={quoteattr(cert.url)}><font color=\"{_ACCENT}\">{escape(cert.url)}</font></a>"
+                story.append(Paragraph(markup, body))
 
         if doc.languages:
             heading("Languages")

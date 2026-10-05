@@ -30,6 +30,7 @@ class CertificationEntry:
     title: str
     issuer: str
     dates: str
+    url: str | None = None
 
 
 @dataclass(frozen=True)
@@ -129,6 +130,7 @@ def build_cv_data(profile: Profile) -> CVDocument:
             title=cert.name,
             issuer=cert.issuing_organization,
             dates=_range(cert.issue_date, cert.expiration_date),
+            url=cert.credential_url or None,
         )
         for cert in profile.certifications
         if cert.is_active
