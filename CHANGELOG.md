@@ -13,9 +13,7 @@ and the project follows [Semantic Versioning](https://semver.org/).
 
 ### Changed
 
-- `software-engineer` CV template: the institution of each education and the issuer of each
-  certification now sit on their own line below the title instead of after it.
-- `software-engineer` CV: in Education and Certifications the institution or issuing organization is no longer bold; only the degree or certification name is.
+- `software-engineer` CV: the institution (education) and issuer (certification) now sit on their own line below the title, not bold.
 
 ## [1.3.2] - 2026-10-05
 
