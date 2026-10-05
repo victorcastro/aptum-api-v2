@@ -2,12 +2,13 @@ from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from importlib.metadata import version
 
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from scalar_fastapi import get_scalar_api_reference
 
 from aptum.core.config import get_settings
+from aptum.core.dependencies import get_current_user
 from aptum.core.exceptions import register_exception_handlers
 from aptum.core.logging_config import configure_logging
 from aptum.modules.audit.router import router as audit_router
@@ -70,6 +71,15 @@ class HealthRead(BaseModel):
 @app.get("/health")
 def health() -> HealthRead:
     return HealthRead(status="ok")
+
+
+class VersionRead(BaseModel):
+    version: str
+
+
+@app.get("/version", dependencies=[Depends(get_current_user)])
+def api_version() -> VersionRead:
+    return VersionRead(version=app.version)
 
 
 if docs_enabled:

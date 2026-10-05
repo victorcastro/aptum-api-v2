@@ -4,6 +4,19 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 and the project follows [Semantic Versioning](https://semver.org/).
 
+## [1.3.1] - 2026-10-05
+
+### Added
+
+- `GET /version`: returns `{"version"}` of the running backend. Requires a valid token; `/health` is unchanged.
+- Experiences accept `skill_ids` (catalog skills used in the role) on `POST` and `PATCH /profile/me/experiences`, and return them as `skills`. On `PATCH`, sending `skill_ids` replaces the list and omitting it keeps it. An unknown skill is a 404. They print as "Technologies" in the CV.
+
+### Fixed
+
+- `software-engineer` CV template: the date range of each experience, education and certification
+  now sits on the same line as its title, right-aligned, instead of on a line below. A long title
+  wraps without moving or splitting the date, and the block never breaks across pages.
+
 ## [1.3.0] - 2026-10-04
 
 Schema changes are in migration `0004_release_1_3_0`.
