@@ -23,22 +23,31 @@ class ProfileRepository:
             setattr(profile, key, value)
         return profile
 
-    def add_experience(self, profile: Profile, functions: list[str], **fields) -> Experience:
+    def add_experience(
+        self, profile: Profile, functions: list[str], skills: list, **fields
+    ) -> Experience:
         experience = Experience(
             profile_id=profile.id,
             functions=_build_functions(functions),
+            skills=skills,
             **fields,
         )
         self.db.add(experience)
         return experience
 
     def update_experience(
-        self, experience: Experience, functions: list[str] | None, **fields
+        self,
+        experience: Experience,
+        functions: list[str] | None,
+        skills: list | None,
+        **fields,
     ) -> Experience:
         for key, value in fields.items():
             setattr(experience, key, value)
         if functions is not None:
             experience.functions = _build_functions(functions)
+        if skills is not None:
+            experience.skills = skills
         return experience
 
     def list_rows(self, model: type[Base], profile: Profile, *order_by) -> list:

@@ -6,9 +6,10 @@ from reportlab.lib.enums import TA_CENTER
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import ParagraphStyle
 from reportlab.lib.units import cm
+from reportlab.pdfbase.pdfmetrics import stringWidth
 from reportlab.platypus import (
+    Flowable,
     HRFlowable,
-    KeepTogether,
     Paragraph,
     SimpleDocTemplate,
     Spacer,
@@ -25,6 +26,42 @@ _RULE = "#B8C2CC"
 
 def _labeled(label: str, value: str, style: ParagraphStyle) -> Paragraph:
     return Paragraph(f"<b>{escape(label)}:</b> {escape(value)}", style)
+
+
+class _DatedLine(Flowable):
+    """Title wrapped on the left, date on the first line at the right margin. One atomic flowable, so
+    the block never splits across pages, and the date never wraps: the title gets the width left over."""
+
+    _GAP = 8
+
+    def __init__(self, title: str, dates: str, title_style: ParagraphStyle, date_style: ParagraphStyle) -> None:
+        super().__init__()
+        self._title = p(title, title_style)
+        self._date_style = date_style
+        self._dates = dates
+        self._date_width = stringWidth(dates, date_style.fontName, date_style.fontSize) if dates else 0
+
+    def wrap(self, availWidth: float, availHeight: float) -> tuple[float, float]:
+        reserved = self._date_width + self._GAP if self._dates else 0
+        _, height = self._title.wrap(availWidth - reserved, availHeight)
+        self.width = availWidth
+        self.height = height
+        return availWidth, height
+
+    def getSpaceBefore(self) -> float:
+        return self._title.getSpaceBefore()
+
+    def getSpaceAfter(self) -> float:
+        return self._title.getSpaceAfter()
+
+    def draw(self) -> None:
+        self._title.drawOn(self.canv, 0, 0)
+        if self._dates:
+            style = self._date_style
+            baseline = self.height - self._title.blPara.ascent
+            self.canv.setFont(style.fontName, style.fontSize)
+            self.canv.setFillColor(style.textColor)
+            self.canv.drawRightString(self.width, baseline, self._dates)
 
 
 class SoftwareEngineerTemplate:
@@ -104,7 +141,7 @@ class SoftwareEngineerTemplate:
             for index, exp in enumerate(doc.experiences):
                 if index:
                     story.append(Spacer(1, 0.3 * cm))
-                story.append(KeepTogether([p(exp.title, item), p(exp.dates, muted)]))
+                story.append(_DatedLine(exp.title, exp.dates, item, muted))
                 if exp.description:
                     story.append(p(exp.description, body))
                 for text in exp.bullets:
@@ -122,14 +159,14 @@ class SoftwareEngineerTemplate:
         if doc.educations:
             heading("Education")
             for edu in doc.educations:
-                story.append(KeepTogether([p(edu.title, item), p(edu.dates, muted)]))
+                story.append(_DatedLine(edu.title, edu.dates, item, muted))
                 if edu.description:
                     story.append(p(edu.description, body))
 
         if doc.certifications:
             heading("Certifications")
             for cert in doc.certifications:
-                story.append(KeepTogether([p(cert.title, item), p(cert.dates, muted)]))
+                story.append(_DatedLine(cert.title, cert.dates, item, muted))
 
         if doc.languages:
             heading("Languages")

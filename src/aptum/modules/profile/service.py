@@ -110,11 +110,14 @@ class ProfileService:
     def add_experience(self, user_id: int, data: ExperienceCreate):
         profile = self._get_owned(user_id)
         self._check_companies(data.employer_id, data.client_id)
+        fields = data.model_dump()
+        skills = self._resolve_skills(fields.pop("skill_ids"))
         return self._save(
             self.repository.add_experience(
                 profile,
+                skills=skills,
                 is_current=data.end_date is None,
-                **data.model_dump(),
+                **fields,
             )
         )
 
@@ -122,6 +125,8 @@ class ProfileService:
         experience = self._get_owned_row(user_id, Experience, experience_id)
         fields = data.model_dump(exclude_unset=True)
         functions = fields.pop("functions", None)
+        skill_ids = fields.pop("skill_ids", None)
+        skills = None if skill_ids is None else self._resolve_skills(skill_ids)
         self._check_range(experience, fields, "start_date", "end_date")
         employer_id = fields.get("employer_id", experience.employer_id)
         client_id = fields.get("client_id", experience.client_id)
@@ -130,7 +135,7 @@ class ProfileService:
         self._check_companies(fields.get("employer_id"), fields.get("client_id"))
         if "end_date" in fields:
             fields["is_current"] = fields["end_date"] is None
-        return self._save(self.repository.update_experience(experience, functions, **fields))
+        return self._save(self.repository.update_experience(experience, functions, skills, **fields))
 
     def delete_experience(self, user_id: int, experience_id: int) -> None:
         self.delete_row(user_id, Experience, experience_id)
@@ -186,6 +191,15 @@ class ProfileService:
         level = fields.get("proficiency")
         if level is not None and not self.commons.has_language_level(level):
             raise NotFoundError("Language level not found")
+
+    def _resolve_skills(self, skill_ids: list[int]) -> list:
+        skills = []
+        for skill_id in dict.fromkeys(skill_ids):
+            skill = self.skills.get(skill_id)
+            if skill is None:
+                raise NotFoundError("Skill not found")
+            skills.append(skill)
+        return skills
 
     def _check_companies(self, *company_ids: int | None) -> None:
         for company_id in set(company_ids) - {None}:
