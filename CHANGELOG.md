@@ -4,6 +4,12 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 and the project follows [Semantic Versioning](https://semver.org/).
 
+## [1.3.3] - 2026-10-05
+
+### Changed
+
+- `software-engineer` CV: in Education and Certifications the institution or issuing organization is no longer bold; only the degree or certification name is.
+
 ## [1.3.2] - 2026-10-05
 
 ### Fixed

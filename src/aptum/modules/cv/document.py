@@ -20,6 +20,7 @@ class ExperienceEntry:
 @dataclass(frozen=True)
 class EducationEntry:
     title: str
+    institution: str
     dates: str
     description: str | None
 
@@ -27,6 +28,7 @@ class EducationEntry:
 @dataclass(frozen=True)
 class CertificationEntry:
     title: str
+    issuer: str
     dates: str
 
 
@@ -114,7 +116,8 @@ def build_cv_data(profile: Profile) -> CVDocument:
     )
     educations = tuple(
         EducationEntry(
-            title=f"{edu.degree}{f', {edu.field_of_study}' if edu.field_of_study else ''} - {edu.institution}",
+            title=f"{edu.degree}{f', {edu.field_of_study}' if edu.field_of_study else ''}",
+            institution=edu.institution,
             dates=_range(edu.start_date, edu.end_date),
             description=edu.description or None,
         )
@@ -123,7 +126,8 @@ def build_cv_data(profile: Profile) -> CVDocument:
     )
     certifications = tuple(
         CertificationEntry(
-            title=f"{cert.name} - {cert.issuing_organization}",
+            title=cert.name,
+            issuer=cert.issuing_organization,
             dates=_range(cert.issue_date, cert.expiration_date),
         )
         for cert in profile.certifications
