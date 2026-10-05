@@ -106,6 +106,7 @@ class ExperienceCreate(BaseModel):
     is_active: bool = True
     description: str | None = None
     functions: list[str] = Field(default_factory=list)
+    skill_ids: list[int] = Field(default_factory=list, description="Catalog skills used in this role.")
     area: ExperienceArea | None = Field(default=None, description="Used for per-area years of experience.")
 
     @model_validator(mode="after")
@@ -141,6 +142,7 @@ class ExperienceRead(BaseModel):
     description: str | None
     area: ExperienceArea | None = None
     functions: list[ExperienceFunctionRead] = []
+    skills: list[SkillRead] = []
 
 
 class PartialUpdate(BaseModel):
@@ -157,7 +159,7 @@ class PartialUpdate(BaseModel):
 
 
 class ExperienceUpdate(PartialUpdate):
-    non_nullable = ("position", "employer_id", "start_date", "is_active", "functions")
+    non_nullable = ("position", "employer_id", "start_date", "is_active", "functions", "skill_ids")
 
     position: Annotated[str, Field(min_length=1, max_length=255)] | None = None
     employer_id: int | None = None
@@ -171,6 +173,7 @@ class ExperienceUpdate(PartialUpdate):
     is_active: bool | None = None
     description: str | None = None
     functions: list[str] | None = None
+    skill_ids: list[int] | None = None
     area: ExperienceArea | None = None
 
 

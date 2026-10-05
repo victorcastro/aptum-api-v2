@@ -9,6 +9,7 @@ and the project follows [Semantic Versioning](https://semver.org/).
 ### Added
 
 - `GET /version`: returns `{"version"}` of the running backend. Requires a valid token; `/health` is unchanged.
+- Experiences accept `skill_ids` (catalog skills used in the role) on `POST` and `PATCH /profile/me/experiences`, and return them as `skills`. On `PATCH`, sending `skill_ids` replaces the list and omitting it keeps it. An unknown skill is a 404. They print as "Technologies" in the CV.
 
 ### Fixed
 
