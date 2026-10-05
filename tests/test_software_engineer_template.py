@@ -71,3 +71,10 @@ def test_certification_link_is_hidden_when_the_user_turns_it_off():
     profile.certifications[0].credential_url = "https://verify.example.dev/abc123"
     profile.certifications[0].show_credential_url = False
     assert not any("verify.example.dev" in line for line in _lines(profile))
+
+
+def test_inactive_language_is_not_printed():
+    profile = base_profile()
+    profile.languages[0].is_active = False
+    name = profile.languages[0].language.name
+    assert not any(name in line for line in _lines(profile))

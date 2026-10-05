@@ -99,6 +99,7 @@ class ProfileLanguage(Base):
     language_code: Mapped[str] = mapped_column(String(2), ForeignKey("languages.code"))
     # Code of a `language_levels` row: CEFR (A1-C2) or Native.
     proficiency: Mapped[str] = mapped_column(String(8), ForeignKey("language_levels.code"))
+    is_active: Mapped[bool] = mapped_column(default=True, server_default=true())
 
     profile: Mapped["Profile"] = relationship(back_populates="languages")
     language: Mapped[Language] = relationship(lazy="joined")

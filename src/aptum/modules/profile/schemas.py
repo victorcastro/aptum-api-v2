@@ -224,18 +224,21 @@ LanguageLevelCode = Annotated[
 class LanguageCreate(BaseModel):
     language_code: LanguageCode = Field(description="Code from `GET /commons/languages` (ISO 639-1).")
     proficiency: LanguageLevelCode
+    is_active: bool = True
 
 
 class LanguageUpdate(PartialUpdate):
-    non_nullable = ("proficiency",)
+    non_nullable = ("proficiency", "is_active")
 
     proficiency: LanguageLevelCode | None = None
+    is_active: bool | None = None
 
 
 class LanguageRead(LanguageCreate):
     model_config = ConfigDict(from_attributes=True)
 
     id: int
+    is_active: bool
 
 
 class ProfileSkillCreate(BaseModel):

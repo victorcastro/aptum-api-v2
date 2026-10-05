@@ -11,6 +11,8 @@ and the project follows [Semantic Versioning](https://semver.org/).
 - `certifications.show_credential_url` (default `true`), exposed as `show_credential_url` on the
   certification create/update/read schemas. When `false` the `credential_url` stays on the
   certification but is not printed on the CV. Migration `0005`.
+- `profile_languages.is_active` (default `true`), exposed as `is_active` on the language create/update/read
+  schemas. Inactive languages stay on the profile but are not printed on any CV template.
 
 ### Removed
 

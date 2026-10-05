@@ -38,7 +38,7 @@ def work_authorization_line(profile: Profile) -> str | None:
 
 def language_lines(profile: Profile) -> list[str]:
     """`Spanish - Native`, `English - C1`: language name and level code from the catalogs."""
-    return [f"{lang.language.name} - {lang.proficiency}" for lang in profile.languages]
+    return [f"{lang.language.name} - {lang.proficiency}" for lang in profile.languages if lang.is_active]
 
 
 def _education_dates(edu: Education) -> str:

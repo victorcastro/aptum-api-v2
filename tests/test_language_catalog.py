@@ -50,7 +50,7 @@ def _service() -> ProfileService:
 def test_add_language_with_catalog_codes():
     service = _service()
     service.add_row(1, ProfileLanguage, LanguageCreate(language_code="en", proficiency="B2"))
-    assert service.repository.saved == {"language_code": "en", "proficiency": "B2"}
+    assert service.repository.saved == {"language_code": "en", "proficiency": "B2", "is_active": True}
 
 
 @pytest.mark.parametrize(
