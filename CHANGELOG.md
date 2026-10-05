@@ -6,6 +6,10 @@ and the project follows [Semantic Versioning](https://semver.org/).
 
 ## [1.3.1] - 2026-10-05
 
+### Added
+
+- `GET /version`: returns `{"version"}` of the running backend. Requires a valid token; `/health` is unchanged.
+
 ### Fixed
 
 - `software-engineer` CV template: the date range of each experience, education and certification
