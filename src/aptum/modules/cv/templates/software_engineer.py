@@ -162,8 +162,6 @@ class SoftwareEngineerTemplate:
             for edu in doc.educations:
                 story.append(_DatedLine(edu.title, edu.dates, item, muted))
                 story.append(p(edu.institution, body))
-                if edu.description:
-                    story.append(p(edu.description, body))
 
         if doc.certifications:
             heading("Certifications")

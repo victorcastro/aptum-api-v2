@@ -187,7 +187,6 @@ class EducationCreate(BaseModel):
     end_year: Year | None = Field(default=None, description="Year-only end (or expected graduation year).")
     grade: str | None = None
     is_active: bool = True
-    description: str | None = None
 
     @model_validator(mode="after")
     def _validate(self):
@@ -208,7 +207,6 @@ class EducationUpdate(PartialUpdate):
     end_year: Year | None = None
     grade: str | None = None
     is_active: bool | None = None
-    description: str | None = None
 
 
 class EducationRead(EducationCreate):
@@ -226,18 +224,21 @@ LanguageLevelCode = Annotated[
 class LanguageCreate(BaseModel):
     language_code: LanguageCode = Field(description="Code from `GET /commons/languages` (ISO 639-1).")
     proficiency: LanguageLevelCode
+    is_active: bool = True
 
 
 class LanguageUpdate(PartialUpdate):
-    non_nullable = ("proficiency",)
+    non_nullable = ("proficiency", "is_active")
 
     proficiency: LanguageLevelCode | None = None
+    is_active: bool | None = None
 
 
 class LanguageRead(LanguageCreate):
     model_config = ConfigDict(from_attributes=True)
 
     id: int
+    is_active: bool
 
 
 class ProfileSkillCreate(BaseModel):
@@ -294,6 +295,7 @@ class CertificationCreate(BaseModel):
     expiration_date: YearMonth | None = None
     credential_id: Annotated[str, Field(max_length=255)] | None = None
     credential_url: HttpUrlStr | None = None
+    show_credential_url: bool = True
     is_active: bool = True
 
     @model_validator(mode="after")
@@ -311,6 +313,7 @@ class CertificationUpdate(PartialUpdate):
     expiration_date: YearMonth | None = None
     credential_id: Annotated[str, Field(max_length=255)] | None = None
     credential_url: HttpUrlStr | None = None
+    show_credential_url: bool | None = None
     is_active: bool | None = None
 
 
@@ -324,6 +327,7 @@ class CertificationRead(BaseModel):
     expiration_date: YearMonth | None
     credential_id: str | None
     credential_url: str | None
+    show_credential_url: bool
     is_active: bool
 
 

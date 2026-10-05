@@ -4,6 +4,21 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 and the project follows [Semantic Versioning](https://semver.org/).
 
+## [1.4.0] - 2026-10-05
+
+### Added
+
+- `certifications.show_credential_url` (default `true`), exposed as `show_credential_url` on the
+  certification create/update/read schemas. When `false` the `credential_url` stays on the
+  certification but is not printed on the CV. Migration `0005`.
+- `profile_languages.is_active` (default `true`), exposed as `is_active` on the language create/update/read
+  schemas. Inactive languages stay on the profile but are not printed on any CV template.
+
+### Removed
+
+- `description` on education (breaking): dropped from the model, the create/update/read schemas and
+  every CV template. Existing education descriptions are deleted by migration `0005`.
+
 ## [1.3.3] - 2026-10-05
 
 ### Added

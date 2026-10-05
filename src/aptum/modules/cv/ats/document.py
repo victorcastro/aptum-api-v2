@@ -57,7 +57,6 @@ class ATSEducation:
     title: str
     institution: str
     dates: str
-    description: str | None
 
 
 @dataclass
@@ -104,8 +103,6 @@ class ATSDocument:
             blocks.extend((f"experience:{exp.title}", bullet) for bullet in exp.bullets)
         for edu in self.educations:
             blocks.append(("education", edu.title))
-            if edu.description:
-                blocks.append(("education", edu.description))
         blocks.extend(("certifications", cert.title) for cert in self.certifications)
         for project in self.projects:
             blocks.append(("projects", project.name))
