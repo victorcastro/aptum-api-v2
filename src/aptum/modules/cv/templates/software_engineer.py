@@ -37,6 +37,7 @@ class _DatedLine(Flowable):
     def __init__(self, title: str, dates: str, title_style: ParagraphStyle, date_style: ParagraphStyle) -> None:
         super().__init__()
         self._title = p(title, title_style)
+        self._title_style = title_style
         self._date_style = date_style
         self._dates = dates
         self._date_width = stringWidth(dates, date_style.fontName, date_style.fontSize) if dates else 0
@@ -58,7 +59,7 @@ class _DatedLine(Flowable):
         self._title.drawOn(self.canv, 0, 0)
         if self._dates:
             style = self._date_style
-            baseline = self.height - self._title.blPara.ascent
+            baseline = self.height - getattr(self._title.blPara, "ascent", self._title_style.fontSize)
             self.canv.setFont(style.fontName, style.fontSize)
             self.canv.setFillColor(style.textColor)
             self.canv.drawRightString(self.width, baseline, self._dates)
