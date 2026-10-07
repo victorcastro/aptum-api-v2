@@ -1,3 +1,5 @@
+from typing import Literal
+
 from fastapi import APIRouter, Depends, Query, Response
 from sqlalchemy.orm import Session
 
@@ -13,6 +15,8 @@ from aptum.modules.cv.service import CVService
 from aptum.modules.users.models import User
 
 router = APIRouter(prefix="/cv", tags=["cv"])
+
+_DOCX_MEDIA_TYPE = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
 
 _PDF_RESPONSE = {
     200: {
@@ -68,20 +72,30 @@ def reset_cv_settings(
     response_class=Response,
     responses={
         200: {
-            "description": "CV as a PDF file",
-            "content": {"application/pdf": {"schema": {"type": "string", "format": "binary"}}},
+            "description": "CV as a PDF file, or as an editable Word file with format=docx",
+            "content": {
+                "application/pdf": {"schema": {"type": "string", "format": "binary"}},
+                _DOCX_MEDIA_TYPE: {"schema": {"type": "string", "format": "binary"}},
+            },
         }
     },
 )
 def export_cv(
-    template: str | None = Query(default=None, description="Template for this download only"),
+    template: str | None = Query(default=None, description="Template for this download only (PDF)"),
+    format: Literal["pdf", "docx"] = Query(default="pdf", description="docx ignores template"),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> Response:
-    pdf, filename = CVService(db).export_pdf(current_user.id, template)
+    service = CVService(db)
+    if format == "docx":
+        content, filename = service.export_docx(current_user.id)
+        media_type = _DOCX_MEDIA_TYPE
+    else:
+        content, filename = service.export_pdf(current_user.id, template)
+        media_type = "application/pdf"
     return Response(
-        content=pdf,
-        media_type="application/pdf",
+        content=content,
+        media_type=media_type,
         headers={"Content-Disposition": f'attachment; filename="{filename}"'},
     )
 

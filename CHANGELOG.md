@@ -4,6 +4,14 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 and the project follows [Semantic Versioning](https://semver.org/).
 
+## [1.5.0] - 2026-10-07
+
+### Added
+
+- `GET /cv/export?format=docx`: editable Word CV with the software-engineer layout. Uses named styles,
+  a right tab stop for dates, real bullet lists and hyperlinks, so it stays editable in Word and
+  Google Docs. `format` defaults to `pdf`; `template` is ignored for `docx`.
+
 ## [1.4.0] - 2026-10-05
 
 ### Added

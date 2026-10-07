@@ -55,6 +55,21 @@ def test_explicit_template_overrides_the_saved_one(client, profile):
     assert "LLMs & AI: OpenAI API, RAG" in text and "TECHNICAL SKILLS" not in text
 
 
+def test_docx_export_returns_an_editable_word_file(client, profile):
+    profile.preferred_template = "basic"
+    response = client.get("/cv/export", params={"format": "docx"})
+    assert response.status_code == 200
+    assert response.headers["content-type"].startswith(
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    )
+    assert response.headers["content-disposition"].endswith('.docx"')
+    assert response.content.startswith(b"PK")
+
+
+def test_unknown_export_format_is_rejected(client):
+    assert client.get("/cv/export", params={"format": "xml"}).status_code == 422
+
+
 def test_templates_list_basic_first_and_selected_by_default(client):
     templates = client.get("/cv/templates").json()
     assert [t["id"] for t in templates] == ["basic", "software-engineer"]
