@@ -7,6 +7,7 @@ from aptum.common.utils import strip_accents
 from aptum.core.exceptions import NotFoundError
 from aptum.modules.cv.ats.pipeline import ATSResult, generate_ats_cv
 from aptum.modules.cv.document import build_cv_data
+from aptum.modules.cv.docx_render import render_cv_docx
 from aptum.modules.cv.schemas import (
     ATSReport,
     CVSettingsRead,
@@ -48,6 +49,12 @@ class CVService:
         doc = build_cv_data(profile)
         return template.render(doc), self._filename(doc.full_name)
 
+    def export_docx(self, user_id: int) -> tuple[bytes, str]:
+        """Editable Word CV of the authenticated user's own profile. Always the software-engineer
+        layout, whatever template is saved. Returns the docx bytes and the download filename."""
+        doc = build_cv_data(self.profiles.get_or_create(user_id))
+        return render_cv_docx(doc), self._filename(doc.full_name, "docx")
+
     def generate_ats(self, user_id: int, job_description: str | None) -> tuple[ATSResult, str]:
         """ATS CV for the authenticated user's own profile, optionally tailored to a job offer."""
         profile = self.profiles.get_or_create(user_id)
@@ -67,12 +74,12 @@ class CVService:
         )
 
     @staticmethod
-    def _filename(full_name: str) -> str:
-        """CV-YYYY.MM-First_Last-YYYYMMDDHHMMSS.pdf, ASCII only so it is safe in a header."""
+    def _filename(full_name: str, extension: str = "pdf") -> str:
+        """CV-YYYY.MM-First_Last-YYYYMMDDHHMMSS.<extension>, ASCII only so it is safe in a header."""
         now = datetime.now(UTC)
         ascii_name = strip_accents(full_name)
         name = "_".join(re.findall(r"[A-Za-z0-9]+", ascii_name)) or "CV"
-        return f"CV-{now:%Y.%m}-{name}-{now:%Y%m%d%H%M%S}.pdf"
+        return f"CV-{now:%Y.%m}-{name}-{now:%Y%m%d%H%M%S}.{extension}"
 
     def list_templates(self, user_id: int) -> list[CVTemplateOut]:
         effective = self._effective_template(self.profiles.get_or_create(user_id))
