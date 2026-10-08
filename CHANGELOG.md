@@ -4,6 +4,13 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 and the project follows [Semantic Versioning](https://semver.org/).
 
+## [1.6.1] - 2026-10-08
+
+### Fixed
+
+- `software-engineer` CV: the project link under a project is built as a `Paragraph` directly, so the
+  hyperlink renders correctly.
+
 ## [1.6.0] - 2026-10-08
 
 ### Added
