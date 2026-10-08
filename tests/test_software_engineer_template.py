@@ -20,7 +20,7 @@ def test_header_is_name_tagline_data_then_links_in_saved_order():
     assert lines[:4] == [
         "Alex Rivera",
         "Senior Software Engineer",
-        "Toronto, Canada | +1 555 0100 | alex.rivera@example.com",
+        "Toronto, Ontario, Canada | +1 555 0100 | alex.rivera@example.com",
         "https://alex.example.dev | https://www.linkedin.com/in/example-alex | https://github.com/example-alex",
     ]
 
@@ -71,6 +71,14 @@ def test_certification_link_is_hidden_when_the_user_turns_it_off():
     profile.certifications[0].credential_url = "https://verify.example.dev/abc123"
     profile.certifications[0].show_credential_url = False
     assert not any("verify.example.dev" in line for line in _lines(profile))
+
+
+def test_project_link_is_printed_and_can_be_hidden():
+    profile = base_profile()
+    profile.projects[0].url = "https://github.com/example-alex/cli"
+    assert any("github.com/example-alex/cli" in line for line in _lines(profile))
+    profile.projects[0].show_url = False
+    assert not any("github.com/example-alex/cli" in line for line in _lines(profile))
 
 
 def test_inactive_language_is_not_printed():

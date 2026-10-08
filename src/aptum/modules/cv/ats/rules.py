@@ -194,7 +194,7 @@ def _drop_weakest(exp: ATSExperience, words: frozenset[str]) -> str:
 
 def _trim_once(doc: ATSDocument, words: frozenset[str]) -> tuple[str, str, str] | None:
     """Remove the next least valuable piece: extra bullets of the oldest roles, then old role
-    descriptions, then last bullets oldest first, then project descriptions. Roles stay."""
+    descriptions, then last bullets oldest first, then project descriptions, then role technologies. Roles stay."""
     oldest_first = list(reversed(doc.experiences))
     for exp in oldest_first:
         if len(exp.bullets) > 1:
@@ -210,6 +210,10 @@ def _trim_once(doc: ATSDocument, words: frozenset[str]) -> tuple[str, str, str] 
         if project.description:
             text, project.description = project.description, None
             return "projects", project.name, text
+    for exp in oldest_first:
+        if exp.skills_line:
+            text, exp.skills_line = exp.skills_line, None
+            return "experience", exp.title, text
     return None
 
 

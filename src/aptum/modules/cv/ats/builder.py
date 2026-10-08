@@ -41,16 +41,19 @@ def language_lines(profile: Profile) -> list[str]:
     return [f"{lang.language.name} - {lang.proficiency}" for lang in profile.languages if lang.is_active]
 
 
-def _education_dates(edu: Education) -> str:
+def education_dates(edu: Education) -> str:
     if edu.start_date or edu.end_date:
         return format_range(edu.start_date, edu.end_date)
     return format_year_range(edu.start_year, edu.end_year)
 
 
+def location_line(profile: Profile) -> str:
+    return ", ".join(x for x in (profile.city, profile.region, country_name(profile.country_code)) if x)
+
+
 def build_ats_document(profile: Profile, offer: str | None = None) -> ATSDocument:
     full_name = " ".join(part for part in (profile.first_name, profile.last_name) if part)
-    location = ", ".join(x for x in (profile.city, profile.region, country_name(profile.country_code)) if x)
-    contact = " | ".join(x for x in (location, profile.phone, profile.contact_email) if x)
+    contact = " | ".join(x for x in (location_line(profile), profile.phone, profile.contact_email) if x)
     selected = select_skills(profile.skills, offer, profile.experiences)
 
     return ATSDocument(
@@ -73,6 +76,7 @@ def build_ats_document(profile: Profile, offer: str | None = None) -> ATSDocumen
                 area=exp.area,
                 description=exp.description or None,
                 bullets=[function.description for function in exp.functions if function.description.strip()],
+                skills_line=", ".join(s.name for s in exp.skills) or None,
             )
             for exp in sorted(profile.experiences, key=lambda e: e.start_date, reverse=True)
             if exp.is_active
@@ -81,18 +85,25 @@ def build_ats_document(profile: Profile, offer: str | None = None) -> ATSDocumen
             ATSEducation(
                 title=f"{edu.degree}{f', {edu.field_of_study}' if edu.field_of_study else ''} - {edu.institution}",
                 institution=edu.institution,
-                dates=_education_dates(edu),
+                dates=education_dates(edu),
             )
             for edu in profile.educations
             if edu.is_active
         ],
         certifications=[
-            ATSCertification(f"{cert.name} - {cert.issuing_organization}", format_range(cert.issue_date, cert.expiration_date))
+            ATSCertification(
+                cert.name,
+                cert.issuing_organization,
+                format_range(cert.issue_date, cert.expiration_date),
+                cert.credential_url if cert.show_credential_url else None,
+            )
             for cert in profile.certifications
             if cert.is_active
         ],
         projects=[
-            ATSProject(project.name, project.description or None) for project in profile.projects if project.is_active
+            ATSProject(project.name, project.description or None, project.url if project.show_url else None)
+            for project in profile.projects
+            if project.is_active
         ],
         languages=language_lines(profile),
     )

@@ -4,6 +4,25 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 and the project follows [Semantic Versioning](https://semver.org/).
 
+## [1.6.0] - 2026-10-08
+
+### Added
+
+- `projects.show_url` (default `true`), exposed as `show_url` on the project create/update/read
+  schemas. When `true` and the project has a `url`, the link is printed under the project in every
+  template (a real hyperlink in `software-engineer` and DOCX, plain text in `basic`). When `false` the
+  `url` stays on the project but is not printed. Migration `0006`.
+
+### Changed
+
+- All CV templates (`basic`, `software-engineer` and the DOCX export) now show and hide the same
+  profile data under the same conditions; each one only decides how it looks.
+- `basic` (ATS) now prints the certification issuer and credential link (when `show_credential_url`),
+  the project link (when `show_url`) and a `Technologies` line per role. The `Technologies` line is the
+  last thing dropped when the 2-page limit forces trimming.
+- `software-engineer` and DOCX now print education dates that only have years, include the region in the
+  location line (like `basic`) and skip empty bullets.
+
 ## [1.5.0] - 2026-10-07
 
 ### Added

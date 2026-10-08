@@ -75,6 +75,8 @@ def render_cv_docx(doc: CVDocument) -> bytes:
             document.add_paragraph(project.name, style="CV Item")
             if project.description:
                 document.add_paragraph(project.description)
+            if project.url:
+                _add_hyperlink(document.add_paragraph(), project.url, project.url)
 
     if doc.educations:
         _heading(document, "Education")

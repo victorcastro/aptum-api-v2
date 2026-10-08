@@ -41,7 +41,7 @@ def test_header_and_section_order():
     assert texts[:3] == [
         "Alex Rivera",
         "Senior Software Engineer",
-        "Toronto, Canada | +1 555 0100 | alex.rivera@example.com",
+        "Toronto, Ontario, Canada | +1 555 0100 | alex.rivera@example.com",
     ]
     headings = [p.text for p in document.paragraphs if p.style.name == "Heading 1"]
     assert headings == [
@@ -100,6 +100,14 @@ def test_certification_link_hidden_when_toggled_off():
     document = _render(profile)
     assert CERT_URL not in _hyperlinks(document)
     assert not any("verify.example.dev" in t for t in _texts(document))
+
+
+def test_project_link_is_a_hyperlink_and_can_be_hidden():
+    profile = base_profile()
+    profile.projects[0].url = "https://github.com/example-alex/cli"
+    assert "https://github.com/example-alex/cli" in _hyperlinks(_render(profile))
+    profile.projects[0].show_url = False
+    assert "https://github.com/example-alex/cli" not in _hyperlinks(_render(profile))
 
 
 def test_inactive_language_is_not_printed():
