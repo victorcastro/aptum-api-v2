@@ -4,6 +4,14 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 and the project follows [Semantic Versioning](https://semver.org/).
 
+## [1.7.1] - 2026-10-08
+
+### Changed
+
+- Project links print the same clean text as the header links in every template (`basic`,
+  `software-engineer` and DOCX): no `https://` and no `www.` (`github.com/example-alex/cli`). The link
+  target stays the full `https://` URL.
+
 ## [1.7.0] - 2026-10-08
 
 ### Added

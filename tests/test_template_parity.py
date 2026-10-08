@@ -11,6 +11,7 @@ from aptum.modules.cv.docx_render import render_cv_docx
 from aptum.modules.cv.templates.software_engineer import SoftwareEngineerTemplate
 
 PROJECT_URL = "https://github.com/example-alex/cli"
+PROJECT_URL_TEXT = "github.com/example-alex/cli"
 CERT_URL = "https://verify.example.dev/abc123"
 CERT_LINK_TEXT = "Verifycredential"  # the credential link text, squashed like the rendered text
 
@@ -64,8 +65,8 @@ def _years_only_education(profile):
 
 
 CASES = [
-    pytest.param(_with_urls, PROJECT_URL, True, id="project-url-shown"),
-    pytest.param(_hide_project_url, PROJECT_URL, False, id="project-url-hidden"),
+    pytest.param(_with_urls, PROJECT_URL_TEXT, True, id="project-url-shown"),
+    pytest.param(_hide_project_url, PROJECT_URL_TEXT, False, id="project-url-hidden"),
     pytest.param(_with_urls, CERT_LINK_TEXT, True, id="credential-url-shown"),
     pytest.param(_hide_cert_url, CERT_LINK_TEXT, False, id="credential-url-hidden"),
     pytest.param(lambda profile: None, "ExampleCloudInstitute", True, id="certification-issuer"),

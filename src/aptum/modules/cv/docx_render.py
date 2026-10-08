@@ -12,7 +12,7 @@ from docx.styles.style import ParagraphStyle
 from docx.text.paragraph import Paragraph
 
 from aptum.modules.cv.document import CVDocument
-from aptum.modules.cv.links import CREDENTIAL_LINK_TEXT, normalize_link_href
+from aptum.modules.cv.links import CREDENTIAL_LINK_TEXT, format_link_display, normalize_link_href
 
 _FONT = "Arial"
 _INK = RGBColor(0x1F, 0x29, 0x33)
@@ -229,9 +229,8 @@ def _dated(document, title: str, dates: str) -> Paragraph:
 
 
 def _add_url(paragraph: Paragraph, url: str) -> None:
-    """The full `https://` URL as text, linked to itself (project links)."""
-    href = normalize_link_href(url)
-    _add_hyperlink(paragraph, href, href)
+    """The clean URL as text (no scheme, no `www.`), linked to the full `https://` URL (project links)."""
+    _add_hyperlink(paragraph, format_link_display(url), normalize_link_href(url))
 
 
 def _add_hyperlink(paragraph: Paragraph, text: str, url: str, *, styled: bool = True) -> None:
