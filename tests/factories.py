@@ -119,7 +119,6 @@ def base_profile(**fields) -> Profile:
         "phone": "+1 555 0100",
         "contact_email": "alex.rivera@example.com",
         "city": "Toronto",
-        "region": "Ontario",
         "country_code": "CA",
         "links": [
             {"kind": "linkedin", "label": "LinkedIn", "url": "https://www.linkedin.com/in/example-alex", "visible": True},

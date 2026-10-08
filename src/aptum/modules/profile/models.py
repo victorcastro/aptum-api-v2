@@ -58,7 +58,6 @@ class Profile(TimestampMixin, Base):
     phone: Mapped[str | None] = mapped_column(String(40), default=None)
     contact_email: Mapped[str | None] = mapped_column(String(255), default=None)
     city: Mapped[str | None] = mapped_column(String(120), default=None)
-    region: Mapped[str | None] = mapped_column(String(120), default=None)
     country_code: Mapped[str | None] = mapped_column(String(2), default=None)
     preferred_template: Mapped[str | None] = mapped_column(String(40), default=None)
     # Header links of the CV, in print order: [{"kind", "label", "url", "visible"}].

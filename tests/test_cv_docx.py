@@ -41,7 +41,7 @@ def test_header_and_section_order():
     assert texts[:3] == [
         "Alex Rivera",
         "Senior Software Engineer",
-        "Toronto, Ontario, Canada | +1 555 0100 | alex.rivera@example.com",
+        "Toronto, Canada | +1 555 0100 | alex.rivera@example.com",
     ]
     headings = [p.text for p in document.paragraphs if p.style.name == "Heading 1"]
     assert headings == [

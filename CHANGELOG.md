@@ -4,6 +4,13 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 and the project follows [Semantic Versioning](https://semver.org/).
 
+## [1.7.0] - 2026-10-08
+
+### Removed
+
+- `region` on the profile (breaking): dropped from the model, the update/read schemas and the CV
+  location line, which is now city and country. Existing regions are deleted by migration `0007`.
+
 ## [1.6.0] - 2026-10-08
 
 ### Added

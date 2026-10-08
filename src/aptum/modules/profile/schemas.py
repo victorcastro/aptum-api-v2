@@ -381,7 +381,6 @@ class ProfileUpdate(PartialUpdate):
     phone: str | None = None
     contact_email: str | None = None
     city: str | None = None
-    region: str | None = None
     country_code: CountryCode | None = None
     links: ProfileLinks | None = None
     work_authorization: WorkAuthorization | None = None
@@ -403,7 +402,6 @@ class ProfileRead(BaseModel):
     phone: str | None
     contact_email: str | None
     city: str | None
-    region: str | None
     country_code: str | None
     links: list[ProfileLink] = []
     work_authorization: WorkAuthorization | None = None

@@ -48,7 +48,7 @@ def education_dates(edu: Education) -> str:
 
 
 def location_line(profile: Profile) -> str:
-    return ", ".join(x for x in (profile.city, profile.region, country_name(profile.country_code)) if x)
+    return ", ".join(x for x in (profile.city, country_name(profile.country_code)) if x)
 
 
 def build_ats_document(profile: Profile, offer: str | None = None) -> ATSDocument:

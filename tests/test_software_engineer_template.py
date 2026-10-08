@@ -20,7 +20,7 @@ def test_header_is_name_tagline_data_then_links_in_saved_order():
     assert lines[:4] == [
         "Alex Rivera",
         "Senior Software Engineer",
-        "Toronto, Ontario, Canada | +1 555 0100 | alex.rivera@example.com",
+        "Toronto, Canada | +1 555 0100 | alex.rivera@example.com",
         "https://alex.example.dev | https://www.linkedin.com/in/example-alex | https://github.com/example-alex",
     ]
 
