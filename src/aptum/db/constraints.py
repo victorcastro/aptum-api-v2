@@ -25,3 +25,9 @@ def in_values_check(column: str, values: type[StrEnum]) -> CheckConstraint:
     """Closed set of string values without a native enum type (cheaper to extend and to roll back)."""
     allowed = ", ".join("'" + value.replace("'", "''") + "'" for value in values)
     return CheckConstraint(f"{column} IS NULL OR {column} IN ({allowed})", name=f"{column}_allowed")
+
+
+def array_values_check(column: str, values: type[StrEnum]) -> CheckConstraint:
+    """Every element of a string array belongs to a closed set (see `in_values_check`)."""
+    allowed = ", ".join("'" + value.replace("'", "''") + "'" for value in values)
+    return CheckConstraint(f"{column} <@ ARRAY[{allowed}]::varchar[]", name=f"{column}_allowed")

@@ -12,6 +12,7 @@ from docx.styles.style import ParagraphStyle
 from docx.text.paragraph import Paragraph
 
 from aptum.modules.cv.document import CVDocument
+from aptum.modules.cv.links import CREDENTIAL_LINK_TEXT, normalize_link_href
 
 _FONT = "Arial"
 _INK = RGBColor(0x1F, 0x29, 0x33)
@@ -36,9 +37,14 @@ def render_cv_docx(doc: CVDocument) -> bytes:
     document.add_paragraph(doc.full_name, style="Title")
     if doc.headline:
         document.add_paragraph(doc.headline, style="Subtitle")
-    contact = " | ".join(x for x in (doc.location, doc.phone, doc.email) if x)
-    if contact:
-        document.add_paragraph(contact, style="CV Contact")
+    if doc.availability_line:
+        document.add_paragraph(doc.availability_line, style="CV Contact")
+    if doc.phone or doc.email:
+        contact = document.add_paragraph(doc.phone or "", style="CV Contact")
+        if doc.email:
+            if doc.phone:
+                contact.add_run(" | ")
+            _add_hyperlink(contact, doc.email, f"mailto:{doc.email}", styled=False)
     if doc.links:
         links = document.add_paragraph(style="CV Contact")
         for index, link in enumerate(doc.links):
@@ -46,12 +52,9 @@ def render_cv_docx(doc: CVDocument) -> bytes:
                 links.add_run(" | ")
             _add_hyperlink(links, link.label, link.url)
 
-    if doc.summary or doc.work_authorization_line:
+    if doc.summary:
         _heading(document, "Summary")
-        if doc.work_authorization_line:
-            document.add_paragraph(doc.work_authorization_line, style="CV Muted")
-        if doc.summary:
-            document.add_paragraph(doc.summary)
+        document.add_paragraph(doc.summary)
 
     if doc.skill_groups:
         _heading(document, "Technical Skills")
@@ -71,12 +74,14 @@ def render_cv_docx(doc: CVDocument) -> bytes:
 
     if doc.projects:
         _heading(document, "Projects")
-        for project in doc.projects:
-            document.add_paragraph(project.name, style="CV Item")
+        for index, project in enumerate(doc.projects):
+            name = document.add_paragraph(project.name, style="CV Item")
+            if index:
+                name.paragraph_format.space_before = Pt(10)
             if project.description:
                 document.add_paragraph(project.description)
             if project.url:
-                _add_hyperlink(document.add_paragraph(), project.url, project.url)
+                _add_url(document.add_paragraph(), project.url)
 
     if doc.educations:
         _heading(document, "Education")
@@ -86,12 +91,14 @@ def render_cv_docx(doc: CVDocument) -> bytes:
 
     if doc.certifications:
         _heading(document, "Certifications")
-        for cert in doc.certifications:
-            _dated(document, cert.title, cert.dates)
+        for index, cert in enumerate(doc.certifications):
+            title = _dated(document, cert.title, cert.dates)
+            if index:
+                title.paragraph_format.space_before = Pt(10)
             line = document.add_paragraph(cert.issuer)
             if cert.url:
                 line.add_run(" | ")
-                _add_hyperlink(line, cert.url, cert.url)
+                _add_hyperlink(line, CREDENTIAL_LINK_TEXT, normalize_link_href(cert.url))
 
     if doc.languages:
         _heading(document, "Languages")
@@ -208,7 +215,7 @@ def _labeled(document, label: str, value: str, style: str | None = None) -> None
     paragraph.add_run(value)
 
 
-def _dated(document, title: str, dates: str) -> None:
+def _dated(document, title: str, dates: str) -> Paragraph:
     """Title, then a tab to the right margin and the date, all in one paragraph."""
     paragraph = document.add_paragraph(style="CV Item")
     paragraph.paragraph_format.tab_stops.add_tab_stop(_TEXT_WIDTH, WD_TAB_ALIGNMENT.RIGHT)
@@ -218,21 +225,30 @@ def _dated(document, title: str, dates: str) -> None:
         run.bold = False
         run.font.size = Pt(9)
         run.font.color.rgb = _GRAY
+    return paragraph
 
 
-def _add_hyperlink(paragraph: Paragraph, text: str, url: str) -> None:
+def _add_url(paragraph: Paragraph, url: str) -> None:
+    """The full `https://` URL as text, linked to itself (project links)."""
+    href = normalize_link_href(url)
+    _add_hyperlink(paragraph, href, href)
+
+
+def _add_hyperlink(paragraph: Paragraph, text: str, url: str, *, styled: bool = True) -> None:
+    """`styled=False` keeps the paragraph's own look (the email on the contact line)."""
     relation_id = paragraph.part.relate_to(url, RELATIONSHIP_TYPE.HYPERLINK, is_external=True)
     hyperlink = OxmlElement("w:hyperlink")
     hyperlink.set(qn("r:id"), relation_id)
     run = OxmlElement("w:r")
-    props = OxmlElement("w:rPr")
-    color = OxmlElement("w:color")
-    color.set(qn("w:val"), "1F3A5F")
-    underline = OxmlElement("w:u")
-    underline.set(qn("w:val"), "single")
-    props.append(color)
-    props.append(underline)
-    run.append(props)
+    if styled:
+        props = OxmlElement("w:rPr")
+        color = OxmlElement("w:color")
+        color.set(qn("w:val"), "1F3A5F")
+        underline = OxmlElement("w:u")
+        underline.set(qn("w:val"), "single")
+        props.append(color)
+        props.append(underline)
+        run.append(props)
     content = OxmlElement("w:t")
     content.text = text
     content.set(qn("xml:space"), "preserve")

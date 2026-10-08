@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from datetime import date
 
 from aptum.modules.cv.ats.skills import SkillLine
+from aptum.modules.cv.links import LinkEntry
 
 _MONTHS = ("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")
 
@@ -79,9 +80,10 @@ class ATSProject:
 class ATSDocument:
     full_name: str
     headline: str | None
-    contact_line: str | None
-    links: list[str]
-    work_authorization_line: str | None
+    availability_line: str | None
+    phone: str | None
+    email: str | None
+    links: list[LinkEntry]
     summary: str | None
     skill_lines: list[SkillLine]
     experiences: list[ATSExperience]

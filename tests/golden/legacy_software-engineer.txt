@@ -1,7 +1,8 @@
 Alex Rivera
  Senior Software Engineer
- Toronto, Canada | +1 555 0100 | alex.rivera@example.com
- https://www.linkedin.com/in/example-alex | https://github.com/example-alex
+ Toronto, Canada
+ +1 555 0100 | alex.rivera@example.com
+ linkedin.com/in/example-alex | github.com/example-alex
 SUMMARY
 Engineer building backend services and LLM features.
 TECHNICAL SKILLS
@@ -42,8 +43,8 @@ EDUCATION
 BSc, Computer Science
 Mar 2008 - Dec 2012
 Lakeside University
-CERTIFICATIONS
 
+CERTIFICATIONS
 Cloud Practitioner
 May 2022
 Example Cloud Institute

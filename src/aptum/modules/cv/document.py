@@ -1,14 +1,10 @@
 from dataclasses import dataclass
 
 from aptum.common.enums import SkillCategory
-from aptum.modules.cv.ats.builder import (
-    education_dates,
-    language_lines,
-    location_line,
-    work_authorization_line,
-)
+from aptum.modules.cv.ats.builder import education_dates, language_lines
 from aptum.modules.cv.ats.document import format_range
-from aptum.modules.cv.links import visible_link_urls
+from aptum.modules.cv.header import availability_line
+from aptum.modules.cv.links import LinkEntry, header_links
 from aptum.modules.profile.models import Profile
 
 
@@ -50,24 +46,15 @@ class SkillGroup:
 
 
 @dataclass(frozen=True)
-class LinkEntry:
-    label: str
-    url: str
-
-
-@dataclass(frozen=True)
 class CVDocument:
     """Presentation-ready CV: every value is already formatted, templates only lay it out."""
 
     full_name: str
     headline: str | None
-    contact_line: str | None
-    links_line: str | None
-    location: str | None
+    availability_line: str | None
     phone: str | None
     email: str | None
     links: tuple[LinkEntry, ...]
-    work_authorization_line: str | None
     summary: str | None
     experiences: tuple[ExperienceEntry, ...]
     educations: tuple[EducationEntry, ...]
@@ -93,9 +80,6 @@ def _group_skills(profile: Profile) -> tuple[SkillGroup, ...]:
 
 def build_cv_data(profile: Profile) -> CVDocument:
     full_name = " ".join(part for part in (profile.first_name, profile.last_name) if part)
-    location = location_line(profile)
-    links = tuple(LinkEntry(url, url) for url in visible_link_urls(profile))
-    contact = " | ".join(x for x in (profile.contact_email, profile.phone, location) if x)
 
     experiences = tuple(
         ExperienceEntry(
@@ -141,13 +125,10 @@ def build_cv_data(profile: Profile) -> CVDocument:
     return CVDocument(
         full_name=full_name or "Curriculum Vitae",
         headline=profile.headline or None,
-        contact_line=contact or None,
-        links_line=" | ".join(link.url for link in links) or None,
-        location=location or None,
+        availability_line=availability_line(profile),
         phone=profile.phone or None,
         email=profile.contact_email or None,
-        links=links,
-        work_authorization_line=work_authorization_line(profile),
+        links=tuple(header_links(profile)),
         summary=profile.summary or None,
         experiences=experiences,
         educations=educations,

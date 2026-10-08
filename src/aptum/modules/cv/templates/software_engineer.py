@@ -1,5 +1,5 @@
 from io import BytesIO
-from xml.sax.saxutils import escape, quoteattr
+from xml.sax.saxutils import escape
 
 from reportlab.lib.colors import HexColor
 from reportlab.lib.enums import TA_CENTER
@@ -16,7 +16,12 @@ from reportlab.platypus import (
 )
 
 from aptum.modules.cv.document import CVDocument
-from aptum.modules.cv.templates.common import p
+from aptum.modules.cv.templates.common import (
+    credential_markup,
+    header_paragraphs,
+    p,
+    url_markup,
+)
 
 _INK = "#1F2933"
 _ACCENT = "#1F3A5F"
@@ -111,26 +116,16 @@ class SoftwareEngineerTemplate:
         story: list = [p(doc.full_name, name)]
         if doc.headline:
             story.append(p(doc.headline, headline))
-        contact_parts = [escape(x) for x in (doc.location, doc.phone, doc.email) if x]
-        if contact_parts:
-            story.append(Paragraph(" | ".join(contact_parts), contact))
-        link_parts = [
-            f"<a href={quoteattr(link.url)}>{escape(link.label)}</a>" for link in doc.links
-        ]
-        if link_parts:
-            story.append(Paragraph(" | ".join(link_parts), links))
+        story.extend(header_paragraphs(doc.availability_line, doc.phone, doc.email, doc.links, contact, links))
         story.append(Spacer(1, 0.4 * cm))
 
         def heading(title: str) -> None:
             story.append(p(title.upper(), section))
             story.append(HRFlowable(width="100%", thickness=0.5, color=HexColor(_RULE), spaceBefore=1, spaceAfter=4))
 
-        if doc.summary or doc.work_authorization_line:
+        if doc.summary:
             heading("Summary")
-            if doc.work_authorization_line:
-                story.append(p(doc.work_authorization_line, muted))
-            if doc.summary:
-                story.append(p(doc.summary, body))
+            story.append(p(doc.summary, body))
 
         if doc.skill_groups:
             heading("Technical Skills")
@@ -152,17 +147,14 @@ class SoftwareEngineerTemplate:
 
         if doc.projects:
             heading("Projects")
-            for project in doc.projects:
+            for index, project in enumerate(doc.projects):
+                if index:
+                    story.append(Spacer(1, 0.2 * cm))
                 story.append(p(project.name, item))
                 if project.description:
                     story.append(p(project.description, body))
                 if project.url:
-                    story.append(
-                        Paragraph(
-                            f"<a href={quoteattr(project.url)}><font color=\"{_ACCENT}\">{escape(project.url)}</font></a>",
-                            body,
-                        )
-                    )
+                    story.append(Paragraph(url_markup(project.url, _ACCENT), body))
 
         if doc.educations:
             heading("Education")
@@ -172,11 +164,13 @@ class SoftwareEngineerTemplate:
 
         if doc.certifications:
             heading("Certifications")
-            for cert in doc.certifications:
+            for index, cert in enumerate(doc.certifications):
+                if index:
+                    story.append(Spacer(1, 0.2 * cm))
                 story.append(_DatedLine(cert.title, cert.dates, item, muted))
                 markup = escape(cert.issuer)
                 if cert.url:
-                    markup += f" | <a href={quoteattr(cert.url)}><font color=\"{_ACCENT}\">{escape(cert.url)}</font></a>"
+                    markup += f" | {credential_markup(cert.url, _ACCENT)}"
                 story.append(Paragraph(markup, body))
 
         if doc.languages:
