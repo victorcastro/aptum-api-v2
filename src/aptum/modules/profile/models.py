@@ -13,11 +13,12 @@ from sqlalchemy import (
     Text,
     UniqueConstraint,
     false,
+    select,
     text,
     true,
 )
 from sqlalchemy.dialects.postgresql import JSONB
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.orm import Mapped, column_property, mapped_column, relationship
 
 from aptum.common.constants import EMBEDDING_DIM
 from aptum.common.enums import (
@@ -34,7 +35,7 @@ from aptum.db.constraints import (
     in_values_check,
     month_precision_checks,
 )
-from aptum.modules.commons.models import Language
+from aptum.modules.commons.models import Language, LanguageLevel
 from aptum.modules.companies.models import Company
 from aptum.modules.skills.models import Skill
 
@@ -79,7 +80,11 @@ class Profile(TimestampMixin, Base):
         order_by="Education.end_date.desc().nulls_first()",
         **_OWNED,
     )
-    languages: Mapped[list["ProfileLanguage"]] = relationship(back_populates="profile", **_OWNED)
+    languages: Mapped[list["ProfileLanguage"]] = relationship(
+        back_populates="profile",
+        order_by="(ProfileLanguage.level_rank.desc(), ProfileLanguage.language_code)",
+        **_OWNED,
+    )
     skills: Mapped[list["ProfileSkill"]] = relationship(
         back_populates="profile", order_by="ProfileSkill.id", **_OWNED
     )
@@ -99,6 +104,10 @@ class ProfileLanguage(Base):
     # Code of a `language_levels` row: CEFR (A1-C2) or Native.
     proficiency: Mapped[str] = mapped_column(String(8), ForeignKey("language_levels.code"))
     is_active: Mapped[bool] = mapped_column(default=True, server_default=true())
+    # `language_levels.rank` of the proficiency. Only used to order languages, never serialized.
+    level_rank: Mapped[int] = column_property(
+        select(LanguageLevel.rank).where(LanguageLevel.code == proficiency).scalar_subquery()
+    )
 
     profile: Mapped["Profile"] = relationship(back_populates="languages")
     language: Mapped[Language] = relationship(lazy="joined")

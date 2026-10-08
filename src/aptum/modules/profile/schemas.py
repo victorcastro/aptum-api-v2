@@ -3,6 +3,7 @@ from urllib.parse import urlsplit
 
 from pydantic import (
     AfterValidator,
+    AliasPath,
     BaseModel,
     ConfigDict,
     Field,
@@ -238,6 +239,7 @@ class LanguageRead(LanguageCreate):
     model_config = ConfigDict(from_attributes=True)
 
     id: int
+    language_name: str = Field(validation_alias=AliasPath("language", "name"), description="English name.")
     is_active: bool
 
 
