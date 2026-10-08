@@ -4,13 +4,6 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 and the project follows [Semantic Versioning](https://semver.org/).
 
-## [1.7.0] - 2026-10-08
-
-### Removed
-
-- `region` on the profile (breaking): dropped from the model, the update/read schemas and the CV
-  location line, which is now city and country. Existing regions are deleted by migration `0007`.
-
 ## [1.6.0] - 2026-10-08
 
 ### Added
@@ -27,8 +20,12 @@ and the project follows [Semantic Versioning](https://semver.org/).
 - `basic` (ATS) now prints the certification issuer and credential link (when `show_credential_url`),
   the project link (when `show_url`) and a `Technologies` line per role. The `Technologies` line is the
   last thing dropped when the 2-page limit forces trimming.
-- `software-engineer` and DOCX now print education dates that only have years, include the region in the
-  location line (like `basic`) and skip empty bullets.
+- `software-engineer` and DOCX now print education dates that only have years and skip empty bullets.
+
+### Removed
+
+- `region` on the profile (breaking): dropped from the model, the update/read schemas and the CV
+  location line, which is now city and country. Existing regions are deleted by migration `0006`.
 
 ## [1.5.0] - 2026-10-07
 
