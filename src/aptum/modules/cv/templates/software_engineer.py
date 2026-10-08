@@ -1,5 +1,5 @@
 from io import BytesIO
-from xml.sax.saxutils import escape, quoteattr
+from xml.sax.saxutils import escape
 
 from reportlab.lib.colors import HexColor
 from reportlab.lib.enums import TA_CENTER
@@ -16,7 +16,7 @@ from reportlab.platypus import (
 )
 
 from aptum.modules.cv.document import CVDocument
-from aptum.modules.cv.templates.common import header_paragraphs, p
+from aptum.modules.cv.templates.common import header_paragraphs, p, url_markup
 
 _INK = "#1F2933"
 _ACCENT = "#1F3A5F"
@@ -147,12 +147,7 @@ class SoftwareEngineerTemplate:
                 if project.description:
                     story.append(p(project.description, body))
                 if project.url:
-                    story.append(
-                        Paragraph(
-                            f"<a href={quoteattr(project.url)}><font color=\"{_ACCENT}\">{escape(project.url)}</font></a>",
-                            body,
-                        )
-                    )
+                    story.append(Paragraph(url_markup(project.url, _ACCENT, clean=False), body))
 
         if doc.educations:
             heading("Education")
@@ -162,11 +157,13 @@ class SoftwareEngineerTemplate:
 
         if doc.certifications:
             heading("Certifications")
-            for cert in doc.certifications:
+            for index, cert in enumerate(doc.certifications):
+                if index:
+                    story.append(Spacer(1, 0.2 * cm))
                 story.append(_DatedLine(cert.title, cert.dates, item, muted))
                 markup = escape(cert.issuer)
                 if cert.url:
-                    markup += f" | <a href={quoteattr(cert.url)}><font color=\"{_ACCENT}\">{escape(cert.url)}</font></a>"
+                    markup += f" | {url_markup(cert.url, _ACCENT)}"
                 story.append(Paragraph(markup, body))
 
         if doc.languages:

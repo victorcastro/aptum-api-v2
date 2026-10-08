@@ -3,12 +3,25 @@ from io import BytesIO
 from docx import Document
 from docx.enum.text import WD_TAB_ALIGNMENT
 from docx.oxml.ns import qn
+from docx.shared import Pt
 from factories import base_profile
 
 from aptum.modules.cv.document import build_cv_data
 from aptum.modules.cv.docx_render import render_cv_docx
+from aptum.modules.profile.models import Certification
 
 CERT_URL = "https://verify.example.dev/abc123"
+
+
+def replace_cert(cert: Certification) -> Certification:
+    return Certification(
+        id=cert.id + 1,
+        name=cert.name,
+        issuing_organization=cert.issuing_organization,
+        issue_date=cert.issue_date,
+        show_credential_url=True,
+        is_active=True,
+    )
 
 
 def _render(profile):
@@ -92,7 +105,15 @@ def test_header_links_and_certification_link_are_real_hyperlinks():
     links = _hyperlinks(document)
     assert "https://github.com/example-alex" in links
     assert CERT_URL in links
-    assert f"Example Cloud Institute | {CERT_URL}" in _texts(document)
+    assert "Example Cloud Institute | verify.example.dev/abc123" in _texts(document)
+
+
+def test_certifications_after_the_first_get_extra_space_before():
+    profile = base_profile()
+    profile.certifications = [profile.certifications[0], replace_cert(profile.certifications[0])]
+    titles = [p for p in _render(profile).paragraphs if p.text.startswith("Cloud Practitioner")]
+    assert titles[0].paragraph_format.space_before is None
+    assert titles[1].paragraph_format.space_before == Pt(10)
 
 
 def test_certification_link_hidden_when_toggled_off():

@@ -12,6 +12,7 @@ from docx.styles.style import ParagraphStyle
 from docx.text.paragraph import Paragraph
 
 from aptum.modules.cv.document import CVDocument
+from aptum.modules.cv.links import format_link_display, normalize_link_href
 
 _FONT = "Arial"
 _INK = RGBColor(0x1F, 0x29, 0x33)
@@ -78,7 +79,7 @@ def render_cv_docx(doc: CVDocument) -> bytes:
             if project.description:
                 document.add_paragraph(project.description)
             if project.url:
-                _add_hyperlink(document.add_paragraph(), project.url, project.url)
+                _add_url(document.add_paragraph(), project.url, clean=False)
 
     if doc.educations:
         _heading(document, "Education")
@@ -88,12 +89,14 @@ def render_cv_docx(doc: CVDocument) -> bytes:
 
     if doc.certifications:
         _heading(document, "Certifications")
-        for cert in doc.certifications:
-            _dated(document, cert.title, cert.dates)
+        for index, cert in enumerate(doc.certifications):
+            title = _dated(document, cert.title, cert.dates)
+            if index:
+                title.paragraph_format.space_before = Pt(10)
             line = document.add_paragraph(cert.issuer)
             if cert.url:
                 line.add_run(" | ")
-                _add_hyperlink(line, cert.url, cert.url)
+                _add_url(line, cert.url)
 
     if doc.languages:
         _heading(document, "Languages")
@@ -210,7 +213,7 @@ def _labeled(document, label: str, value: str, style: str | None = None) -> None
     paragraph.add_run(value)
 
 
-def _dated(document, title: str, dates: str) -> None:
+def _dated(document, title: str, dates: str) -> Paragraph:
     """Title, then a tab to the right margin and the date, all in one paragraph."""
     paragraph = document.add_paragraph(style="CV Item")
     paragraph.paragraph_format.tab_stops.add_tab_stop(_TEXT_WIDTH, WD_TAB_ALIGNMENT.RIGHT)
@@ -220,6 +223,14 @@ def _dated(document, title: str, dates: str) -> None:
         run.bold = False
         run.font.size = Pt(9)
         run.font.color.rgb = _GRAY
+    return paragraph
+
+
+def _add_url(paragraph: Paragraph, url: str, *, clean: bool = True) -> None:
+    """A link with its full `https://` target; the text is the clean URL, or the full one with
+    `clean=False` (project links)."""
+    href = normalize_link_href(url)
+    _add_hyperlink(paragraph, format_link_display(url) if clean else href, href)
 
 
 def _add_hyperlink(paragraph: Paragraph, text: str, url: str, *, styled: bool = True) -> None:

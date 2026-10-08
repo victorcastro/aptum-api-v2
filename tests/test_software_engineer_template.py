@@ -70,8 +70,14 @@ def test_certification_link_is_printed_after_the_issuer():
     lines = _lines(profile)
     cert = next(i for i, line in enumerate(lines) if line.startswith("Cloud Practitioner"))
     assert any(
-        line == "Example Cloud Institute | https://verify.example.dev/abc123" for line in lines[cert + 1 : cert + 3]
+        line == "Example Cloud Institute | verify.example.dev/abc123" for line in lines[cert + 1 : cert + 3]
     )
+
+
+def test_project_link_keeps_the_full_url():
+    profile = base_profile()
+    profile.projects[0].url = "https://github.com/example-alex/cli"
+    assert "https://github.com/example-alex/cli" in _lines(profile)
 
 
 def test_certification_link_is_hidden_when_the_user_turns_it_off():
