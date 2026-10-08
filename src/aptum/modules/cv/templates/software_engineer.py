@@ -158,7 +158,10 @@ class SoftwareEngineerTemplate:
                     story.append(p(project.description, body))
                 if project.url:
                     story.append(
-                        p(f"<a href={quoteattr(project.url)}><font color=\"{_ACCENT}\">{escape(project.url)}</font></a>", body)
+                        Paragraph(
+                            f"<a href={quoteattr(project.url)}><font color=\"{_ACCENT}\">{escape(project.url)}</font></a>",
+                            body,
+                        )
                     )
 
         if doc.educations:
