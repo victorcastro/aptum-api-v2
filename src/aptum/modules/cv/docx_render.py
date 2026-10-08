@@ -12,7 +12,11 @@ from docx.styles.style import ParagraphStyle
 from docx.text.paragraph import Paragraph
 
 from aptum.modules.cv.document import CVDocument
-from aptum.modules.cv.links import CREDENTIAL_LINK_TEXT, format_link_display, normalize_link_href
+from aptum.modules.cv.links import (
+    CREDENTIAL_LINK_TEXT,
+    format_link_display,
+    normalize_link_href,
+)
 
 _FONT = "Arial"
 _INK = RGBColor(0x1F, 0x29, 0x33)

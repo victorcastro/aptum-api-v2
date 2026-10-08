@@ -5,7 +5,12 @@ from reportlab.lib.styles import ParagraphStyle
 from reportlab.platypus import Paragraph
 
 from aptum.modules.cv.header import join_parts
-from aptum.modules.cv.links import CREDENTIAL_LINK_TEXT, LinkEntry, format_link_display, normalize_link_href
+from aptum.modules.cv.links import (
+    CREDENTIAL_LINK_TEXT,
+    LinkEntry,
+    format_link_display,
+    normalize_link_href,
+)
 
 
 def p(text: str, style: ParagraphStyle) -> Paragraph:
