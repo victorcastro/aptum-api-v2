@@ -12,7 +12,7 @@ from aptum.modules.cv.templates.software_engineer import SoftwareEngineerTemplat
 
 PROJECT_URL = "https://github.com/example-alex/cli"
 CERT_URL = "https://verify.example.dev/abc123"
-CERT_URL_TEXT = "verify.example.dev/abc123"  # certification links print without the scheme
+CERT_LINK_TEXT = "Verifycredential"  # the credential link text, squashed like the rendered text
 
 
 def _squash(text: str) -> str:
@@ -66,8 +66,8 @@ def _years_only_education(profile):
 CASES = [
     pytest.param(_with_urls, PROJECT_URL, True, id="project-url-shown"),
     pytest.param(_hide_project_url, PROJECT_URL, False, id="project-url-hidden"),
-    pytest.param(_with_urls, CERT_URL_TEXT, True, id="credential-url-shown"),
-    pytest.param(_hide_cert_url, CERT_URL_TEXT, False, id="credential-url-hidden"),
+    pytest.param(_with_urls, CERT_LINK_TEXT, True, id="credential-url-shown"),
+    pytest.param(_hide_cert_url, CERT_LINK_TEXT, False, id="credential-url-hidden"),
     pytest.param(lambda profile: None, "ExampleCloudInstitute", True, id="certification-issuer"),
     pytest.param(lambda profile: None, "FastAPI,Docker,AWS", True, id="experience-technologies"),
     pytest.param(_years_only_education, "2008-2012", True, id="education-years-only"),

@@ -70,7 +70,7 @@ def test_certification_link_is_printed_after_the_issuer():
     lines = _lines(profile)
     cert = next(i for i, line in enumerate(lines) if line.startswith("Cloud Practitioner"))
     assert any(
-        line == "Example Cloud Institute | verify.example.dev/abc123" for line in lines[cert + 1 : cert + 3]
+        line == "Example Cloud Institute | Verify credential" for line in lines[cert + 1 : cert + 3]
     )
 
 
@@ -84,7 +84,7 @@ def test_certification_link_is_hidden_when_the_user_turns_it_off():
     profile = base_profile()
     profile.certifications[0].credential_url = "https://verify.example.dev/abc123"
     profile.certifications[0].show_credential_url = False
-    assert not any("verify.example.dev" in line for line in _lines(profile))
+    assert not any("verify.example.dev" in line or "Verify credential" in line for line in _lines(profile))
 
 
 def test_project_link_is_printed_and_can_be_hidden():

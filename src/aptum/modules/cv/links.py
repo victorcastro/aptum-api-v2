@@ -8,6 +8,10 @@ from aptum.modules.profile.models import Profile
 _KIND_ORDER = (LinkKind.linkedin, LinkKind.github, LinkKind.portfolio, LinkKind.other)
 
 
+# Visible text of a certification credential link; the link target is the credential URL.
+CREDENTIAL_LINK_TEXT = "Verify credential"
+
+
 @dataclass(frozen=True)
 class LinkEntry:
     label: str

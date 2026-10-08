@@ -5,26 +5,30 @@ from reportlab.lib.styles import ParagraphStyle
 from reportlab.platypus import Paragraph
 
 from aptum.modules.cv.header import join_parts
-from aptum.modules.cv.links import LinkEntry, format_link_display, normalize_link_href
+from aptum.modules.cv.links import CREDENTIAL_LINK_TEXT, LinkEntry, normalize_link_href
 
 
 def p(text: str, style: ParagraphStyle) -> Paragraph:
     return Paragraph(escape(text), style)
 
 
-def link_markup(label: str, href: str) -> str:
+def link_markup(label: str, href: str, color: str | None = None) -> str:
     """A real link annotation over plain text."""
-    return f"<a href={quoteattr(href)}>{escape(label)}</a>"
-
-
-def url_markup(url: str, color: str | None = None, *, clean: bool = True) -> str:
-    """A link to `url` with its full `https://` target. The text is the clean URL
-    (`credly.com/badges/x`), or the full one with `clean=False` (project links)."""
-    href = normalize_link_href(url)
-    label = escape(format_link_display(url) if clean else href)
+    text = escape(label)
     if color:
-        label = f'<font color="{color}">{label}</font>'
-    return f"<a href={quoteattr(href)}>{label}</a>"
+        text = f'<font color="{color}">{text}</font>'
+    return f"<a href={quoteattr(href)}>{text}</a>"
+
+
+def url_markup(url: str, color: str | None = None) -> str:
+    """The full `https://` URL as text, linked to itself (project links)."""
+    href = normalize_link_href(url)
+    return link_markup(href, href, color)
+
+
+def credential_markup(url: str, color: str | None = None) -> str:
+    """`Verify credential`, linked to the credential URL."""
+    return link_markup(CREDENTIAL_LINK_TEXT, normalize_link_href(url), color)
 
 
 def contact_markup(phone: str | None, email: str | None) -> str | None:

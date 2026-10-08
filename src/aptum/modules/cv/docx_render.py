@@ -12,7 +12,7 @@ from docx.styles.style import ParagraphStyle
 from docx.text.paragraph import Paragraph
 
 from aptum.modules.cv.document import CVDocument
-from aptum.modules.cv.links import format_link_display, normalize_link_href
+from aptum.modules.cv.links import CREDENTIAL_LINK_TEXT, normalize_link_href
 
 _FONT = "Arial"
 _INK = RGBColor(0x1F, 0x29, 0x33)
@@ -74,12 +74,14 @@ def render_cv_docx(doc: CVDocument) -> bytes:
 
     if doc.projects:
         _heading(document, "Projects")
-        for project in doc.projects:
-            document.add_paragraph(project.name, style="CV Item")
+        for index, project in enumerate(doc.projects):
+            name = document.add_paragraph(project.name, style="CV Item")
+            if index:
+                name.paragraph_format.space_before = Pt(10)
             if project.description:
                 document.add_paragraph(project.description)
             if project.url:
-                _add_url(document.add_paragraph(), project.url, clean=False)
+                _add_url(document.add_paragraph(), project.url)
 
     if doc.educations:
         _heading(document, "Education")
@@ -96,7 +98,7 @@ def render_cv_docx(doc: CVDocument) -> bytes:
             line = document.add_paragraph(cert.issuer)
             if cert.url:
                 line.add_run(" | ")
-                _add_url(line, cert.url)
+                _add_hyperlink(line, CREDENTIAL_LINK_TEXT, normalize_link_href(cert.url))
 
     if doc.languages:
         _heading(document, "Languages")
@@ -226,11 +228,10 @@ def _dated(document, title: str, dates: str) -> Paragraph:
     return paragraph
 
 
-def _add_url(paragraph: Paragraph, url: str, *, clean: bool = True) -> None:
-    """A link with its full `https://` target; the text is the clean URL, or the full one with
-    `clean=False` (project links)."""
+def _add_url(paragraph: Paragraph, url: str) -> None:
+    """The full `https://` URL as text, linked to itself (project links)."""
     href = normalize_link_href(url)
-    _add_hyperlink(paragraph, format_link_display(url) if clean else href, href)
+    _add_hyperlink(paragraph, href, href)
 
 
 def _add_hyperlink(paragraph: Paragraph, text: str, url: str, *, styled: bool = True) -> None:

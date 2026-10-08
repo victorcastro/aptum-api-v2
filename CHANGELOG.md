@@ -27,10 +27,10 @@ and the project follows [Semantic Versioning](https://semver.org/).
   5. Links: LinkedIn, GitHub, portfolio, then other links in saved order. The text has no scheme,
      `www.` or trailing slash (`linkedin.com/in/x`); the link target is the full `https://` URL.
 - `basic` header links are now real link annotations (still plain text, no icons).
-- Certification credential links print like the header links (`credly.com/badges/x`, target the full
-  `https://` URL) in every template. Project links keep the full URL as text and are now clickable in
+- Certification credential links print as `Verify credential`, linked to the full `https://`
+  credential URL, in every template. Project links keep the full URL as text and are now clickable in
   `basic` too.
-- `software-engineer` and DOCX: more space between certifications.
+- `software-engineer` and DOCX: more space between certifications and between projects.
 - The work authorization line moved from the Summary section to the header, and `Open to relocation`
   no longer names a country.
 

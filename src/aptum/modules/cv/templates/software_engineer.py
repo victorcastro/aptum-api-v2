@@ -16,7 +16,12 @@ from reportlab.platypus import (
 )
 
 from aptum.modules.cv.document import CVDocument
-from aptum.modules.cv.templates.common import header_paragraphs, p, url_markup
+from aptum.modules.cv.templates.common import (
+    credential_markup,
+    header_paragraphs,
+    p,
+    url_markup,
+)
 
 _INK = "#1F2933"
 _ACCENT = "#1F3A5F"
@@ -142,12 +147,14 @@ class SoftwareEngineerTemplate:
 
         if doc.projects:
             heading("Projects")
-            for project in doc.projects:
+            for index, project in enumerate(doc.projects):
+                if index:
+                    story.append(Spacer(1, 0.2 * cm))
                 story.append(p(project.name, item))
                 if project.description:
                     story.append(p(project.description, body))
                 if project.url:
-                    story.append(Paragraph(url_markup(project.url, _ACCENT, clean=False), body))
+                    story.append(Paragraph(url_markup(project.url, _ACCENT), body))
 
         if doc.educations:
             heading("Education")
@@ -163,7 +170,7 @@ class SoftwareEngineerTemplate:
                 story.append(_DatedLine(cert.title, cert.dates, item, muted))
                 markup = escape(cert.issuer)
                 if cert.url:
-                    markup += f" | {url_markup(cert.url, _ACCENT)}"
+                    markup += f" | {credential_markup(cert.url, _ACCENT)}"
                 story.append(Paragraph(markup, body))
 
         if doc.languages:

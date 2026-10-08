@@ -10,7 +10,12 @@ from reportlab.lib.units import cm
 from reportlab.platypus import KeepTogether, Paragraph, SimpleDocTemplate, Spacer
 
 from aptum.modules.cv.ats.document import ATSDocument
-from aptum.modules.cv.templates.common import header_paragraphs, p, url_markup
+from aptum.modules.cv.templates.common import (
+    credential_markup,
+    header_paragraphs,
+    p,
+    url_markup,
+)
 
 # Standard headings, in the order ATS parsers expect them.
 SECTION_HEADINGS = ("Summary", "Experience", "Skills", "Education", "Certifications", "Projects", "Languages")
@@ -81,7 +86,7 @@ class ATSTemplate:
             heading("Certifications")
             for cert in doc.certifications:
                 line = f"{cert.title} - {cert.issuer}{f' ({cert.dates})' if cert.dates else ''}"
-                markup = escape(line) + (f" | {url_markup(cert.url)}" if cert.url else "")
+                markup = escape(line) + (f" | {credential_markup(cert.url)}" if cert.url else "")
                 story.append(Paragraph(markup, body))
 
         if doc.projects:
@@ -92,7 +97,7 @@ class ATSTemplate:
                     text += f": {escape(project.description)}"
                 story.append(Paragraph(text, body))
                 if project.url:
-                    story.append(Paragraph(url_markup(project.url, clean=False), body))
+                    story.append(Paragraph(url_markup(project.url), body))
 
         if doc.languages:
             heading("Languages")
