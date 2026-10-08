@@ -16,7 +16,7 @@ from reportlab.platypus import (
 )
 
 from aptum.modules.cv.document import CVDocument
-from aptum.modules.cv.templates.common import p
+from aptum.modules.cv.templates.common import header_paragraphs, p
 
 _INK = "#1F2933"
 _ACCENT = "#1F3A5F"
@@ -111,26 +111,16 @@ class SoftwareEngineerTemplate:
         story: list = [p(doc.full_name, name)]
         if doc.headline:
             story.append(p(doc.headline, headline))
-        contact_parts = [escape(x) for x in (doc.location, doc.phone, doc.email) if x]
-        if contact_parts:
-            story.append(Paragraph(" | ".join(contact_parts), contact))
-        link_parts = [
-            f"<a href={quoteattr(link.url)}>{escape(link.label)}</a>" for link in doc.links
-        ]
-        if link_parts:
-            story.append(Paragraph(" | ".join(link_parts), links))
+        story.extend(header_paragraphs(doc.availability_line, doc.phone, doc.email, doc.links, contact, links))
         story.append(Spacer(1, 0.4 * cm))
 
         def heading(title: str) -> None:
             story.append(p(title.upper(), section))
             story.append(HRFlowable(width="100%", thickness=0.5, color=HexColor(_RULE), spaceBefore=1, spaceAfter=4))
 
-        if doc.summary or doc.work_authorization_line:
+        if doc.summary:
             heading("Summary")
-            if doc.work_authorization_line:
-                story.append(p(doc.work_authorization_line, muted))
-            if doc.summary:
-                story.append(p(doc.summary, body))
+            story.append(p(doc.summary, body))
 
         if doc.skill_groups:
             heading("Technical Skills")

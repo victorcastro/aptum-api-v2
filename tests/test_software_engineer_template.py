@@ -14,22 +14,30 @@ def _lines(profile) -> list[str]:
     return [line.strip() for line in text.splitlines() if line.strip()]
 
 
-def test_header_is_name_tagline_data_then_links_in_saved_order():
-    links = [PORTFOLIO, *base_profile().links]
-    lines = _lines(base_profile(links=links))
-    assert lines[:4] == [
+def test_header_is_name_title_availability_contact_then_links_by_kind():
+    links = [PORTFOLIO, *reversed(base_profile().links)]
+    profile = base_profile(
+        links=links, work_authorization="authorized", work_authorization_country="CA", work_preferences=["hybrid"]
+    )
+    assert _lines(profile)[:5] == [
         "Alex Rivera",
         "Senior Software Engineer",
-        "Toronto, Canada | +1 555 0100 | alex.rivera@example.com",
-        "https://alex.example.dev | https://www.linkedin.com/in/example-alex | https://github.com/example-alex",
+        "Toronto, Canada | Open to hybrid | Authorized to work in Canada",
+        "+1 555 0100 | alex.rivera@example.com",
+        "linkedin.com/in/example-alex | github.com/example-alex | alex.example.dev",
     ]
 
 
-def test_links_line_follows_the_saved_order():
-    reordered = list(reversed(base_profile().links))
-    assert _lines(base_profile(links=reordered))[3] == (
-        "https://github.com/example-alex | https://www.linkedin.com/in/example-alex"
-    )
+def test_header_links_are_clickable_with_full_urls():
+    from pypdf import PdfReader
+
+    page = PdfReader(BytesIO(SoftwareEngineerTemplate().render(build_cv_data(base_profile())))).pages[0]
+    targets = [str(annot.get_object()["/A"]["/URI"]) for annot in page["/Annots"]]
+    assert targets[:3] == [
+        "mailto:alex.rivera@example.com",
+        "https://www.linkedin.com/in/example-alex",
+        "https://github.com/example-alex",
+    ]
 
 
 def test_dated_line_draws_for_plain_wrapped_and_escaped_titles():

@@ -94,6 +94,37 @@ ProfileLinks = Annotated[
 ]
 
 
+def _dedupe_modes(modes: list[WorkMode]) -> list[WorkMode]:
+    return list(dict.fromkeys(modes))
+
+
+WorkPreferences = Annotated[
+    list[WorkMode],
+    AfterValidator(_dedupe_modes),
+    Field(
+        description="Work modes the user is open to. The CV prints `Open to remote`, `Open to remote or "
+        "hybrid` or `Open to hybrid`; `onsite` alone prints nothing. Repeats are dropped.",
+        examples=[["remote", "hybrid"]],
+    ),
+]
+
+
+def _blank_to_none(value: str | None) -> str | None:
+    return (value or "").strip() or None
+
+
+TimezoneLabel = Annotated[
+    str | None,
+    Field(
+        max_length=16,
+        description="Short timezone label printed after the CV location, e.g. `Madrid, Spain (CET)`. "
+        "Blank clears it.",
+        examples=["CET"],
+    ),
+    AfterValidator(_blank_to_none),
+]
+
+
 class ExperienceCreate(BaseModel):
     position: str
     employer_id: int
@@ -374,7 +405,7 @@ class ProjectRead(BaseModel):
 
 
 class ProfileUpdate(PartialUpdate):
-    non_nullable = ("open_to_relocation", "links")
+    non_nullable = ("open_to_relocation", "links", "work_preferences")
 
     first_name: str | None = None
     last_name: str | None = None
@@ -390,6 +421,8 @@ class ProfileUpdate(PartialUpdate):
         default=None, description="Country the authorization or relocation refers to."
     )
     open_to_relocation: bool | None = None
+    work_preferences: WorkPreferences | None = None
+    timezone_label: TimezoneLabel = None
 
 
 class ProfileRead(BaseModel):
@@ -409,6 +442,8 @@ class ProfileRead(BaseModel):
     work_authorization: WorkAuthorization | None = None
     work_authorization_country: str | None = None
     open_to_relocation: bool = False
+    work_preferences: list[WorkMode] = []
+    timezone_label: str | None = None
     experiences: list[ExperienceRead] = []
     educations: list[EducationRead] = []
     languages: list[LanguageRead] = []

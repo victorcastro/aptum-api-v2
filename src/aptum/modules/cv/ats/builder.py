@@ -1,9 +1,5 @@
 """Profile -> ATSDocument. Every value comes from the profile; nothing is generated here."""
 
-from aptum.common.countries import country_name
-from aptum.common.enums import (
-    WorkAuthorization,
-)
 from aptum.modules.cv.ats.document import (
     ATSCertification,
     ATSDocument,
@@ -14,26 +10,9 @@ from aptum.modules.cv.ats.document import (
     format_year_range,
 )
 from aptum.modules.cv.ats.skills import select_skills, skill_lines
-from aptum.modules.cv.links import visible_link_urls
+from aptum.modules.cv.header import availability_line
+from aptum.modules.cv.links import header_links
 from aptum.modules.profile.models import Education, Profile
-
-
-def header_links(profile: Profile) -> list[str]:
-    """The visible profile links as plain URLs."""
-    return visible_link_urls(profile)
-
-
-def work_authorization_line(profile: Profile) -> str | None:
-    """One short line, only from what the user set. None when nothing is set."""
-    country = country_name(profile.work_authorization_country)
-    parts: list[str] = []
-    if profile.work_authorization == WorkAuthorization.authorized:
-        parts.append(f"Authorized to work in {country}" if country else "Authorized to work")
-    elif profile.work_authorization == WorkAuthorization.requires_sponsorship:
-        parts.append(f"Requires visa sponsorship for {country}" if country else "Requires visa sponsorship")
-    if profile.open_to_relocation:
-        parts.append(f"Open to relocation to {country}" if country and not parts else "Open to relocation")
-    return " | ".join(parts) or None
 
 
 def language_lines(profile: Profile) -> list[str]:
@@ -47,21 +26,17 @@ def education_dates(edu: Education) -> str:
     return format_year_range(edu.start_year, edu.end_year)
 
 
-def location_line(profile: Profile) -> str:
-    return ", ".join(x for x in (profile.city, country_name(profile.country_code)) if x)
-
-
 def build_ats_document(profile: Profile, offer: str | None = None) -> ATSDocument:
     full_name = " ".join(part for part in (profile.first_name, profile.last_name) if part)
-    contact = " | ".join(x for x in (location_line(profile), profile.phone, profile.contact_email) if x)
     selected = select_skills(profile.skills, offer, profile.experiences)
 
     return ATSDocument(
         full_name=full_name or "Curriculum Vitae",
         headline=profile.headline or None,
-        contact_line=contact or None,
+        availability_line=availability_line(profile),
+        phone=profile.phone or None,
+        email=profile.contact_email or None,
         links=header_links(profile),
-        work_authorization_line=work_authorization_line(profile),
         summary=profile.summary or None,
         skill_lines=skill_lines(selected),
         experiences=[

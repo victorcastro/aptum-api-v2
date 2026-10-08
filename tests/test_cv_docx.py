@@ -38,10 +38,12 @@ def test_uses_only_native_structures():
 def test_header_and_section_order():
     document = _render(base_profile())
     texts = _texts(document)
-    assert texts[:3] == [
+    assert texts[:5] == [
         "Alex Rivera",
         "Senior Software Engineer",
-        "Toronto, Canada | +1 555 0100 | alex.rivera@example.com",
+        "Toronto, Canada",
+        "+1 555 0100 | alex.rivera@example.com",
+        "linkedin.com/in/example-alex | github.com/example-alex",
     ]
     headings = [p.text for p in document.paragraphs if p.style.name == "Heading 1"]
     assert headings == [

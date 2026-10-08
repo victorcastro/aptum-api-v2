@@ -36,9 +36,14 @@ def render_cv_docx(doc: CVDocument) -> bytes:
     document.add_paragraph(doc.full_name, style="Title")
     if doc.headline:
         document.add_paragraph(doc.headline, style="Subtitle")
-    contact = " | ".join(x for x in (doc.location, doc.phone, doc.email) if x)
-    if contact:
-        document.add_paragraph(contact, style="CV Contact")
+    if doc.availability_line:
+        document.add_paragraph(doc.availability_line, style="CV Contact")
+    if doc.phone or doc.email:
+        contact = document.add_paragraph(doc.phone or "", style="CV Contact")
+        if doc.email:
+            if doc.phone:
+                contact.add_run(" | ")
+            _add_hyperlink(contact, doc.email, f"mailto:{doc.email}", styled=False)
     if doc.links:
         links = document.add_paragraph(style="CV Contact")
         for index, link in enumerate(doc.links):
@@ -46,12 +51,9 @@ def render_cv_docx(doc: CVDocument) -> bytes:
                 links.add_run(" | ")
             _add_hyperlink(links, link.label, link.url)
 
-    if doc.summary or doc.work_authorization_line:
+    if doc.summary:
         _heading(document, "Summary")
-        if doc.work_authorization_line:
-            document.add_paragraph(doc.work_authorization_line, style="CV Muted")
-        if doc.summary:
-            document.add_paragraph(doc.summary)
+        document.add_paragraph(doc.summary)
 
     if doc.skill_groups:
         _heading(document, "Technical Skills")
@@ -220,19 +222,21 @@ def _dated(document, title: str, dates: str) -> None:
         run.font.color.rgb = _GRAY
 
 
-def _add_hyperlink(paragraph: Paragraph, text: str, url: str) -> None:
+def _add_hyperlink(paragraph: Paragraph, text: str, url: str, *, styled: bool = True) -> None:
+    """`styled=False` keeps the paragraph's own look (the email on the contact line)."""
     relation_id = paragraph.part.relate_to(url, RELATIONSHIP_TYPE.HYPERLINK, is_external=True)
     hyperlink = OxmlElement("w:hyperlink")
     hyperlink.set(qn("r:id"), relation_id)
     run = OxmlElement("w:r")
-    props = OxmlElement("w:rPr")
-    color = OxmlElement("w:color")
-    color.set(qn("w:val"), "1F3A5F")
-    underline = OxmlElement("w:u")
-    underline.set(qn("w:val"), "single")
-    props.append(color)
-    props.append(underline)
-    run.append(props)
+    if styled:
+        props = OxmlElement("w:rPr")
+        color = OxmlElement("w:color")
+        color.set(qn("w:val"), "1F3A5F")
+        underline = OxmlElement("w:u")
+        underline.set(qn("w:val"), "single")
+        props.append(color)
+        props.append(underline)
+        run.append(props)
     content = OxmlElement("w:t")
     content.text = text
     content.set(qn("xml:space"), "preserve")
