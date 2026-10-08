@@ -4,6 +4,40 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 and the project follows [Semantic Versioning](https://semver.org/).
 
+## [1.7.0] - 2026-10-08
+
+### Added
+
+- Profile fields for the CV availability line, on `PATCH /profile/me` and `GET /profile/me`
+  (migration `0007`; existing profiles get the defaults):
+  - `work_preferences`: list of `remote`, `hybrid`, `onsite` (default `[]`, repeats dropped, `null`
+    rejected). Printed as `Open to remote`, `Open to remote or hybrid` or `Open to hybrid`; `onsite`
+    is never printed.
+  - `timezone_label`: short label, max 16 characters (default `null`, blank clears it). Printed after
+    the location: `Madrid, Spain (CET)`.
+
+### Changed
+
+- CV header (`basic`, `software-engineer` and DOCX): centered, one line per block, ` | ` between parts,
+  empty parts and empty lines left out:
+  1. Full name
+  2. Headline
+  3. Availability: `location (timezone) | work preference | Authorized to work [in {country}] | Open to relocation`
+  4. Contact: `phone | email` (the email is a `mailto:` link)
+  5. Links: LinkedIn, GitHub, portfolio, then other links in saved order. The text has no scheme,
+     `www.` or trailing slash (`linkedin.com/in/x`); the link target is the full `https://` URL.
+- `basic` header links are now real link annotations (still plain text, no icons).
+- Certification credential links print as `Verify credential`, linked to the full `https://`
+  credential URL, in every template. Project links keep the full URL as text and are now clickable in
+  `basic` too.
+- `software-engineer` and DOCX: more space between certifications and between projects.
+- The work authorization line moved from the Summary section to the header, and `Open to relocation`
+  no longer names a country.
+
+### Removed
+
+- `requires_sponsorship` is no longer printed on any CV (the value is still stored on the profile).
+
 ## [1.6.1] - 2026-10-08
 
 ### Fixed

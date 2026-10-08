@@ -3,13 +3,19 @@ from io import BytesIO
 from xml.sax.saxutils import escape
 
 from reportlab.lib.colors import black
+from reportlab.lib.enums import TA_CENTER
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import ParagraphStyle
 from reportlab.lib.units import cm
 from reportlab.platypus import KeepTogether, Paragraph, SimpleDocTemplate, Spacer
 
 from aptum.modules.cv.ats.document import ATSDocument
-from aptum.modules.cv.templates.common import p
+from aptum.modules.cv.templates.common import (
+    credential_markup,
+    header_paragraphs,
+    p,
+    url_markup,
+)
 
 # Standard headings, in the order ATS parsers expect them.
 SECTION_HEADINGS = ("Summary", "Experience", "Skills", "Education", "Certifications", "Projects", "Languages")
@@ -23,14 +29,18 @@ class RenderedPDF:
 
 class ATSTemplate:
     """ATS-safe layout: one column of plain text in a standard font (Helvetica), black on white.
-    No tables, images, icons, charts, drawn lines, text boxes or photo; links are printed as
-    visible URLs. A4, like every other template."""
+    No tables, images, icons, charts, drawn lines, text boxes or photo. The centered header prints
+    links as visible text with a real link annotation. A4, like every other template."""
 
     def render(self, doc: ATSDocument) -> RenderedPDF:
         body = ParagraphStyle("Body", fontName="Helvetica", fontSize=10, leading=12.5, spaceAfter=1, textColor=black)
-        header = ParagraphStyle("Header", parent=body, fontSize=9.5, leading=12)
-        name = ParagraphStyle("Name", parent=body, fontName="Helvetica-Bold", fontSize=18, leading=22, spaceAfter=2)
-        headline = ParagraphStyle("Headline", parent=body, fontName="Helvetica-Bold", fontSize=11, leading=14)
+        header = ParagraphStyle("Header", parent=body, fontSize=9.5, leading=12, alignment=TA_CENTER)
+        name = ParagraphStyle(
+            "Name", parent=body, fontName="Helvetica-Bold", fontSize=18, leading=22, spaceAfter=2, alignment=TA_CENTER
+        )
+        headline = ParagraphStyle(
+            "Headline", parent=body, fontName="Helvetica-Bold", fontSize=11, leading=14, alignment=TA_CENTER
+        )
         section = ParagraphStyle(
             "Section", parent=body, fontName="Helvetica-Bold", fontSize=11.5, leading=14, spaceBefore=18, spaceAfter=4
         )
@@ -40,9 +50,7 @@ class ATSTemplate:
         story: list = [p(doc.full_name, name)]
         if doc.headline:
             story.append(p(doc.headline, headline))
-        for line in (doc.contact_line, " | ".join(doc.links), doc.work_authorization_line):
-            if line:
-                story.append(p(line, header))
+        story.extend(header_paragraphs(doc.availability_line, doc.phone, doc.email, doc.links, header))
 
         def heading(title: str) -> None:
             story.append(p(title.upper(), section))
@@ -78,7 +86,8 @@ class ATSTemplate:
             heading("Certifications")
             for cert in doc.certifications:
                 line = f"{cert.title} - {cert.issuer}{f' ({cert.dates})' if cert.dates else ''}"
-                story.append(p(f"{line} | {cert.url}" if cert.url else line, body))
+                markup = escape(line) + (f" | {credential_markup(cert.url)}" if cert.url else "")
+                story.append(Paragraph(markup, body))
 
         if doc.projects:
             heading("Projects")
@@ -88,7 +97,7 @@ class ATSTemplate:
                     text += f": {escape(project.description)}"
                 story.append(Paragraph(text, body))
                 if project.url:
-                    story.append(p(project.url, body))
+                    story.append(Paragraph(url_markup(project.url), body))
 
         if doc.languages:
             heading("Languages")

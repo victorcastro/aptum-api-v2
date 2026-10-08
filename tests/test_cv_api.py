@@ -163,25 +163,11 @@ def test_matching_prompt_has_locked_years():
     assert "LOCKED FACTS" in prompts[0] and "Total professional experience:" in prompts[0]
 
 
-def test_legacy_template_prints_work_authorization_line(client, profile):
+@pytest.mark.parametrize("params", [{}, {"template": "software-engineer"}])
+def test_availability_line_sits_in_the_header_and_never_mentions_sponsorship(client, profile, params):
     profile.work_authorization = "requires_sponsorship"
     profile.work_authorization_country = "PE"
     profile.open_to_relocation = True
-    lines = [
-        line.strip()
-        for line in pdf_text(client.get("/cv/export", params={"template": "software-engineer"}).content).splitlines()
-    ]
-    assert "Requires visa sponsorship for Peru | Open to relocation" in lines
-    assert lines.index("SUMMARY") + 1 == lines.index("Requires visa sponsorship for Peru | Open to relocation")
-    assert lines.index("Requires visa sponsorship for Peru | Open to relocation") + 1 == lines.index(
-        base_profile().summary
-    )
-
-
-@pytest.mark.parametrize("params", [{}, {"template": "software-engineer"}])
-def test_work_authorization_line_without_country(client, profile, params):
-    profile.work_authorization = "requires_sponsorship"
-    profile.work_authorization_country = None
-    profile.open_to_relocation = True
-    text = pdf_text(client.get("/cv/export", params=params).content)
-    assert "Requires visa sponsorship | Open to relocation" in text
+    lines = [line.strip() for line in pdf_text(client.get("/cv/export", params=params).content).splitlines()]
+    assert lines[2] == "Toronto, Canada | Open to relocation"
+    assert not any("sponsorship" in line.lower() for line in lines)

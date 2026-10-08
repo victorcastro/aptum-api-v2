@@ -36,22 +36,44 @@ def test_text_is_selectable_and_headings_are_standard_and_ordered():
     assert lines[0] == "Alex Rivera"
 
 
-def test_nothing_is_an_image_table_or_link_box():
+def _link_targets(page) -> list[str]:
+    annots = [annot.get_object() for annot in page.get("/Annots") or []]
+    assert all(annot["/Subtype"] == "/Link" for annot in annots)
+    return [str(annot["/A"]["/URI"]) for annot in annots]
+
+
+def test_nothing_is_an_image_or_table_and_only_header_links_are_annotations():
     reader = PdfReader(BytesIO(generate_ats_cv(_profile(), today=TODAY).pdf))
+    assert _link_targets(reader.pages[0]) == [
+        "mailto:alex.rivera@example.com",
+        "https://www.linkedin.com/in/example-alex",
+        "https://github.com/example-alex",
+        "https://alex.example.dev",
+    ]
     for page in reader.pages:
         assert list(page.images) == []
         resources = page.get("/Resources") or {}
         assert "/XObject" not in resources  # no images or form boxes
-        assert "/Annots" not in page  # URLs are plain text, not clickable boxes
         fonts = {str(font.get_object()["/BaseFont"]) for font in resources["/Font"].values()}
         assert fonts <= {"/Helvetica", "/Helvetica-Bold"}
 
 
-def test_header_prints_urls_and_work_authorization_line():
-    lines = _lines(generate_ats_cv(_profile(open_to_relocation=True), today=TODAY).pdf)
-    assert "https://alex.example.dev | https://www.linkedin.com/in/example-alex | https://github.com/example-alex" in lines
-    assert "Authorized to work in Canada | Open to relocation" in lines
-    assert lines.index("Authorized to work in Canada | Open to relocation") < lines.index("SUMMARY")
+def test_header_is_name_title_availability_contact_then_links():
+    profile = _profile(open_to_relocation=True, timezone_label="EST", work_preferences=["remote"])
+    lines = _lines(generate_ats_cv(profile, today=TODAY).pdf)
+    assert lines[: lines.index("SUMMARY")] == [
+        "Alex Rivera",
+        "Senior Software Engineer",
+        "Toronto, Canada (EST) | Open to remote | Authorized to work in Canada | Open to relocation",
+        "+1 555 0100 | alex.rivera@example.com",
+        "linkedin.com/in/example-alex | github.com/example-alex | alex.example.dev",
+    ]
+
+
+def test_sponsorship_need_is_never_printed():
+    text = pdf_text(generate_ats_cv(_profile(work_authorization="requires_sponsorship"), today=TODAY).pdf)
+    assert "Authorized" not in text and "sponsorship" not in text.lower() and "visa" not in text.lower()
+    assert "Toronto, Canada\n" in text
 
 
 def test_work_authorization_line_absent_when_not_set():

@@ -17,7 +17,7 @@ from sqlalchemy import (
     text,
     true,
 )
-from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.dialects.postgresql import ARRAY, JSONB
 from sqlalchemy.orm import Mapped, column_property, mapped_column, relationship
 
 from aptum.common.constants import EMBEDDING_DIM
@@ -31,6 +31,7 @@ from aptum.common.enums import (
 )
 from aptum.db.base import Base, TimestampMixin
 from aptum.db.constraints import (
+    array_values_check,
     date_range_check,
     in_values_check,
     month_precision_checks,
@@ -48,6 +49,7 @@ class Profile(TimestampMixin, Base):
     __tablename__ = "profiles"
     __table_args__ = (
         in_values_check("work_authorization", WorkAuthorization),
+        array_values_check("work_preferences", WorkMode),
     )
 
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -68,6 +70,12 @@ class Profile(TimestampMixin, Base):
     # Country the authorization (or the relocation target) refers to; ISO 3166-1 alpha-2.
     work_authorization_country: Mapped[str | None] = mapped_column(String(2), default=None)
     open_to_relocation: Mapped[bool] = mapped_column(Boolean, default=False, server_default=false())
+    # Work modes the user is open to (`WorkMode` values), printed on the CV availability line.
+    work_preferences: Mapped[list[str]] = mapped_column(
+        ARRAY(String(16)), default=list, server_default=text("'{}'")
+    )
+    # Short timezone label printed after the location, e.g. "CET".
+    timezone_label: Mapped[str | None] = mapped_column(String(16), default=None)
     embedding: Mapped[list[float] | None] = mapped_column(Vector(EMBEDDING_DIM), nullable=True)
 
     experiences: Mapped[list["Experience"]] = relationship(
