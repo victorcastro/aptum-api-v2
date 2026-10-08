@@ -337,6 +337,7 @@ class ProjectCreate(BaseModel):
     url: HttpUrlStr | None = None
     start_date: YearMonth | None = None
     end_date: YearMonth | None = None
+    show_url: bool = True
     is_active: bool = True
 
     @model_validator(mode="after")
@@ -346,13 +347,14 @@ class ProjectCreate(BaseModel):
 
 
 class ProjectUpdate(PartialUpdate):
-    non_nullable = ("name", "is_active")
+    non_nullable = ("name", "show_url", "is_active")
 
     name: Annotated[str, Field(min_length=1, max_length=255)] | None = None
     description: str | None = None
     url: HttpUrlStr | None = None
     start_date: YearMonth | None = None
     end_date: YearMonth | None = None
+    show_url: bool | None = None
     is_active: bool | None = None
 
 
@@ -365,6 +367,7 @@ class ProjectRead(BaseModel):
     url: str | None
     start_date: YearMonth | None
     end_date: YearMonth | None
+    show_url: bool
     is_active: bool
 
 

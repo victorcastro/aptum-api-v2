@@ -199,7 +199,7 @@ def base_profile(**fields) -> Profile:
         )
     ]
     profile.projects = [
-        Project(id=next(_ids), name="Open-source CLI", description="A small CLI for prompt testing.", is_active=True)
+        Project(id=next(_ids), name="Open-source CLI", description="A small CLI for prompt testing.", show_url=True, is_active=True)
     ]
     profile.languages = [
         profile_language("es", "Spanish", "Native"),

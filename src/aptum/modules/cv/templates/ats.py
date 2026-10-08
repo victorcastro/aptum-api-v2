@@ -59,6 +59,8 @@ class ATSTemplate:
                     story.append(p(exp.description, body))
                 for text in exp.bullets:
                     story.append(Paragraph(escape(text), bullet, bulletText="•"))
+                if exp.skills_line:
+                    story.append(Paragraph(f"<b>Technologies:</b> {escape(exp.skills_line)}", body))
 
         if doc.skill_lines:
             heading("Skills")
@@ -75,7 +77,8 @@ class ATSTemplate:
         if doc.certifications:
             heading("Certifications")
             for cert in doc.certifications:
-                story.append(p(f"{cert.title}{f' ({cert.dates})' if cert.dates else ''}", body))
+                line = f"{cert.title} - {cert.issuer}{f' ({cert.dates})' if cert.dates else ''}"
+                story.append(p(f"{line} | {cert.url}" if cert.url else line, body))
 
         if doc.projects:
             heading("Projects")
@@ -84,6 +87,8 @@ class ATSTemplate:
                 if project.description:
                     text += f": {escape(project.description)}"
                 story.append(Paragraph(text, body))
+                if project.url:
+                    story.append(p(project.url, body))
 
         if doc.languages:
             heading("Languages")

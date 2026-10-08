@@ -1,6 +1,6 @@
 Alex Rivera
  Senior Software Engineer
- Toronto, Canada | +1 555 0100 | alex.rivera@example.com
+ Toronto, Ontario, Canada | +1 555 0100 | alex.rivera@example.com
  https://www.linkedin.com/in/example-alex | https://github.com/example-alex
 SUMMARY
 Engineer building backend services and LLM features.

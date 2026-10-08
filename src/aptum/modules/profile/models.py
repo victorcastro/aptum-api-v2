@@ -259,6 +259,7 @@ class Project(TimestampMixin, Base):
     name: Mapped[str] = mapped_column(String(255))
     description: Mapped[str | None] = mapped_column(Text, default=None)
     url: Mapped[str | None] = mapped_column(String(500), default=None)
+    show_url: Mapped[bool] = mapped_column(default=True, server_default=true())
     is_active: Mapped[bool] = mapped_column(default=True, server_default=true())
     start_date: Mapped[date | None] = mapped_column(Date, default=None)
     end_date: Mapped[date | None] = mapped_column(Date, default=None)
