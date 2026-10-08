@@ -1,6 +1,6 @@
 [project]
 name = "aptum-api"
-version = "1.5.0"
+version = "1.6.0"
 description = "Aptum backend: CV profiles, ATS-friendly CV generation and job matching, with role-based access control."
 readme = "README.md"
 authors = [

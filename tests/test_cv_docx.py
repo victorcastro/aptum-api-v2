@@ -102,6 +102,14 @@ def test_certification_link_hidden_when_toggled_off():
     assert not any("verify.example.dev" in t for t in _texts(document))
 
 
+def test_project_link_is_a_hyperlink_and_can_be_hidden():
+    profile = base_profile()
+    profile.projects[0].url = "https://github.com/example-alex/cli"
+    assert "https://github.com/example-alex/cli" in _hyperlinks(_render(profile))
+    profile.projects[0].show_url = False
+    assert "https://github.com/example-alex/cli" not in _hyperlinks(_render(profile))
+
+
 def test_inactive_language_is_not_printed():
     profile = base_profile()
     profile.languages[0].is_active = False

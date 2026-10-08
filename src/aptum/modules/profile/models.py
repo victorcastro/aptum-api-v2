@@ -13,11 +13,12 @@ from sqlalchemy import (
     Text,
     UniqueConstraint,
     false,
+    select,
     text,
     true,
 )
 from sqlalchemy.dialects.postgresql import JSONB
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.orm import Mapped, column_property, mapped_column, relationship
 
 from aptum.common.constants import EMBEDDING_DIM
 from aptum.common.enums import (
@@ -34,7 +35,7 @@ from aptum.db.constraints import (
     in_values_check,
     month_precision_checks,
 )
-from aptum.modules.commons.models import Language
+from aptum.modules.commons.models import Language, LanguageLevel
 from aptum.modules.companies.models import Company
 from aptum.modules.skills.models import Skill
 
@@ -58,7 +59,6 @@ class Profile(TimestampMixin, Base):
     phone: Mapped[str | None] = mapped_column(String(40), default=None)
     contact_email: Mapped[str | None] = mapped_column(String(255), default=None)
     city: Mapped[str | None] = mapped_column(String(120), default=None)
-    region: Mapped[str | None] = mapped_column(String(120), default=None)
     country_code: Mapped[str | None] = mapped_column(String(2), default=None)
     preferred_template: Mapped[str | None] = mapped_column(String(40), default=None)
     # Header links of the CV, in print order: [{"kind", "label", "url", "visible"}].
@@ -80,7 +80,11 @@ class Profile(TimestampMixin, Base):
         order_by="Education.end_date.desc().nulls_first()",
         **_OWNED,
     )
-    languages: Mapped[list["ProfileLanguage"]] = relationship(back_populates="profile", **_OWNED)
+    languages: Mapped[list["ProfileLanguage"]] = relationship(
+        back_populates="profile",
+        order_by="(ProfileLanguage.level_rank.desc(), ProfileLanguage.language_code)",
+        **_OWNED,
+    )
     skills: Mapped[list["ProfileSkill"]] = relationship(
         back_populates="profile", order_by="ProfileSkill.id", **_OWNED
     )
@@ -100,6 +104,10 @@ class ProfileLanguage(Base):
     # Code of a `language_levels` row: CEFR (A1-C2) or Native.
     proficiency: Mapped[str] = mapped_column(String(8), ForeignKey("language_levels.code"))
     is_active: Mapped[bool] = mapped_column(default=True, server_default=true())
+    # `language_levels.rank` of the proficiency. Only used to order languages, never serialized.
+    level_rank: Mapped[int] = column_property(
+        select(LanguageLevel.rank).where(LanguageLevel.code == proficiency).scalar_subquery()
+    )
 
     profile: Mapped["Profile"] = relationship(back_populates="languages")
     language: Mapped[Language] = relationship(lazy="joined")
@@ -259,6 +267,7 @@ class Project(TimestampMixin, Base):
     name: Mapped[str] = mapped_column(String(255))
     description: Mapped[str | None] = mapped_column(Text, default=None)
     url: Mapped[str | None] = mapped_column(String(500), default=None)
+    show_url: Mapped[bool] = mapped_column(default=True, server_default=true())
     is_active: Mapped[bool] = mapped_column(default=True, server_default=true())
     start_date: Mapped[date | None] = mapped_column(Date, default=None)
     end_date: Mapped[date | None] = mapped_column(Date, default=None)

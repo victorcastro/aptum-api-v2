@@ -119,7 +119,6 @@ def base_profile(**fields) -> Profile:
         "phone": "+1 555 0100",
         "contact_email": "alex.rivera@example.com",
         "city": "Toronto",
-        "region": "Ontario",
         "country_code": "CA",
         "links": [
             {"kind": "linkedin", "label": "LinkedIn", "url": "https://www.linkedin.com/in/example-alex", "visible": True},
@@ -199,7 +198,7 @@ def base_profile(**fields) -> Profile:
         )
     ]
     profile.projects = [
-        Project(id=next(_ids), name="Open-source CLI", description="A small CLI for prompt testing.", is_active=True)
+        Project(id=next(_ids), name="Open-source CLI", description="A small CLI for prompt testing.", show_url=True, is_active=True)
     ]
     profile.languages = [
         profile_language("es", "Spanish", "Native"),

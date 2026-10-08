@@ -105,6 +105,7 @@ def test_keyword_supported_by_profile_but_trimmed_from_cv():
     doc.skill_lines = []
     for exp in doc.experiences:
         exp.bullets = []
+        exp.skills_line = None
     coverage = keyword_coverage("Swift and Docker", doc, profile)
     assert coverage.missing == ["Docker", "Swift"]
     assert coverage.supported_by_profile == ["Docker", "Swift"]
