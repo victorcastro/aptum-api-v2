@@ -1,9 +1,13 @@
 from dataclasses import dataclass
-from datetime import date
 
-from aptum.common.countries import country_name
 from aptum.common.enums import SkillCategory
-from aptum.modules.cv.ats.builder import language_lines, work_authorization_line
+from aptum.modules.cv.ats.builder import (
+    education_dates,
+    language_lines,
+    location_line,
+    work_authorization_line,
+)
+from aptum.modules.cv.ats.document import format_range
 from aptum.modules.cv.links import visible_link_urls
 from aptum.modules.profile.models import Profile
 
@@ -36,6 +40,7 @@ class CertificationEntry:
 class ProjectEntry:
     name: str
     description: str | None
+    url: str | None = None
 
 
 @dataclass(frozen=True)
@@ -73,16 +78,6 @@ class CVDocument:
     projects: tuple[ProjectEntry, ...]
 
 
-def _month(value: date | None) -> str:
-    return value.strftime("%b %Y") if value else ""
-
-
-def _range(start: date | None, end: date | None, current: bool = False) -> str:
-    if start is None and end is None:
-        return ""
-    return f"{_month(start)} - {'Present' if current else _month(end)}".strip(" -")
-
-
 def _group_skills(profile: Profile) -> tuple[SkillGroup, ...]:
     """Group by the profile skill's CV category, in `SkillCategory` order like the ATS CV;
     empty groups are left out."""
@@ -98,7 +93,7 @@ def _group_skills(profile: Profile) -> tuple[SkillGroup, ...]:
 
 def build_cv_data(profile: Profile) -> CVDocument:
     full_name = " ".join(part for part in (profile.first_name, profile.last_name) if part)
-    location = ", ".join(x for x in (profile.city, profile.region, country_name(profile.country_code)) if x)
+    location = location_line(profile)
     links = tuple(LinkEntry(url, url) for url in visible_link_urls(profile))
     contact = " | ".join(x for x in (profile.contact_email, profile.phone, location) if x)
 
@@ -106,9 +101,9 @@ def build_cv_data(profile: Profile) -> CVDocument:
         ExperienceEntry(
             title=f"{exp.position} - "
             + (f"{exp.client.name} (via {exp.employer.name})" if exp.client else exp.employer.name),
-            dates=_range(exp.start_date, exp.end_date, exp.is_current),
+            dates=format_range(exp.start_date, exp.end_date, exp.is_current),
             description=exp.description or None,
-            bullets=tuple(function.description for function in exp.functions),
+            bullets=tuple(function.description for function in exp.functions if function.description.strip()),
             skills_line=", ".join(s.name for s in exp.skills) if exp.skills else None,
         )
         for exp in profile.experiences
@@ -118,7 +113,7 @@ def build_cv_data(profile: Profile) -> CVDocument:
         EducationEntry(
             title=f"{edu.degree}{f', {edu.field_of_study}' if edu.field_of_study else ''}",
             institution=edu.institution,
-            dates=_range(edu.start_date, edu.end_date),
+            dates=education_dates(edu),
         )
         for edu in profile.educations
         if edu.is_active
@@ -127,14 +122,18 @@ def build_cv_data(profile: Profile) -> CVDocument:
         CertificationEntry(
             title=cert.name,
             issuer=cert.issuing_organization,
-            dates=_range(cert.issue_date, cert.expiration_date),
+            dates=format_range(cert.issue_date, cert.expiration_date),
             url=(cert.credential_url if cert.show_credential_url else None),
         )
         for cert in profile.certifications
         if cert.is_active
     )
     projects = tuple(
-        ProjectEntry(name=project.name, description=project.description or None)
+        ProjectEntry(
+            name=project.name,
+            description=project.description or None,
+            url=(project.url if project.show_url else None),
+        )
         for project in profile.projects
         if project.is_active
     )
@@ -144,7 +143,7 @@ def build_cv_data(profile: Profile) -> CVDocument:
         headline=profile.headline or None,
         contact_line=contact or None,
         links_line=" | ".join(link.url for link in links) or None,
-        location=", ".join(x for x in (profile.city, country_name(profile.country_code)) if x) or None,
+        location=location or None,
         phone=profile.phone or None,
         email=profile.contact_email or None,
         links=links,

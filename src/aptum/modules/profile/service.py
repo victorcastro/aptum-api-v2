@@ -40,7 +40,7 @@ _ORDER = {
     Education: (Education.end_date.desc().nulls_first(), Education.id),
     Certification: (Certification.issue_date.desc().nulls_last(), Certification.id),
     Project: (Project.start_date.desc().nulls_last(), Project.id),
-    ProfileLanguage: (ProfileLanguage.id,),
+    ProfileLanguage: (ProfileLanguage.level_rank.desc(), ProfileLanguage.language_code),
     ProfileSkill: (ProfileSkill.id,),
 }
 

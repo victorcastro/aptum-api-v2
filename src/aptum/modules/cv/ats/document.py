@@ -38,6 +38,7 @@ class ATSExperience:
     description: str | None
     bullets: list[str]
     compressed: bool = False
+    skills_line: str | None = None
 
     @property
     def company_line(self) -> str:
@@ -62,13 +63,16 @@ class ATSEducation:
 @dataclass
 class ATSCertification:
     title: str
+    issuer: str
     dates: str
+    url: str | None = None
 
 
 @dataclass
 class ATSProject:
     name: str
     description: str | None
+    url: str | None = None
 
 
 @dataclass
@@ -101,9 +105,13 @@ class ATSDocument:
             if exp.description:
                 blocks.append((f"experience:{exp.title}", exp.description))
             blocks.extend((f"experience:{exp.title}", bullet) for bullet in exp.bullets)
+            if exp.skills_line:
+                blocks.append((f"experience:{exp.title}", exp.skills_line))
         for edu in self.educations:
             blocks.append(("education", edu.title))
-        blocks.extend(("certifications", cert.title) for cert in self.certifications)
+        for cert in self.certifications:
+            blocks.append(("certifications", cert.title))
+            blocks.append(("certifications", cert.issuer))
         for project in self.projects:
             blocks.append(("projects", project.name))
             if project.description:

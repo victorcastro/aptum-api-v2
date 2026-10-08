@@ -73,6 +73,14 @@ def test_certification_link_is_hidden_when_the_user_turns_it_off():
     assert not any("verify.example.dev" in line for line in _lines(profile))
 
 
+def test_project_link_is_printed_and_can_be_hidden():
+    profile = base_profile()
+    profile.projects[0].url = "https://github.com/example-alex/cli"
+    assert any("github.com/example-alex/cli" in line for line in _lines(profile))
+    profile.projects[0].show_url = False
+    assert not any("github.com/example-alex/cli" in line for line in _lines(profile))
+
+
 def test_inactive_language_is_not_printed():
     profile = base_profile()
     profile.languages[0].is_active = False

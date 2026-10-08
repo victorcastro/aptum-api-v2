@@ -3,6 +3,7 @@ from urllib.parse import urlsplit
 
 from pydantic import (
     AfterValidator,
+    AliasPath,
     BaseModel,
     ConfigDict,
     Field,
@@ -238,6 +239,7 @@ class LanguageRead(LanguageCreate):
     model_config = ConfigDict(from_attributes=True)
 
     id: int
+    language_name: str = Field(validation_alias=AliasPath("language", "name"), description="English name.")
     is_active: bool
 
 
@@ -337,6 +339,7 @@ class ProjectCreate(BaseModel):
     url: HttpUrlStr | None = None
     start_date: YearMonth | None = None
     end_date: YearMonth | None = None
+    show_url: bool = True
     is_active: bool = True
 
     @model_validator(mode="after")
@@ -346,13 +349,14 @@ class ProjectCreate(BaseModel):
 
 
 class ProjectUpdate(PartialUpdate):
-    non_nullable = ("name", "is_active")
+    non_nullable = ("name", "show_url", "is_active")
 
     name: Annotated[str, Field(min_length=1, max_length=255)] | None = None
     description: str | None = None
     url: HttpUrlStr | None = None
     start_date: YearMonth | None = None
     end_date: YearMonth | None = None
+    show_url: bool | None = None
     is_active: bool | None = None
 
 
@@ -365,6 +369,7 @@ class ProjectRead(BaseModel):
     url: str | None
     start_date: YearMonth | None
     end_date: YearMonth | None
+    show_url: bool
     is_active: bool
 
 
@@ -378,7 +383,6 @@ class ProfileUpdate(PartialUpdate):
     phone: str | None = None
     contact_email: str | None = None
     city: str | None = None
-    region: str | None = None
     country_code: CountryCode | None = None
     links: ProfileLinks | None = None
     work_authorization: WorkAuthorization | None = None
@@ -400,7 +404,6 @@ class ProfileRead(BaseModel):
     phone: str | None
     contact_email: str | None
     city: str | None
-    region: str | None
     country_code: str | None
     links: list[ProfileLink] = []
     work_authorization: WorkAuthorization | None = None

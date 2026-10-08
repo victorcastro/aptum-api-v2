@@ -192,6 +192,19 @@ def _has_data(profile: Profile) -> bool:
     )
 
 
+def _clear_cv(db: Session, profile: Profile) -> None:
+    for collection in (
+        profile.experiences,
+        profile.educations,
+        profile.skills,
+        profile.languages,
+        profile.certifications,
+        profile.projects,
+    ):
+        collection.clear()
+    db.flush()
+
+
 def seed_demo_cv(db: Session, user: User, reset: bool) -> Profile | None:
     """The demo CV on the user's profile. None (nothing touched) when it already has CV data
     and `reset` is false."""
@@ -199,16 +212,7 @@ def seed_demo_cv(db: Session, user: User, reset: bool) -> Profile | None:
     if _has_data(profile):
         if not reset:
             return None
-        for collection in (
-            profile.experiences,
-            profile.educations,
-            profile.skills,
-            profile.languages,
-            profile.certifications,
-            profile.projects,
-        ):
-            collection.clear()
-        db.flush()
+        _clear_cv(db, profile)
 
     ntt = _company(db, "NTT Data", "Information Technology and Services", consultancy=True)
     _company(db, "Banco de Credito del Peru", "Banking")
@@ -361,6 +365,7 @@ def seed_demo_cv(db: Session, user: User, reset: bool) -> Profile | None:
     profile.languages = [
         ProfileLanguage(language_code="es", proficiency="Native"),
         ProfileLanguage(language_code="en", proficiency="C1"),
+        ProfileLanguage(language_code="pt", proficiency="B1"),
     ]
     profile.certifications = [
         Certification(
@@ -370,14 +375,217 @@ def seed_demo_cv(db: Session, user: User, reset: bool) -> Profile | None:
             expiration_date=date(2026, 5, 1),
             credential_id="AWS-DEV-ASSOC-2023-0001",
             credential_url="https://www.credly.com/badges/aws-certified-developer-associate",
-        )
+        ),
+        Certification(
+            name="Certified Kubernetes Application Developer (CKAD)",
+            issuing_organization="The Linux Foundation",
+            issue_date=date(2024, 3, 1),
+            expiration_date=date(2027, 3, 1),
+            credential_id="LF-CKAD-2024-0002",
+            credential_url="https://www.credly.com/badges/ckad",
+        ),
+        Certification(
+            name="Professional Scrum Master I",
+            issuing_organization="Scrum.org",
+            issue_date=date(2022, 9, 1),
+            credential_id="PSM-I-2022-0003",
+            show_credential_url=False,
+        ),
     ]
     profile.projects = [
         Project(
             name="Aptum API",
             description="Open CV platform with matching by industry and skills.",
+            url="https://github.com/ana-torres-demo/aptum-api",
             start_date=date(2025, 1, 1),
-        )
+        ),
+        Project(
+            name="Pagos Lite",
+            description="Open-source payments gateway client for Peruvian wallets, with retries and webhooks.",
+            url="https://github.com/ana-torres-demo/pagos-lite",
+            start_date=date(2023, 6, 1),
+            end_date=date(2024, 8, 1),
+        ),
+    ]
+    db.commit()
+    db.refresh(profile)
+    return profile
+
+
+def seed_admin_cv(db: Session, user: User, reset: bool) -> Profile | None:
+    """A complete made-up CV for the admin user. None (nothing touched) when it already has CV
+    data and `reset` is false."""
+    profile = ProfileRepository(db).get_by_user_id(user.id)
+    if _has_data(profile):
+        if not reset:
+            return None
+        _clear_cv(db, profile)
+
+    globant = _company(db, "Globant", "Information Technology and Services", consultancy=True)
+    mercadolibre = _company(db, "Mercado Libre", "Software Development")
+    bbva = _company(db, "BBVA Peru", "Banking")
+    scotiabank = _company(db, "Scotiabank", "Banking")
+
+    python, fastapi, postgres, docker, aws, react, java, kafka = (
+        _skill(db, "Python"),
+        _skill(db, "FastAPI"),
+        _skill(db, "PostgreSQL"),
+        _skill(db, "Docker"),
+        _skill(db, "AWS"),
+        _skill(db, "React"),
+        _skill(db, "Java"),
+        _skill(db, "Kafka"),
+    )
+    terraform, kubernetes = _skill(db, "Terraform"), _skill(db, "Kubernetes")
+
+    profile.summary = (
+        "Platform engineer and technical lead with 12 years of experience running cloud infrastructure, "
+        "developer platforms and data pipelines for fintech and e-commerce. Focused on reliability, "
+        "cost control and growing engineering teams."
+    )
+    profile.phone = "+51 987 654 321"
+    profile.contact_email = "lucia.vargas@example.com"
+    profile.city = "Arequipa"
+    profile.country_code = "PE"
+    profile.links = [
+        {"kind": "linkedin", "label": "LinkedIn", "url": "https://linkedin.com/in/lucia-vargas-demo", "visible": True},
+        {"kind": "github", "label": "GitHub", "url": "https://github.com/lucia-vargas-demo", "visible": True},
+        {"kind": "portfolio", "label": "Portfolio", "url": "https://lucia-vargas.example.dev", "visible": False},
+    ]
+    profile.work_authorization = WorkAuthorization.authorized
+    profile.work_authorization_country = "PE"
+    profile.open_to_relocation = False
+
+    profile.experiences = [
+        Experience(
+            position="Platform Lead",
+            employer_id=globant.id,
+            client_id=scotiabank.id,
+            employment_type=EmploymentType.full_time,
+            work_mode=WorkMode.remote,
+            location_city="Arequipa",
+            location_country_code="PE",
+            start_date=date(2021, 2, 1),
+            end_date=None,
+            is_current=True,
+            area=ExperienceArea.other,
+            description="Internal developer platform for a regional bank.",
+            functions=[
+                ExperienceFunction(description="Led a team of 6 engineers building a Kubernetes-based platform."),
+                ExperienceFunction(description="Cut cloud spend by 28% with right-sizing and reserved capacity."),
+                ExperienceFunction(description="Reduced deploy time from 45 to 8 minutes with Terraform and CI/CD."),
+            ],
+            skills=[aws, terraform, kubernetes, docker, python],
+        ),
+        Experience(
+            position="Senior DevOps Engineer",
+            employer_id=mercadolibre.id,
+            employment_type=EmploymentType.full_time,
+            work_mode=WorkMode.hybrid,
+            location_city="Lima",
+            location_country_code="PE",
+            start_date=date(2017, 8, 1),
+            end_date=date(2021, 1, 1),
+            is_current=False,
+            area=ExperienceArea.other,
+            functions=[
+                ExperienceFunction(description="Ran the CI/CD pipelines of 40 services with 99.95% uptime."),
+                ExperienceFunction(description="Built observability dashboards that cut incident time by 35%."),
+                ExperienceFunction(description="Migrated 12 services from VMs to containers."),
+            ],
+            skills=[aws, docker, kubernetes, python],
+        ),
+        Experience(
+            position="Backend Developer",
+            employer_id=bbva.id,
+            employment_type=EmploymentType.full_time,
+            work_mode=WorkMode.onsite,
+            location_city="Lima",
+            location_country_code="PE",
+            start_date=date(2013, 3, 1),
+            end_date=date(2017, 7, 1),
+            is_current=False,
+            area=ExperienceArea.backend,
+            description="Core banking integrations and reporting.",
+            functions=[
+                ExperienceFunction(description="Built Java services for account statements used by 1M customers."),
+                ExperienceFunction(description="Moved nightly batch jobs to Kafka streams."),
+            ],
+            skills=[java, kafka, postgres],
+        ),
+    ]
+    profile.educations = [
+        Education(
+            institution="Universidad Catolica San Pablo",
+            degree="BSc",
+            field_of_study="Systems Engineering",
+            start_date=date(2007, 3, 1),
+            end_date=date(2012, 12, 1),
+        ),
+        Education(
+            institution="Pontificia Universidad Catolica del Peru",
+            degree="Postgraduate Diploma",
+            field_of_study="Cloud Architecture",
+            start_date=date(2019, 4, 1),
+            end_date=date(2020, 3, 1),
+        ),
+    ]
+    profile.skills = [
+        ProfileSkill(skill_id=aws.id, category=classify_skill(aws.name), level=SkillLevel.expert, years_experience=9),
+        ProfileSkill(skill_id=terraform.id, category=classify_skill(terraform.name), level=SkillLevel.expert, years_experience=6),
+        ProfileSkill(skill_id=kubernetes.id, category=classify_skill(kubernetes.name), level=SkillLevel.advanced, years_experience=6),
+        ProfileSkill(skill_id=docker.id, category=classify_skill(docker.name), level=SkillLevel.expert, years_experience=9),
+        ProfileSkill(skill_id=python.id, category=classify_skill(python.name), level=SkillLevel.advanced, years_experience=10),
+        ProfileSkill(skill_id=postgres.id, category=classify_skill(postgres.name), level=SkillLevel.advanced, years_experience=10),
+        ProfileSkill(skill_id=java.id, category=classify_skill(java.name), level=SkillLevel.intermediate, years_experience=5),
+        ProfileSkill(skill_id=fastapi.id, category=classify_skill(fastapi.name), level=SkillLevel.intermediate, years_experience=3),
+        ProfileSkill(skill_id=react.id, category=classify_skill(react.name), level=SkillLevel.beginner, years_experience=1),
+    ]
+    profile.languages = [
+        ProfileLanguage(language_code="es", proficiency="Native"),
+        ProfileLanguage(language_code="en", proficiency="C2"),
+        ProfileLanguage(language_code="fr", proficiency="A2", is_active=False),
+    ]
+    profile.certifications = [
+        Certification(
+            name="AWS Certified Solutions Architect - Professional",
+            issuing_organization="Amazon Web Services",
+            issue_date=date(2022, 11, 1),
+            expiration_date=date(2025, 11, 1),
+            credential_id="AWS-SAP-2022-0101",
+            credential_url="https://www.credly.com/badges/aws-solutions-architect-professional",
+        ),
+        Certification(
+            name="Certified Kubernetes Administrator (CKA)",
+            issuing_organization="The Linux Foundation",
+            issue_date=date(2021, 6, 1),
+            expiration_date=date(2024, 6, 1),
+            credential_id="LF-CKA-2021-0102",
+            credential_url="https://www.credly.com/badges/cka",
+        ),
+        Certification(
+            name="HashiCorp Certified: Terraform Associate",
+            issuing_organization="HashiCorp",
+            issue_date=date(2020, 9, 1),
+            credential_id="HC-TF-2020-0103",
+            show_credential_url=False,
+        ),
+    ]
+    profile.projects = [
+        Project(
+            name="InfraKit",
+            description="Open-source Terraform modules for secure AWS landing zones.",
+            url="https://github.com/lucia-vargas-demo/infrakit",
+            start_date=date(2022, 1, 1),
+        ),
+        Project(
+            name="CostLens",
+            description="CLI that reports idle cloud resources and estimates monthly savings.",
+            url="https://github.com/lucia-vargas-demo/costlens",
+            start_date=date(2023, 3, 1),
+            end_date=date(2024, 2, 1),
+            show_url=False,
+        ),
     ]
     db.commit()
     db.refresh(profile)
@@ -406,6 +614,8 @@ def main() -> None:
             print("Demo CV already there (pass --reset to replace it)")
         else:
             print(f"Seeded demo CV for user_id={cv_user.id} (profile_id={profile.id})")
+        admin_profile = seed_admin_cv(db, users["admin@aptum.test"], args.reset)
+        print("Seeded demo CV for the admin" if admin_profile else "Admin demo CV already there")
         if args.pdf:
             with open(args.pdf, "wb") as file:
                 file.write(render_cv_pdf(profile))
