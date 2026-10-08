@@ -74,10 +74,12 @@ def test_certification_link_is_printed_after_the_issuer():
     )
 
 
-def test_project_link_keeps_the_full_url():
+def test_project_link_text_has_no_scheme_or_www():
     profile = base_profile()
-    profile.projects[0].url = "https://github.com/example-alex/cli"
-    assert "https://github.com/example-alex/cli" in _lines(profile)
+    profile.projects[0].url = "https://www.github.com/example-alex/cli"
+    lines = _lines(profile)
+    assert "github.com/example-alex/cli" in lines
+    assert not any("https://" in line or "www." in line for line in lines)
 
 
 def test_certification_link_is_hidden_when_the_user_turns_it_off():
