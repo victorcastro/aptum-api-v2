@@ -9,11 +9,13 @@ from reportlab.lib.styles import ParagraphStyle
 from reportlab.lib.units import cm
 from reportlab.platypus import KeepTogether, Paragraph, SimpleDocTemplate, Spacer
 
+from aptum.common.richtext import to_reportlab
 from aptum.modules.cv.ats.document import ATSDocument
 from aptum.modules.cv.templates.common import (
     credential_markup,
     header_paragraphs,
     p,
+    rich,
     url_markup,
 )
 
@@ -57,16 +59,16 @@ class ATSTemplate:
 
         if doc.summary:
             heading("Summary")
-            story.append(p(doc.summary, body))
+            story.append(rich(doc.summary, body))
 
         if doc.experiences:
             heading("Experience")
             for exp in doc.experiences:
                 story.append(KeepTogether([p(exp.title, item), p(exp.dates, body)]))
                 if exp.description:
-                    story.append(p(exp.description, body))
+                    story.append(rich(exp.description, body))
                 for text in exp.bullets:
-                    story.append(Paragraph(escape(text), bullet, bulletText="•"))
+                    story.append(rich(text, bullet, "•"))
                 if exp.skills_line:
                     story.append(Paragraph(f"<b>Technologies:</b> {escape(exp.skills_line)}", body))
 
@@ -94,7 +96,7 @@ class ATSTemplate:
             for project in doc.projects:
                 text = f"<b>{escape(project.name)}</b>"
                 if project.description:
-                    text += f": {escape(project.description)}"
+                    text += f": {to_reportlab(project.description)}"
                 story.append(Paragraph(text, body))
                 if project.url:
                     story.append(Paragraph(url_markup(project.url), body))

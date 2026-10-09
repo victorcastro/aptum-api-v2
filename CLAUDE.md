@@ -10,6 +10,10 @@ Respond in English by default. Only respond in Spanish when I explicitly ask for
 
 Python 3.12 + uv, FastAPI, SQLAlchemy 2.0 (typed `Mapped`, sync `Session`), Alembic, Postgres (psycopg3) + pgvector.
 
+## Branches
+
+Always work on a branch named after the release version: `version/<x.y.z>` (e.g. `version/1.8.0`), created from `staging`. The branch version must match `version` in `pyproject.toml` and the top `CHANGELOG.md` entry.
+
 ## Commands
 
 - Run API: `uv run fastapi dev src/aptum/main.py`
