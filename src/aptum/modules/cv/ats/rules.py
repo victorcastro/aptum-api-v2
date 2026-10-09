@@ -7,6 +7,7 @@ from datetime import date
 from functools import cache
 from pathlib import Path
 
+from aptum.common.richtext import to_plain
 from aptum.common.utils import normalize_text
 from aptum.modules.cv.ats.document import ATSDocument, ATSExperience
 from aptum.modules.cv.ats.report import CVWarning
@@ -108,7 +109,7 @@ def remove_filler(doc: ATSDocument, warnings: list[CVWarning]) -> None:
     for exp in doc.experiences:
         kept: list[str] = []
         for bullet in exp.bullets:
-            normalized = normalize_text(bullet)
+            normalized = normalize_text(to_plain(bullet))
             phrase = next((p for p in phrases if re.search(rf"(?<!\w){re.escape(p)}(?!\w)", normalized)), None)
             if phrase is None:
                 kept.append(bullet)
@@ -137,7 +138,8 @@ def remove_duplicates(doc: ATSDocument, warnings: list[CVWarning], threshold: fl
     for exp in doc.experiences:
         kept: list[str] = []
         for bullet in exp.bullets:
-            original = next(((b, role) for b, role in seen if similarity(b, bullet) >= threshold), None)
+            plain = to_plain(bullet)
+            original = next(((b, role) for b, role in seen if similarity(to_plain(b), plain) >= threshold), None)
             if original is not None:
                 warnings.append(CVWarning(
                     "duplicate_removed", f"Bullet removed: near-duplicate of a bullet in \"{original[1]}\".",
@@ -151,7 +153,8 @@ def remove_duplicates(doc: ATSDocument, warnings: list[CVWarning], threshold: fl
 
 def bullet_score(bullet: str, offer_words: frozenset[str]) -> int:
     """Higher = keep longer: words shared with the offer, plus one for having a metric."""
-    return len(set(meaningful_words(bullet)) & offer_words) + int(has_metric(bullet))
+    plain = to_plain(bullet)
+    return len(set(meaningful_words(plain)) & offer_words) + int(has_metric(plain))
 
 
 def offer_words(offer: str | None) -> frozenset[str]:
@@ -249,7 +252,7 @@ def metric_warnings(doc: ATSDocument, warnings: list[CVWarning]) -> None:
     """Bullets without a number are reported, never given an invented one."""
     for exp in doc.experiences:
         for bullet in exp.bullets:
-            if not has_metric(bullet):
+            if not has_metric(to_plain(bullet)):
                 warnings.append(CVWarning(
                     "missing_metric", "Bullet has no number or measurable outcome.",
                     section="experience", item=exp.title, text=bullet, suggestion=METRIC_SUGGESTION,

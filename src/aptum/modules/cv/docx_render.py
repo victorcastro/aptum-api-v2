@@ -11,6 +11,7 @@ from docx.shared import Cm, Pt, RGBColor
 from docx.styles.style import ParagraphStyle
 from docx.text.paragraph import Paragraph
 
+from aptum.common.richtext import parse
 from aptum.modules.cv.document import CVDocument
 from aptum.modules.cv.links import (
     CREDENTIAL_LINK_TEXT,
@@ -58,7 +59,7 @@ def render_cv_docx(doc: CVDocument) -> bytes:
 
     if doc.summary:
         _heading(document, "Summary")
-        document.add_paragraph(doc.summary)
+        _add_rich(document, doc.summary)
 
     if doc.skill_groups:
         _heading(document, "Technical Skills")
@@ -70,9 +71,9 @@ def render_cv_docx(doc: CVDocument) -> bytes:
         for exp in doc.experiences:
             _dated(document, exp.title, exp.dates)
             if exp.description:
-                document.add_paragraph(exp.description)
+                _add_rich(document, exp.description)
             for text in exp.bullets:
-                document.add_paragraph(text, style="List Bullet")
+                _add_rich(document, text, style="List Bullet")
             if exp.skills_line:
                 _labeled(document, "Technologies", exp.skills_line, style="CV Muted")
 
@@ -83,7 +84,7 @@ def render_cv_docx(doc: CVDocument) -> bytes:
             if index:
                 name.paragraph_format.space_before = Pt(10)
             if project.description:
-                document.add_paragraph(project.description)
+                _add_rich(document, project.description)
             if project.url:
                 _add_url(document.add_paragraph(), project.url)
 
@@ -211,6 +212,20 @@ def _setup_styles(document) -> None:
 
 def _heading(document, text: str) -> None:
     document.add_paragraph(text.upper(), style="Heading 1")
+
+
+def _add_rich(document, text: str, style: str | None = None) -> Paragraph:
+    """User free text with its bold and italic (see `common/richtext.py`); line breaks stay in the paragraph."""
+    paragraph = document.add_paragraph(style=style)
+    for run in parse(text):
+        for index, line in enumerate(run.text.split("\n")):
+            if index:
+                paragraph.add_run().add_break()
+            if line:
+                added = paragraph.add_run(line)
+                added.bold = run.bold or None
+                added.italic = run.italic or None
+    return paragraph
 
 
 def _labeled(document, label: str, value: str, style: str | None = None) -> None:

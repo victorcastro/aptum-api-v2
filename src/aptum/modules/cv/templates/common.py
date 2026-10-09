@@ -4,6 +4,7 @@ from xml.sax.saxutils import escape, quoteattr
 from reportlab.lib.styles import ParagraphStyle
 from reportlab.platypus import Paragraph
 
+from aptum.common.richtext import to_reportlab
 from aptum.modules.cv.header import join_parts
 from aptum.modules.cv.links import (
     CREDENTIAL_LINK_TEXT,
@@ -15,6 +16,11 @@ from aptum.modules.cv.links import (
 
 def p(text: str, style: ParagraphStyle) -> Paragraph:
     return Paragraph(escape(text), style)
+
+
+def rich(text: str, style: ParagraphStyle, bullet: str | None = None) -> Paragraph:
+    """User free text with its bold and italic (see `common/richtext.py`)."""
+    return Paragraph(to_reportlab(text), style, bulletText=bullet)
 
 
 def link_markup(label: str, href: str, color: str | None = None) -> str:

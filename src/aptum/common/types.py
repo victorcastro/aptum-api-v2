@@ -42,3 +42,18 @@ CountryCode = Annotated[
     AfterValidator(_check_country),
 ]
 LanguageCode = Annotated[str, Field(pattern=r"^[a-z]{2}$", description="ISO 639-1")]
+
+_RICH_TEXT_DOC = (
+    "Inline Markdown subset: `**bold**`, `*italic*`, `***both***`; `\\*` is a literal asterisk. "
+    "Anything else is plain text."
+)
+
+
+def _single_line(value: str) -> str:
+    return " ".join(value.splitlines())
+
+
+RichText = Annotated[str, Field(description=_RICH_TEXT_DOC)]
+RichTextLine = Annotated[
+    str, AfterValidator(_single_line), Field(description=f"{_RICH_TEXT_DOC} One line: line breaks become spaces.")
+]
