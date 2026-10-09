@@ -20,10 +20,21 @@ def test_groups_follow_cv_category_order_skip_empty_ones_and_sort_skills_by_name
 
 
 def test_groups_follow_category_position_not_name_or_id():
-    custom = SkillCategory(id=99, name="Data", position=0, is_system=False)
+    custom = SkillCategory(id=99, profile_id=1, name="Data", position=0)
     result = group_skills([profile_skill("FastAPI", category="Backend"), profile_skill("Pandas", category=custom)])
 
     assert [(g.category.id, g.category.name) for g in result.groups] == [(99, "Data"), (2, "Backend")]
+
+
+def test_skills_without_a_category_are_the_last_group_with_a_null_category():
+    first = SkillCategory(id=99, profile_id=1, name="Data", position=0)
+    result = group_skills(
+        [profile_skill("Excel", category="Other"), profile_skill("Pandas", category=first), profile_skill("Cobol")]
+    )
+
+    assert [g.category.name if g.category else None for g in result.groups] == ["Data", None]
+    assert [s.name for s in result.groups[-1].skills] == ["Cobol", "Excel"]
+    assert result.model_dump()["groups"][-1]["category"] is None
 
 
 def test_item_exposes_both_ids_and_flat_fields():

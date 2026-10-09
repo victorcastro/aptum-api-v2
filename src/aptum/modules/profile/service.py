@@ -23,6 +23,7 @@ from aptum.modules.profile.schemas import (
     ProfileSkillsGrouped,
     ProfileUpdate,
 )
+from aptum.modules.skill_categories.models import print_order
 from aptum.modules.skill_categories.repository import SkillCategoryRepository
 from aptum.modules.skill_categories.schemas import SkillCategoryRef
 from aptum.modules.skills.repository import SkillRepository
@@ -52,13 +53,15 @@ _DATE_RANGES = {
 
 
 def group_skills(rows: list[ProfileSkill]) -> ProfileSkillsGrouped:
-    """Groups by CV category in category `position` order; empty groups are left out and each
-    group is sorted by skill name, case-insensitive."""
-    by_category: dict[int, list[ProfileSkillItem]] = {}
+    """Groups by CV category in category `position` order, `Other` (no category) last; empty
+    groups are left out and each group is sorted by skill name, case-insensitive."""
+    by_category: dict[int | None, list[ProfileSkillItem]] = {}
     categories = {}
     for row in rows:
-        categories[row.category.id] = row.category
-        by_category.setdefault(row.category.id, []).append(
+        key = row.category.id if row.category else None
+        if row.category:
+            categories[key] = row.category
+        by_category.setdefault(key, []).append(
             ProfileSkillItem(
                 id=row.id,
                 skill_id=row.skill_id,
@@ -72,8 +75,15 @@ def group_skills(rows: list[ProfileSkill]) -> ProfileSkillsGrouped:
             category=SkillCategoryRef(id=category.id, name=category.name),
             skills=sorted(by_category[category.id], key=lambda s: (s.name.casefold(), s.id)),
         )
-        for category in sorted(categories.values(), key=lambda c: (c.position, c.id))
+        for category in sorted(categories.values(), key=print_order)
     ]
+    if None in by_category:
+        groups.append(
+            ProfileSkillGroup(
+                category=None,
+                skills=sorted(by_category[None], key=lambda s: (s.name.casefold(), s.id)),
+            )
+        )
     return ProfileSkillsGrouped(total=len(rows), groups=groups)
 
 
@@ -164,7 +174,7 @@ class ProfileService:
                 raise NotFoundError("Skill not found")
             if any(skill.skill_id == fields["skill_id"] for skill in profile.skills):
                 raise ConflictError("Skill already added")
-            fields["category_id"] = self._resolve_category_id(fields.get("category_id"))
+            fields["category_id"] = self._resolve_category_id(profile.id, fields.get("category_id"))
         return self._save(self.repository.add_row(model, profile, **fields))
 
     def update_row(self, user_id: int, model: type[Base], row_id: int, data: BaseModel):
@@ -177,7 +187,7 @@ class ProfileService:
         if model is ProfileLanguage:
             self._check_language_catalog(fields)
         if model is ProfileSkill and "category_id" in fields:
-            fields["category_id"] = self._resolve_category_id(fields["category_id"])
+            fields["category_id"] = self._resolve_category_id(row.profile_id, fields["category_id"])
         return self._save(self.repository.update_row(row, **fields))
 
     def delete_row(self, user_id: int, model: type[Base], row_id: int) -> None:
@@ -185,14 +195,9 @@ class ProfileService:
         self.repository.delete_row(row)
         self.db.commit()
 
-    def _resolve_category_id(self, category_id: int | None) -> int:
-        """The chosen category's id, or `Other`'s when none is given. 404 when it does not exist."""
-        if category_id is None:
-            other = self.categories.get_other()
-            if other is None:
-                raise NotFoundError("Skill category not found")
-            return other.id
-        if self.categories.get(category_id) is None:
+    def _resolve_category_id(self, profile_id: int, category_id: int | None) -> int | None:
+        """The chosen category's id, or None (`Other`). 404 when it is not one of the profile's."""
+        if category_id is not None and self.categories.get_owned(profile_id, category_id) is None:
             raise NotFoundError("Skill category not found")
         return category_id
 

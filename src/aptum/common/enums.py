@@ -62,7 +62,6 @@ class AuditEntity(StrEnum):
     industry = "industry"
     user = "user"
     role = "role"
-    skill_category = "skill_category"
 
 
 class AuditAction(StrEnum):
@@ -78,7 +77,3 @@ class AuditAction(StrEnum):
     role_create = "role.create"
     role_update = "role.update"
     role_delete = "role.delete"
-    skill_category_create = "skill_category.create"
-    skill_category_update = "skill_category.update"
-    skill_category_delete = "skill_category.delete"
-    skill_category_reorder = "skill_category.reorder"

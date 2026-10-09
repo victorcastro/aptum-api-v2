@@ -8,21 +8,23 @@ and the project follows [Semantic Versioning](https://semver.org/).
 
 ### Added
 
-- Skill categories are rows now, editable by API: `GET /skill-categories` (any signed-in user),
-  `POST /skill-categories`, `PATCH /skill-categories/{id}` (rename), `PUT /skill-categories/order`
-  (set the print order with the full list of ids) and `DELETE /skill-categories/{id}`. Writes need
-  the new permission `skill_category:manage` (admin by default; an admin can grant it to any role)
-  and are audited. Deleting a category moves its profile skills to `Other`.
-- `Other` is a system category: it cannot be renamed or deleted (409).
-- Migration 0008 creates `skill_categories`, seeds the six groups of 1.1.0 (`LLMs & AI`, `Backend`,
-  `Cloud & DevOps`, `Architecture`, `Mobile`, `Other`) and keeps every profile skill in its group.
+- Each user owns their skill categories (CV skill groups) and manages them under
+  `/profile/me/skill-categories`: `GET` (their categories in print order), `POST` (add at the end),
+  `PATCH /{id}` (rename), `PUT /order` (set the print order with every one of their ids) and
+  `DELETE /{id}`. No permission or admin involved: another user's category is 404, and names are
+  unique per user only (409 on a clash, compared without case or accents).
+- `Other` is not a category: a skill without one (`category_id` null) is printed in the `Other`
+  group, always the last one. Deleting a category moves its skills there.
+- Migration 0008 creates `skill_categories` (owned by a profile) and gives each profile one
+  category per group it already used, in the old order, so every skill keeps its group.
 
 ### Changed
 
 - **Breaking:** profile skills use `category_id` (integer) on create and update instead of the
-  `category` text, and read as `category: {id, name}` (also in the grouped list). Omitted or `null`
-  means `Other`; an unknown id is 404.
-- CVs print the skill groups in category `position` order instead of the old fixed order.
+  `category` text, and read as `category: {id, name}` or `null` for `Other` (also in the grouped
+  list, where the `Other` group comes last). Omitted or `null` means `Other`; an id that is not
+  one of the caller's categories is 404.
+- CVs print the skill groups in the user's category order, `Other` last.
 
 ### Removed
 

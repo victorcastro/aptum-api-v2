@@ -1,20 +1,20 @@
-"""release 1.9.0: editable skill categories
+"""release 1.9.0: each profile's own skill categories
 
 Revision ID: 0008
 Revises: 0007
 Create Date: 2026-10-09 12:00:00.000000
 
-- skill_categories (id, name unique, position, is_system): the CV skill groups, now rows instead
-  of a fixed list. `position` is the order the CV prints them. Seeded with the six groups of
-  release 1.1.0; `Other` is the system one (cannot be renamed or deleted) and takes the skills
-  of a deleted category.
-- profile_skills.category_id (NOT NULL, foreign key to skill_categories, RESTRICT) replaces
-  profile_skills.category (text with a CHECK on the six values). Existing rows keep their group:
-  category_id is filled by name.
-- permission skill_category:manage is created by roles.sync, which gives it to admin.
+- skill_categories (id, profile_id, name, position): the CV skill groups of one profile, which
+  its owner creates, renames, reorders and deletes. Name unique per profile. `position` is the
+  order the CV prints them. Deleting a profile deletes its categories.
+- profile_skills.category_id (nullable, foreign key to skill_categories, SET NULL) replaces
+  profile_skills.category (text with a CHECK on the six values). Null is `Other`, which is not a
+  row and always prints last; deleting a category moves its skills there.
+- Existing rows keep their group: each profile gets one category per group it used (except
+  `Other`), positioned in the order of release 1.1.0, and category_id is filled by name.
 
-Downgrade restores the text column and its CHECK. Categories created after the upgrade fold
-into 'Other', since the old CHECK only allows the six original values.
+Downgrade restores the text column and its CHECK. Names outside the six original values fold
+into 'Other', since the old CHECK only allows those.
 """
 from collections.abc import Sequence
 
@@ -34,41 +34,36 @@ def upgrade() -> None:
     op.create_table(
         'skill_categories',
         sa.Column('id', sa.Integer(), nullable=False),
+        sa.Column('profile_id', sa.Integer(), nullable=False),
         sa.Column('name', sa.String(length=40), nullable=False),
         sa.Column('position', sa.Integer(), nullable=False),
-        sa.Column('is_system', sa.Boolean(), server_default=sa.false(), nullable=False),
-        sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
-        sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
+        sa.ForeignKeyConstraint(
+            ['profile_id'], ['profiles.id'], name=op.f('fk_skill_categories_profile_id_profiles'), ondelete='CASCADE'
+        ),
         sa.PrimaryKeyConstraint('id', name=op.f('pk_skill_categories')),
-        sa.UniqueConstraint('name', name=op.f('uq_skill_categories_name')),
+        sa.UniqueConstraint('profile_id', 'name', name=op.f('uq_skill_categories_profile_id')),
     )
-    categories = sa.table(
-        'skill_categories',
-        sa.column('name', sa.String),
-        sa.column('position', sa.Integer),
-        sa.column('is_system', sa.Boolean),
-    )
-    op.bulk_insert(
-        categories,
-        [{'name': name, 'position': position, 'is_system': name == OTHER} for position, name in enumerate(CATEGORIES, 1)],
+    op.create_index(op.f('ix_skill_categories_profile_id'), 'skill_categories', ['profile_id'])
+
+    order = " ".join(f"WHEN '{name}' THEN {position}" for position, name in enumerate(CATEGORIES, 1))
+    op.execute(
+        "INSERT INTO skill_categories (profile_id, name, position) "
+        f"SELECT DISTINCT profile_id, category, CASE category {order} END FROM profile_skills "
+        f"WHERE category <> '{OTHER}'"
     )
 
     op.add_column('profile_skills', sa.Column('category_id', sa.Integer(), nullable=True))
     op.execute(
-        "UPDATE profile_skills ps SET category_id = sc.id FROM skill_categories sc WHERE sc.name = ps.category"
+        "UPDATE profile_skills ps SET category_id = sc.id FROM skill_categories sc "
+        "WHERE sc.profile_id = ps.profile_id AND sc.name = ps.category"
     )
-    op.execute(
-        f"UPDATE profile_skills SET category_id = (SELECT id FROM skill_categories WHERE name = '{OTHER}') "
-        "WHERE category_id IS NULL"
-    )
-    op.alter_column('profile_skills', 'category_id', nullable=False)
     op.create_foreign_key(
         op.f('fk_profile_skills_category_id_skill_categories'),
         'profile_skills',
         'skill_categories',
         ['category_id'],
         ['id'],
-        ondelete='RESTRICT',
+        ondelete='SET NULL',
     )
     op.create_index(op.f('ix_profile_skills_category_id'), 'profile_skills', ['category_id'])
     op.drop_constraint(op.f('ck_profile_skills_category_allowed'), 'profile_skills', type_='check')
@@ -93,4 +88,5 @@ def downgrade() -> None:
     op.drop_index(op.f('ix_profile_skills_category_id'), table_name='profile_skills')
     op.drop_constraint(op.f('fk_profile_skills_category_id_skill_categories'), 'profile_skills', type_='foreignkey')
     op.drop_column('profile_skills', 'category_id')
+    op.drop_index(op.f('ix_skill_categories_profile_id'), table_name='skill_categories')
     op.drop_table('skill_categories')

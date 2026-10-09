@@ -132,14 +132,14 @@ class ProfileSkill(Base):
         Enum(SkillLevel, name="skill_level"), default=None
     )
     years_experience: Mapped[int | None] = mapped_column(SmallInteger, default=None)
-    # CV group: the client's choice, `Other` unless sent. Deleting a category moves its skills to `Other`.
-    category_id: Mapped[int] = mapped_column(
-        ForeignKey("skill_categories.id", ondelete="RESTRICT"), index=True
+    # One of the profile's own CV groups; null is `Other`. Deleting the category sets it to null.
+    category_id: Mapped[int | None] = mapped_column(
+        ForeignKey("skill_categories.id", ondelete="SET NULL"), index=True, default=None
     )
 
     profile: Mapped["Profile"] = relationship(back_populates="skills")
     skill: Mapped["Skill"] = relationship(lazy="joined")
-    category: Mapped["SkillCategory"] = relationship(lazy="joined")
+    category: Mapped["SkillCategory | None"] = relationship(lazy="joined")
 
 
 class Experience(TimestampMixin, Base):

@@ -24,16 +24,17 @@ from aptum.modules.profile.models import (
     Project,
 )
 from aptum.modules.roles.models import PermissionRecord, Role
-from aptum.modules.skill_categories.models import OTHER_CATEGORY, SkillCategory
+from aptum.modules.skill_categories.models import OTHER_LABEL, SkillCategory
 from aptum.modules.skills.categories import DICTIONARY_PATH, skill_key
 from aptum.modules.skills.models import Skill
 
 _ids = iter(range(1, 1_000_000))
 
-# What the migrations seed. Positions are 1..6 in this order.
+# A profile's own categories, named like the groups of release 1.1.0. Positions are 1..5 in
+# this order; `Other` is no category (None).
 CATEGORIES = {
-    name: SkillCategory(id=position, name=name, position=position, is_system=name == OTHER_CATEGORY)
-    for position, name in enumerate(["LLMs & AI", "Backend", "Cloud & DevOps", "Architecture", "Mobile", OTHER_CATEGORY], 1)
+    name: SkillCategory(id=position, profile_id=1, name=name, position=position)
+    for position, name in enumerate(["LLMs & AI", "Backend", "Cloud & DevOps", "Architecture", "Mobile"], 1)
 }
 _DICTIONARY_CATEGORY = {
     skill_key(term): category
@@ -88,13 +89,20 @@ def profile_language(code: str, name: str, level: str) -> ProfileLanguage:
 
 
 def profile_skill(name: str, category: str | SkillCategory | None = None, **fields) -> ProfileSkill:
-    """A profile skill in `category` (a seeded name or a SkillCategory). Without one, the group
-    the 1.1.0 dictionary used to pick, so CV tests keep realistic groups."""
+    """A profile skill in `category` (a name from CATEGORIES, `Other` or a SkillCategory).
+    Without one, the group the 1.1.0 dictionary used to pick, so CV tests keep realistic groups."""
     s = skill(name)
     if category is None:
-        category = _DICTIONARY_CATEGORY.get(skill_key(name), OTHER_CATEGORY)
-    row_category = CATEGORIES[category] if isinstance(category, str) else category
-    return ProfileSkill(id=next(_ids), skill_id=s.id, skill=s, category_id=row_category.id, category=row_category, **fields)
+        category = _DICTIONARY_CATEGORY.get(skill_key(name), OTHER_LABEL)
+    row_category = CATEGORIES.get(category) if isinstance(category, str) else category
+    return ProfileSkill(
+        id=next(_ids),
+        skill_id=s.id,
+        skill=s,
+        category_id=row_category.id if row_category else None,
+        category=row_category,
+        **fields,
+    )
 
 
 def experience(

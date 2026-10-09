@@ -104,3 +104,9 @@ def test_dotnet_does_not_match_the_word_net():
     from aptum.modules.cv.ats.text import TextIndex
     assert not TextIndex("Strong focus on net income").find(".NET")
     assert TextIndex("Backend in C# and .NET 8").find(".NET")
+
+
+def test_other_is_the_last_line_even_before_any_category():
+    skills = [profile_skill("Excel", category="Other"), profile_skill("Swift", category="Mobile")]
+    assert [line.render() for line in skill_lines(select_skills(skills))] == ["Mobile: Swift", "Other: Excel"]
+    assert select_skills([profile_skill("Excel", category="Other")])[0].category is None

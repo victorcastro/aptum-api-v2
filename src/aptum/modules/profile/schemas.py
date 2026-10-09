@@ -285,7 +285,7 @@ class ProfileSkillCreate(BaseModel):
     level: SkillLevel | None = None
     years_experience: Annotated[int, Field(ge=0, le=80)] | None = None
     category_id: int | None = Field(
-        default=None, description="CV group (`GET /skill-categories`). Omitted or null: `Other`."
+        default=None, description="One of the caller's CV groups (`GET /profile/me/skill-categories`). Omitted or null: `Other`."
     )
 
 
@@ -293,7 +293,7 @@ class ProfileSkillUpdate(PartialUpdate):
     level: SkillLevel | None = None
     years_experience: Annotated[int, Field(ge=0, le=80)] | None = None
     category_id: int | None = Field(
-        default=None, description="CV group (`GET /skill-categories`). `null` moves it to `Other`."
+        default=None, description="One of the caller's CV groups (`GET /profile/me/skill-categories`). `null` moves it to `Other`."
     )
 
 
@@ -304,7 +304,7 @@ class ProfileSkillRead(BaseModel):
     skill: SkillRead
     level: SkillLevel | None
     years_experience: int | None
-    category: SkillCategoryRef
+    category: SkillCategoryRef | None = Field(description="The CV group; null is `Other`.")
 
 
 class ProfileSkillItem(BaseModel):
@@ -318,7 +318,7 @@ class ProfileSkillItem(BaseModel):
 
 
 class ProfileSkillGroup(BaseModel):
-    category: SkillCategoryRef
+    category: SkillCategoryRef | None = Field(description="The CV group; null is `Other`, always the last group.")
     skills: list[ProfileSkillItem]
 
 

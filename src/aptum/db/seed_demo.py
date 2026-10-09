@@ -52,7 +52,7 @@ from aptum.modules.profile.models import (
 from aptum.modules.profile.repository import ProfileRepository
 from aptum.modules.roles.repository import RoleRepository
 from aptum.modules.roles.sync import sync as sync_roles
-from aptum.modules.skill_categories.models import OTHER_CATEGORY, SkillCategory
+from aptum.modules.skill_categories.models import SkillCategory
 from aptum.modules.skills.models import Skill
 from aptum.modules.users.admin_service import UserAdminService
 from aptum.modules.users.models import User
@@ -126,11 +126,24 @@ _DEMO_CATEGORIES = {
 }
 
 
-def _profile_skill(db: Session, skill: Skill, **fields) -> ProfileSkill:
-    """A demo profile skill in its CV category (`Other` when the demo does not name one). The
-    categories come from the migrations."""
-    name = _DEMO_CATEGORIES.get(skill.name, OTHER_CATEGORY)
-    category = db.query(SkillCategory).filter(SkillCategory.name == name).one()
+_DEMO_CATEGORY_ORDER = ("Backend", "Cloud & DevOps")
+
+
+def _profile_skill(db: Session, profile: Profile, skill: Skill, **fields) -> ProfileSkill:
+    """A demo profile skill in one of the profile's own categories, created on first use;
+    `Other` (no category) when the demo does not name one."""
+    name = _DEMO_CATEGORIES.get(skill.name)
+    if name is None:
+        return ProfileSkill(skill_id=skill.id, category_id=None, **fields)
+    category = (
+        db.query(SkillCategory)
+        .filter(SkillCategory.profile_id == profile.id, SkillCategory.name == name)
+        .first()
+    )
+    if category is None:
+        category = SkillCategory(profile_id=profile.id, name=name, position=_DEMO_CATEGORY_ORDER.index(name) + 1)
+        db.add(category)
+        db.flush()
     return ProfileSkill(skill_id=skill.id, category_id=category.id, **fields)
 
 
@@ -375,12 +388,12 @@ def seed_demo_cv(db: Session, user: User, reset: bool) -> Profile | None:
         )
     ]
     profile.skills = [
-        _profile_skill(db, python, level=SkillLevel.expert, years_experience=8),
-        _profile_skill(db, fastapi, level=SkillLevel.advanced, years_experience=4),
-        _profile_skill(db, postgres, level=SkillLevel.advanced, years_experience=7),
-        _profile_skill(db, docker, level=SkillLevel.advanced, years_experience=6),
-        _profile_skill(db, aws, level=SkillLevel.intermediate, years_experience=4),
-        _profile_skill(db, react, level=SkillLevel.beginner, years_experience=1),
+        _profile_skill(db, profile, python, level=SkillLevel.expert, years_experience=8),
+        _profile_skill(db, profile, fastapi, level=SkillLevel.advanced, years_experience=4),
+        _profile_skill(db, profile, postgres, level=SkillLevel.advanced, years_experience=7),
+        _profile_skill(db, profile, docker, level=SkillLevel.advanced, years_experience=6),
+        _profile_skill(db, profile, aws, level=SkillLevel.intermediate, years_experience=4),
+        _profile_skill(db, profile, react, level=SkillLevel.beginner, years_experience=1),
     ]
     profile.languages = [
         ProfileLanguage(language_code="es", proficiency="Native"),
@@ -551,15 +564,15 @@ def seed_admin_cv(db: Session, user: User, reset: bool) -> Profile | None:
         ),
     ]
     profile.skills = [
-        _profile_skill(db, aws, level=SkillLevel.expert, years_experience=9),
-        _profile_skill(db, terraform, level=SkillLevel.expert, years_experience=6),
-        _profile_skill(db, kubernetes, level=SkillLevel.advanced, years_experience=6),
-        _profile_skill(db, docker, level=SkillLevel.expert, years_experience=9),
-        _profile_skill(db, python, level=SkillLevel.advanced, years_experience=10),
-        _profile_skill(db, postgres, level=SkillLevel.advanced, years_experience=10),
-        _profile_skill(db, java, level=SkillLevel.intermediate, years_experience=5),
-        _profile_skill(db, fastapi, level=SkillLevel.intermediate, years_experience=3),
-        _profile_skill(db, react, level=SkillLevel.beginner, years_experience=1),
+        _profile_skill(db, profile, aws, level=SkillLevel.expert, years_experience=9),
+        _profile_skill(db, profile, terraform, level=SkillLevel.expert, years_experience=6),
+        _profile_skill(db, profile, kubernetes, level=SkillLevel.advanced, years_experience=6),
+        _profile_skill(db, profile, docker, level=SkillLevel.expert, years_experience=9),
+        _profile_skill(db, profile, python, level=SkillLevel.advanced, years_experience=10),
+        _profile_skill(db, profile, postgres, level=SkillLevel.advanced, years_experience=10),
+        _profile_skill(db, profile, java, level=SkillLevel.intermediate, years_experience=5),
+        _profile_skill(db, profile, fastapi, level=SkillLevel.intermediate, years_experience=3),
+        _profile_skill(db, profile, react, level=SkillLevel.beginner, years_experience=1),
     ]
     profile.languages = [
         ProfileLanguage(language_code="es", proficiency="Native"),

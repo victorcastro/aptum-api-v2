@@ -5,7 +5,7 @@ from aptum.modules.cv.ats.document import format_range
 from aptum.modules.cv.header import availability_line
 from aptum.modules.cv.links import LinkEntry, header_links
 from aptum.modules.profile.models import Profile
-from aptum.modules.skill_categories.models import SkillCategory
+from aptum.modules.skill_categories.models import SkillCategory, print_name, print_order
 
 
 @dataclass(frozen=True)
@@ -66,13 +66,14 @@ class CVDocument:
 
 
 def _group_skills(profile: Profile) -> tuple[SkillGroup, ...]:
-    """Group by the profile skill's CV category, in category `position` order like the ATS CV;
-    empty groups are left out."""
-    groups: dict[int, tuple[SkillCategory, list[str]]] = {}
+    """Group by the profile skill's CV category, in category `position` order and `Other` last
+    like the ATS CV; empty groups are left out."""
+    groups: dict[int | None, tuple[SkillCategory | None, list[str]]] = {}
     for ps in profile.skills:
-        groups.setdefault(ps.category.id, (ps.category, []))[1].append(ps.skill.name)
-    ordered = sorted(groups.values(), key=lambda group: (group[0].position, group[0].id))
-    return tuple(SkillGroup(category.name, tuple(names)) for category, names in ordered)
+        key = ps.category.id if ps.category else None
+        groups.setdefault(key, (ps.category, []))[1].append(ps.skill.name)
+    ordered = sorted(groups.values(), key=lambda group: print_order(group[0]))
+    return tuple(SkillGroup(print_name(category), tuple(names)) for category, names in ordered)
 
 
 def build_cv_data(profile: Profile) -> CVDocument:

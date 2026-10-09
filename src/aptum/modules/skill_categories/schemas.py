@@ -16,7 +16,6 @@ class SkillCategoryRef(BaseModel):
 
 class SkillCategoryRead(SkillCategoryRef):
     position: int
-    is_system: bool
 
 
 class SkillCategoryCreate(BaseModel):
@@ -28,4 +27,4 @@ class SkillCategoryUpdate(BaseModel):
 
 
 class SkillCategoryOrder(BaseModel):
-    ids: Annotated[list[int], Field(min_length=1, description="Every category id, in the new order.")]
+    ids: Annotated[list[int], Field(min_length=1, description="Every category id of the caller, in the new order.")]

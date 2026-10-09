@@ -1,45 +1,43 @@
-from sqlalchemy import func, select, update
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from aptum.modules.profile.models import ProfileSkill
-from aptum.modules.skill_categories.models import OTHER_CATEGORY, SkillCategory
+from aptum.modules.skill_categories.models import SkillCategory
 
 
 class SkillCategoryRepository:
+    """Every query is scoped to one profile."""
+
     def __init__(self, db: Session) -> None:
         self.db = db
 
-    def list_all(self) -> list[SkillCategory]:
-        return self.db.query(SkillCategory).order_by(SkillCategory.position, SkillCategory.id).all()
-
-    def get(self, category_id: int) -> SkillCategory | None:
-        return self.db.get(SkillCategory, category_id)
-
-    def get_other(self) -> SkillCategory | None:
+    def list_for(self, profile_id: int) -> list[SkillCategory]:
         return (
             self.db.query(SkillCategory)
-            .filter(SkillCategory.is_system.is_(True), SkillCategory.name == OTHER_CATEGORY)
+            .filter(SkillCategory.profile_id == profile_id)
+            .order_by(SkillCategory.position, SkillCategory.id)
+            .all()
+        )
+
+    def get_owned(self, profile_id: int, category_id: int) -> SkillCategory | None:
+        return (
+            self.db.query(SkillCategory)
+            .filter(SkillCategory.profile_id == profile_id, SkillCategory.id == category_id)
             .first()
         )
 
-    def next_position(self) -> int:
-        return (self.db.scalar(select(func.max(SkillCategory.position))) or 0) + 1
+    def next_position(self, profile_id: int) -> int:
+        current = self.db.scalar(
+            select(func.max(SkillCategory.position)).where(SkillCategory.profile_id == profile_id)
+        )
+        return (current or 0) + 1
 
-    def create(self, name: str, position: int) -> SkillCategory:
+    def create(self, profile_id: int, name: str, position: int) -> SkillCategory:
         """No commit. Flushes, so a name clash raises IntegrityError here."""
-        category = SkillCategory(name=name, position=position)
+        category = SkillCategory(profile_id=profile_id, name=name, position=position)
         self.db.add(category)
         self.db.flush()
         return category
 
-    def reassign_profile_skills(self, from_id: int, to_id: int) -> int:
-        """No commit. Moves every profile skill of one category to another; returns how many."""
-        result = self.db.execute(
-            update(ProfileSkill).where(ProfileSkill.category_id == from_id).values(category_id=to_id)
-        )
-        return result.rowcount or 0
-
     def delete(self, category: SkillCategory) -> None:
-        """No commit. Flushes, so the RESTRICT foreign key fails here if skills still point at it."""
+        """No commit. The foreign key sets its profile skills' `category_id` to null (`Other`)."""
         self.db.delete(category)
-        self.db.flush()

@@ -17,7 +17,7 @@ from datetime import date
 from aptum.common.enums import SkillLevel
 from aptum.modules.cv.ats.text import TextIndex
 from aptum.modules.profile.models import Experience, ProfileSkill
-from aptum.modules.skill_categories.models import SkillCategory
+from aptum.modules.skill_categories.models import SkillCategory, print_name, print_order
 from aptum.modules.skills.categories import skill_key, skill_terms
 
 MAX_SKILLS = 25
@@ -26,7 +26,7 @@ MAX_SKILLS = 25
 @dataclass(frozen=True)
 class SelectedSkill:
     name: str
-    category: SkillCategory
+    category: SkillCategory | None
     offer_relevant: bool
 
 
@@ -91,13 +91,10 @@ def select_skills(
 
 
 def skill_lines(selected: Sequence[SelectedSkill]) -> list[SkillLine]:
-    """One line per category, categories in `position` order."""
-    names_by_category: dict[int, list[str]] = {}
-    categories: dict[int, SkillCategory] = {}
+    """One line per category, categories in `position` order and `Other` last."""
+    groups: dict[int | None, tuple[SkillCategory | None, list[str]]] = {}
     for skill in selected:
-        categories[skill.category.id] = skill.category
-        names_by_category.setdefault(skill.category.id, []).append(skill.name)
-    return [
-        SkillLine(category.name, tuple(names_by_category[category.id]))
-        for category in sorted(categories.values(), key=lambda c: (c.position, c.id))
-    ]
+        key = skill.category.id if skill.category else None
+        groups.setdefault(key, (skill.category, []))[1].append(skill.name)
+    ordered = sorted(groups.values(), key=lambda group: print_order(group[0]))
+    return [SkillLine(print_name(category), tuple(names)) for category, names in ordered]

@@ -32,7 +32,6 @@ class Permission(StrEnum):
     audit_read = "audit:read"
     role_read = "role:read"
     role_manage = "role:manage"
-    skill_category_manage = "skill_category:manage"
 
 
 # Stored in `permissions.description` by roles.sync. Every permission needs one.
@@ -48,7 +47,6 @@ PERMISSION_DESCRIPTIONS: dict[Permission, str] = {
     Permission.audit_read: "Read the audit log",
     Permission.role_read: "List roles and permissions",
     Permission.role_manage: "Create, edit and delete roles",
-    Permission.skill_category_manage: "Create, rename, reorder and delete skill categories",
 }
 
 _MODERATOR = frozenset(
