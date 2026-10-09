@@ -21,7 +21,13 @@ from aptum.common.enums import (
     WorkAuthorization,
     WorkMode,
 )
-from aptum.common.types import CountryCode, LanguageCode, YearMonth
+from aptum.common.types import (
+    CountryCode,
+    LanguageCode,
+    RichText,
+    RichTextLine,
+    YearMonth,
+)
 from aptum.modules.companies.schemas import CompanySummary
 from aptum.modules.skills.schemas import SkillRead
 
@@ -136,8 +142,8 @@ class ExperienceCreate(BaseModel):
     start_date: YearMonth
     end_date: YearMonth | None = None
     is_active: bool = True
-    description: str | None = None
-    functions: list[str] = Field(default_factory=list)
+    description: RichText | None = None
+    functions: list[RichTextLine] = Field(default_factory=list)
     skill_ids: list[int] = Field(default_factory=list, description="Catalog skills used in this role.")
     area: ExperienceArea | None = Field(default=None, description="Used for per-area years of experience.")
 
@@ -203,8 +209,8 @@ class ExperienceUpdate(PartialUpdate):
     start_date: YearMonth | None = None
     end_date: YearMonth | None = None
     is_active: bool | None = None
-    description: str | None = None
-    functions: list[str] | None = None
+    description: RichText | None = None
+    functions: list[RichTextLine] | None = None
     skill_ids: list[int] | None = None
     area: ExperienceArea | None = None
 
@@ -366,7 +372,7 @@ class CertificationRead(BaseModel):
 
 class ProjectCreate(BaseModel):
     name: Annotated[str, Field(min_length=1, max_length=255)]
-    description: str | None = None
+    description: RichText | None = None
     url: HttpUrlStr | None = None
     start_date: YearMonth | None = None
     end_date: YearMonth | None = None
@@ -383,7 +389,7 @@ class ProjectUpdate(PartialUpdate):
     non_nullable = ("name", "show_url", "is_active")
 
     name: Annotated[str, Field(min_length=1, max_length=255)] | None = None
-    description: str | None = None
+    description: RichText | None = None
     url: HttpUrlStr | None = None
     start_date: YearMonth | None = None
     end_date: YearMonth | None = None
@@ -410,7 +416,7 @@ class ProfileUpdate(PartialUpdate):
     first_name: str | None = None
     last_name: str | None = None
     headline: str | None = None
-    summary: str | None = None
+    summary: RichText | None = None
     phone: str | None = None
     contact_email: str | None = None
     city: str | None = None

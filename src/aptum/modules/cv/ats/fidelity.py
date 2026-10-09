@@ -9,6 +9,7 @@ import re
 from dataclasses import dataclass
 from datetime import date
 
+from aptum.common.richtext import split_sentences, to_plain
 from aptum.common.utils import normalize_name
 from aptum.modules.cv.ats.document import ATSDocument, ATSExperience, format_month
 from aptum.modules.cv.ats.report import CVWarning
@@ -35,7 +36,7 @@ def numbers_in(text: str) -> list[str]:
 
 
 def profile_text_blocks(profile: Profile) -> list[str]:
-    """All user-entered free text of a profile."""
+    """All user-entered free text of a profile, without bold/italic markers."""
     blocks = [profile.headline, profile.summary]
     for exp in profile.experiences:
         blocks += [exp.position, exp.description, *(f.description for f in exp.functions)]
@@ -47,7 +48,7 @@ def profile_text_blocks(profile: Profile) -> list[str]:
     for project in profile.projects:
         blocks += [project.name, project.description]
     blocks += [ps.skill.name for ps in profile.skills]
-    return [block for block in blocks if block]
+    return [to_plain(block) for block in blocks if block]
 
 
 def _profile_dates(profile: Profile) -> list[date]:
@@ -130,7 +131,7 @@ def check_fidelity(doc: ATSDocument, facts: ProfileFacts) -> list[FidelityIssue]
 
 
 def _bad(text: str | None, facts: ProfileFacts) -> bool:
-    return bool(text) and bool(_text_issues("", text, facts))
+    return bool(text) and bool(_text_issues("", to_plain(text), facts))
 
 
 def _repair(doc: ATSDocument, profile: Profile, facts: ProfileFacts, warnings: list[CVWarning]) -> None:
@@ -139,7 +140,7 @@ def _repair(doc: ATSDocument, profile: Profile, facts: ProfileFacts, warnings: l
     if _bad(doc.headline, facts):
         doc.headline = profile.headline or None
     if _bad(doc.summary, facts):
-        sentences = re.split(r"(?<=[.!?])\s+", doc.summary)
+        sentences = split_sentences(doc.summary)
         kept = [s for s in sentences if not _bad(s, facts)]
         for sentence in sentences:
             if sentence not in kept:

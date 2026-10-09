@@ -4,6 +4,24 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 and the project follows [Semantic Versioning](https://semver.org/).
 
+## [1.8.0] - 2026-10-09
+
+### Added
+
+- Bold and italic in the profile `summary`, experience `description`, experience bullets (`functions`)
+  and project `description`. The value is a Markdown subset: `**bold**`, `*italic*`, `***both***`,
+  `\*` for a literal asterisk; anything else stays plain text. Stored and returned as written, no
+  migration.
+- Every CV (`basic` and `software-engineer` PDF, DOCX) prints the formatting with standard fonts
+  (Helvetica Bold/Oblique, Arial runs in Word), never the markers.
+
+### Changed
+
+- Bullets (`functions`) are single-line: line breaks become spaces on create and update.
+- Line breaks in the summary and descriptions are kept in every CV.
+- ATS checks (keywords, filler, duplicates, metrics, fidelity) read the text without markers. When
+  the fidelity check removes a summary sentence, the formatting of the rest is kept.
+
 ## [1.7.1] - 2026-10-08
 
 ### Changed

@@ -20,6 +20,7 @@ from aptum.modules.cv.templates.common import (
     credential_markup,
     header_paragraphs,
     p,
+    rich,
     url_markup,
 )
 
@@ -125,7 +126,7 @@ class SoftwareEngineerTemplate:
 
         if doc.summary:
             heading("Summary")
-            story.append(p(doc.summary, body))
+            story.append(rich(doc.summary, body))
 
         if doc.skill_groups:
             heading("Technical Skills")
@@ -139,9 +140,9 @@ class SoftwareEngineerTemplate:
                     story.append(Spacer(1, 0.3 * cm))
                 story.append(_DatedLine(exp.title, exp.dates, item, muted))
                 if exp.description:
-                    story.append(p(exp.description, body))
+                    story.append(rich(exp.description, body))
                 for text in exp.bullets:
-                    story.append(Paragraph(escape(text), bullet, bulletText="•"))
+                    story.append(rich(text, bullet, "•"))
                 if exp.skills_line:
                     story.append(_labeled("Technologies", exp.skills_line, muted))
 
@@ -152,7 +153,7 @@ class SoftwareEngineerTemplate:
                     story.append(Spacer(1, 0.2 * cm))
                 story.append(p(project.name, item))
                 if project.description:
-                    story.append(p(project.description, body))
+                    story.append(rich(project.description, body))
                 if project.url:
                     story.append(Paragraph(url_markup(project.url, _ACCENT), body))
 

@@ -4,6 +4,7 @@ check can work on employers, titles and dates, and the template only lays it out
 from dataclasses import dataclass
 from datetime import date
 
+from aptum.common.richtext import to_plain
 from aptum.modules.cv.ats.skills import SkillLine
 from aptum.modules.cv.links import LinkEntry
 
@@ -93,20 +94,21 @@ class ATSDocument:
     languages: list[str]
 
     def text_blocks(self, skill_labels: bool = True) -> list[tuple[str, str]]:
-        """Every piece of free text as (location, text), for checks that scan the whole CV.
-        `skill_labels=False` leaves out the category labels ("LLMs & AI:"), which are not skills."""
+        """Every piece of free text as (location, text), for checks that scan the whole CV, without
+        bold/italic markers. `skill_labels=False` leaves out the category labels ("LLMs & AI:"), which
+        are not skills."""
         blocks: list[tuple[str, str]] = []
         if self.headline:
             blocks.append(("headline", self.headline))
         if self.summary:
-            blocks.append(("summary", self.summary))
+            blocks.append(("summary", to_plain(self.summary)))
         for line in self.skill_lines:
             blocks.append(("skills", line.render() if skill_labels else ", ".join(line.names)))
         for exp in self.experiences:
             blocks.append((f"experience:{exp.title}", exp.title))
             if exp.description:
-                blocks.append((f"experience:{exp.title}", exp.description))
-            blocks.extend((f"experience:{exp.title}", bullet) for bullet in exp.bullets)
+                blocks.append((f"experience:{exp.title}", to_plain(exp.description)))
+            blocks.extend((f"experience:{exp.title}", to_plain(bullet)) for bullet in exp.bullets)
             if exp.skills_line:
                 blocks.append((f"experience:{exp.title}", exp.skills_line))
         for edu in self.educations:
@@ -117,7 +119,7 @@ class ATSDocument:
         for project in self.projects:
             blocks.append(("projects", project.name))
             if project.description:
-                blocks.append(("projects", project.description))
+                blocks.append(("projects", to_plain(project.description)))
         blocks.extend(("languages", language) for language in self.languages)
         return blocks
 
