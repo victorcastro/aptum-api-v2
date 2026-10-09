@@ -24,7 +24,6 @@ from aptum.common.constants import EMBEDDING_DIM
 from aptum.common.enums import (
     EmploymentType,
     ExperienceArea,
-    SkillCategory,
     SkillLevel,
     WorkAuthorization,
     WorkMode,
@@ -38,6 +37,7 @@ from aptum.db.constraints import (
 )
 from aptum.modules.commons.models import Language, LanguageLevel
 from aptum.modules.companies.models import Company
+from aptum.modules.skill_categories.models import SkillCategory
 from aptum.modules.skills.models import Skill
 
 _OWNED = {"cascade": "all, delete-orphan", "passive_deletes": True}
@@ -123,10 +123,7 @@ class ProfileLanguage(Base):
 
 class ProfileSkill(Base):
     __tablename__ = "profile_skills"
-    __table_args__ = (
-        UniqueConstraint("profile_id", "skill_id"),
-        in_values_check("category", SkillCategory),
-    )
+    __table_args__ = (UniqueConstraint("profile_id", "skill_id"),)
 
     id: Mapped[int] = mapped_column(primary_key=True)
     profile_id: Mapped[int] = mapped_column(ForeignKey("profiles.id", ondelete="CASCADE"))
@@ -135,13 +132,14 @@ class ProfileSkill(Base):
         Enum(SkillLevel, name="skill_level"), default=None
     )
     years_experience: Mapped[int | None] = mapped_column(SmallInteger, default=None)
-    # CV group. Set from the skill dictionary (skills/categories.py) unless the client sends one.
-    category: Mapped[str] = mapped_column(
-        String(40), default=SkillCategory.other.value, server_default=SkillCategory.other.value
+    # One of the profile's own CV groups; null is `Other`. Deleting the category sets it to null.
+    category_id: Mapped[int | None] = mapped_column(
+        ForeignKey("skill_categories.id", ondelete="SET NULL"), index=True, default=None
     )
 
     profile: Mapped["Profile"] = relationship(back_populates="skills")
     skill: Mapped["Skill"] = relationship(lazy="joined")
+    category: Mapped["SkillCategory | None"] = relationship(lazy="joined")
 
 
 class Experience(TimestampMixin, Base):

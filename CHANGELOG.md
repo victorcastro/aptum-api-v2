@@ -4,6 +4,34 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 and the project follows [Semantic Versioning](https://semver.org/).
 
+## [1.9.0] - 2026-10-09
+
+### Added
+
+- Each user owns their skill categories (CV skill groups) and manages them under
+  `/profile/me/skill-categories`: `GET` (their categories in print order), `POST` (add at the end),
+  `PATCH /{id}` (rename), `PUT /order` (set the print order with every one of their ids) and
+  `DELETE /{id}`. No permission or admin involved: another user's category is 404, and names are
+  unique per user only (409 on a clash, compared without case or accents).
+- `Other` is not a category: a skill without one (`category_id` null) is printed in the `Other`
+  group, always the last one. Deleting a category moves its skills there.
+- Migration 0008 creates `skill_categories` (owned by a profile) and gives each profile one
+  category per group it already used, in the old order, so every skill keeps its group.
+
+### Changed
+
+- **Breaking:** profile skills use `category_id` (integer) on create and update instead of the
+  `category` text, and read as `category: {id, name}` or `null` for `Other` (also in the grouped
+  list, where the `Other` group comes last). Omitted or `null` means `Other`; an id that is not
+  one of the caller's categories is 404.
+- CVs print the skill groups in the user's category order, `Other` last.
+
+### Removed
+
+- Automatic classification of a new skill from the dictionary: skills go to `Other` unless the
+  client sends `category_id`. `skill_dictionary.json` stays, only as the alias list that the ATS
+  keyword matching uses.
+
 ## [1.8.0] - 2026-10-09
 
 ### Added

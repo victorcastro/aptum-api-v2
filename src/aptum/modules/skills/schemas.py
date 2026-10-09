@@ -16,6 +16,6 @@ class SkillCreate(BaseModel):
 
 
 class SkillUpdate(BaseModel):
-    """Rename a shared catalog skill. The CV group lives on each profile (`profile_skills.category`)."""
+    """Rename a shared catalog skill. The CV group lives on each profile (`profile_skills.category_id`)."""
 
     name: Annotated[str, Field(min_length=1, max_length=120)]

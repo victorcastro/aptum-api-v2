@@ -2,7 +2,6 @@ from datetime import date
 
 from factories import base_profile, experience, profile_skill
 
-from aptum.common.enums import SkillCategory
 from aptum.modules.cv.ats.skills import select_skills, skill_lines
 
 
@@ -96,15 +95,18 @@ def test_one_line_per_category_in_fixed_order():
     ]
 
 
-def test_stored_category_wins_over_dictionary():
-    skill = profile_skill("Python", category=SkillCategory.llms_ai.value)
-    assert select_skills([skill])[0].category is SkillCategory.llms_ai
+def test_selected_skill_carries_its_stored_category():
+    skill = profile_skill("Python", category="LLMs & AI")
+    assert select_skills([skill])[0].category.name == "LLMs & AI"
 
 
 def test_dotnet_does_not_match_the_word_net():
     from aptum.modules.cv.ats.text import TextIndex
-    from aptum.modules.skills.categories import classify_skill
-
     assert not TextIndex("Strong focus on net income").find(".NET")
     assert TextIndex("Backend in C# and .NET 8").find(".NET")
-    assert classify_skill(".net") is SkillCategory.backend and classify_skill("net") is SkillCategory.other
+
+
+def test_other_is_the_last_line_even_before_any_category():
+    skills = [profile_skill("Excel", category="Other"), profile_skill("Swift", category="Mobile")]
+    assert [line.render() for line in skill_lines(select_skills(skills))] == ["Mobile: Swift", "Other: Excel"]
+    assert select_skills([profile_skill("Excel", category="Other")])[0].category is None

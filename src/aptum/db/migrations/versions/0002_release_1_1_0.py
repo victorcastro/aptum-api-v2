@@ -34,6 +34,7 @@ rebuilt from the creation order (id) of each profile's skills and of each experi
 A1/A2 -> elementary, B1 -> limited_working, B2 -> professional_working, C1/C2 ->
 full_professional, Native -> native_or_bilingual.
 """
+import json
 from collections import defaultdict
 from collections.abc import Sequence
 
@@ -43,11 +44,13 @@ from sqlalchemy.dialects import postgresql
 
 from aptum.common.enums import (
     ExperienceArea,
-    SkillCategory,
     UserRole,
     WorkAuthorization,
 )
-from aptum.modules.skills.categories import classify_skill
+from aptum.modules.skills.categories import DICTIONARY_PATH, skill_key
+
+# The groups of release 1.1.0, frozen: release 1.9.0 moved them to the skill_categories table.
+SKILL_CATEGORIES = ("LLMs & AI", "Backend", "Cloud & DevOps", "Architecture", "Mobile", "Other")
 
 revision: str = '0002'
 down_revision: str | None = '0001'
@@ -111,16 +114,28 @@ def _in(column: str, values) -> str:
     return f"{column} IS NULL OR {column} IN ({allowed})"
 
 
+def _dictionary_categories() -> dict[str, str]:
+    """Skill key -> category, for every name and alias in the dictionary."""
+    raw = json.loads(DICTIONARY_PATH.read_text(encoding="utf-8"))
+    return {
+        skill_key(term): category
+        for category, items in raw["categories"].items()
+        for item in items
+        for term in (item["name"], *item.get("aliases", ()))
+    }
+
+
 def _backfill_skill_categories() -> None:
+    by_key = _dictionary_categories()
     conn = op.get_bind()
     rows = conn.execute(
         sa.text("SELECT ps.id, s.name FROM profile_skills ps JOIN skills s ON s.id = ps.skill_id")
     ).all()
     ids_by_category: dict[str, list[int]] = defaultdict(list)
     for row_id, name in rows:
-        category = classify_skill(name)
-        if category is not SkillCategory.other:
-            ids_by_category[category.value].append(row_id)
+        category = by_key.get(skill_key(name))
+        if category is not None and category != "Other":
+            ids_by_category[category].append(row_id)
     for category, ids in ids_by_category.items():
         conn.execute(
             sa.text("UPDATE profile_skills SET category = :category WHERE id = ANY(:ids)"),
@@ -157,11 +172,11 @@ def upgrade() -> None:
     # Skill categories
     op.add_column(
         'profile_skills',
-        sa.Column('category', sa.String(length=40), server_default=SkillCategory.other.value, nullable=False),
+        sa.Column('category', sa.String(length=40), server_default='Other', nullable=False),
     )
     _backfill_skill_categories()
     op.create_check_constraint(
-        op.f('ck_profile_skills_category_allowed'), 'profile_skills', _in('category', SkillCategory)
+        op.f('ck_profile_skills_category_allowed'), 'profile_skills', _in('category', SKILL_CATEGORIES)
     )
     op.drop_column('skills', 'category')
     op.drop_column('profile_skills', 'position')

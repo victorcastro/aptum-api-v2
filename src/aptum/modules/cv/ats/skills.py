@@ -14,10 +14,11 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import date
 
-from aptum.common.enums import SkillCategory, SkillLevel
+from aptum.common.enums import SkillLevel
 from aptum.modules.cv.ats.text import TextIndex
 from aptum.modules.profile.models import Experience, ProfileSkill
-from aptum.modules.skills.categories import classify_skill, skill_key, skill_terms
+from aptum.modules.skill_categories.models import SkillCategory, print_name, print_order
+from aptum.modules.skills.categories import skill_key, skill_terms
 
 MAX_SKILLS = 25
 
@@ -25,23 +26,17 @@ MAX_SKILLS = 25
 @dataclass(frozen=True)
 class SelectedSkill:
     name: str
-    category: SkillCategory
+    category: SkillCategory | None
     offer_relevant: bool
 
 
 @dataclass(frozen=True)
 class SkillLine:
-    category: SkillCategory
+    category: str
     names: tuple[str, ...]
 
     def render(self) -> str:
-        return f"{self.category.value}: {', '.join(self.names)}"
-
-
-def _category(profile_skill: ProfileSkill) -> SkillCategory:
-    if profile_skill.category:
-        return SkillCategory(profile_skill.category)
-    return classify_skill(profile_skill.skill.name)
+        return f"{self.category}: {', '.join(self.names)}"
 
 
 _LEVEL_RANK = {SkillLevel.expert: 4, SkillLevel.advanced: 3, SkillLevel.intermediate: 2, SkillLevel.beginner: 1}
@@ -91,14 +86,15 @@ def select_skills(
         key = skill_key(ps.skill.name)
         if key and key not in seen:
             seen.add(key)
-            selected.append(SelectedSkill(ps.skill.name, _category(ps), not evidence(ps)[0]))
+            selected.append(SelectedSkill(ps.skill.name, ps.category, not evidence(ps)[0]))
     return selected[:limit]
 
 
 def skill_lines(selected: Sequence[SelectedSkill]) -> list[SkillLine]:
-    """One line per category, categories in SkillCategory order, empty ones skipped."""
-    return [
-        SkillLine(category, names)
-        for category in SkillCategory
-        if (names := tuple(s.name for s in selected if s.category is category))
-    ]
+    """One line per category, categories in `position` order and `Other` last."""
+    groups: dict[int | None, tuple[SkillCategory | None, list[str]]] = {}
+    for skill in selected:
+        key = skill.category.id if skill.category else None
+        groups.setdefault(key, (skill.category, []))[1].append(skill.name)
+    ordered = sorted(groups.values(), key=lambda group: print_order(group[0]))
+    return [SkillLine(print_name(category), tuple(names)) for category, names in ordered]

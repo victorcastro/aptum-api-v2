@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "_comment": "Deterministic skill -> CV category dictionary. Matching is case- and accent-insensitive on the whole name ('name' or any alias), after normalizing separators. Unknown skills go to 'Other'. To extend: add an entry (or an alias) under the right category and bump 'version'. Categories must be values of aptum.common.enums.SkillCategory.",
+  "_comment": "Skill alias dictionary used to recognize skills in job offers and CVs. Matching is case- and accent-insensitive on the whole name ('name' or any alias), after normalizing separators. The category keys only group the file for reading: a skill's CV category lives in the database (skill_categories). To extend: add an entry (or an alias) and bump 'version'.",
   "categories": {
     "LLMs & AI": [
       {"name": "OpenAI API", "aliases": ["openai", "openai sdk", "chatgpt api", "gpt api", "gpt-4", "gpt-4o", "gpt"]},
