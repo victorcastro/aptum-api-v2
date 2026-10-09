@@ -25,17 +25,6 @@ class SkillLevel(StrEnum):
     expert = "expert"
 
 
-class SkillCategory(StrEnum):
-    """CV skill groups, in the order the CV prints them. Values are what gets stored and printed."""
-
-    llms_ai = "LLMs & AI"
-    backend = "Backend"
-    cloud_devops = "Cloud & DevOps"
-    architecture = "Architecture"
-    mobile = "Mobile"
-    other = "Other"
-
-
 class LinkKind(StrEnum):
     portfolio = "portfolio"
     linkedin = "linkedin"

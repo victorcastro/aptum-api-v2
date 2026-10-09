@@ -89,7 +89,8 @@ def test_upgrade_backfills_and_downgrade_round_trips(engine):
     alembic("upgrade", "head")
     with engine.connect() as conn:
         categories = dict(conn.execute(sa.text(
-            "SELECT s.name, ps.category FROM profile_skills ps JOIN skills s ON s.id = ps.skill_id"
+            "SELECT s.name, sc.name FROM profile_skills ps JOIN skills s ON s.id = ps.skill_id "
+            "LEFT JOIN skill_categories sc ON sc.id = ps.category_id"
         )).all())
         profile = conn.execute(sa.text("SELECT * FROM profiles WHERE id = 1")).mappings().one()
         experience = conn.execute(sa.text("SELECT * FROM experiences")).mappings().one()
@@ -99,7 +100,7 @@ def test_upgrade_backfills_and_downgrade_round_trips(engine):
         "docker": "Cloud & DevOps",
         "SWIFT": "Mobile",
         "Hexagonal Architecture": "Architecture",
-        "COBOL": "Other",
+        "COBOL": None,  # Other is no category
         "rag": "LLMs & AI",
         "Node.js": "Backend",
     }
@@ -108,13 +109,24 @@ def test_upgrade_backfills_and_downgrade_round_trips(engine):
     assert experience["area"] is None
 
     with engine.begin() as conn, pytest.raises(sa.exc.IntegrityError):
-        conn.execute(sa.text("UPDATE profile_skills SET category = 'Frontend' WHERE id = 1"))
+        conn.execute(sa.text("UPDATE profile_skills SET category_id = 999 WHERE id = 1"))
+    with engine.connect() as conn:
+        seeded = conn.execute(sa.text(
+            "SELECT profile_id, name, position FROM skill_categories ORDER BY profile_id, position"
+        )).all()
+    assert seeded == [  # one per group the profile used, in the 1.1.0 order; no row for Other
+        (1, "LLMs & AI", 1),
+        (1, "Backend", 2),
+        (1, "Cloud & DevOps", 3),
+        (1, "Architecture", 4),
+        (1, "Mobile", 5),
+    ]
 
     with engine.connect() as conn:
         columns = {row[0] for row in conn.execute(sa.text(
             "SELECT column_name FROM information_schema.columns WHERE table_name = 'profile_skills'"
         ))}
-    assert "position" not in columns and "category" in columns
+    assert "position" not in columns and "category_id" in columns and "category" not in columns
 
     with engine.connect() as conn:
         languages = set(conn.execute(sa.text(
@@ -159,6 +171,25 @@ def test_upgrade_backfills_and_downgrade_round_trips(engine):
     assert "audit_logs" in tables
 
     alembic("check")  # models and migrations agree
+    with engine.begin() as conn:  # deleting a category moves its skills to Other (null)
+        conn.execute(sa.text("DELETE FROM skill_categories WHERE profile_id = 1 AND name = 'Mobile'"))
+        swift = conn.execute(sa.text(
+            "SELECT ps.category_id FROM profile_skills ps JOIN skills s ON s.id = ps.skill_id WHERE s.name = 'SWIFT'"
+        )).scalar_one()
+    assert swift is None
+    with engine.begin() as conn:  # a category created after the upgrade folds into 'Other' on the way down
+        conn.execute(sa.text("INSERT INTO skill_categories (profile_id, name, position) VALUES (1, 'Data', 7)"))
+        conn.execute(sa.text(
+            "UPDATE profile_skills SET category_id = (SELECT id FROM skill_categories WHERE name = 'Data') "
+            "WHERE skill_id = (SELECT id FROM skills WHERE name = 'FastAPI')"
+        ))
+    alembic("downgrade", "0007")
+    with engine.connect() as conn:
+        old_categories = dict(conn.execute(sa.text(
+            "SELECT s.name, ps.category FROM profile_skills ps JOIN skills s ON s.id = ps.skill_id"
+        )).all())
+    assert old_categories["FastAPI"] == "Other" and old_categories["docker"] == "Cloud & DevOps"
+    alembic("upgrade", "head")
     alembic("downgrade", "0002")
     with engine.connect() as conn:
         roles = conn.execute(sa.text("SELECT role FROM users ORDER BY id")).scalars().all()

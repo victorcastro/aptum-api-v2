@@ -18,6 +18,7 @@ from aptum.modules.cv.router import router as cv_router
 from aptum.modules.matching.router import router as matching_router
 from aptum.modules.profile.router import router as profile_router
 from aptum.modules.roles.router import router as roles_router
+from aptum.modules.skill_categories.router import router as skill_categories_router
 from aptum.modules.skills.router import router as skills_router
 from aptum.modules.users.admin_router import router as admin_users_router
 from aptum.modules.users.router import router as users_router
@@ -57,6 +58,7 @@ app.include_router(profile_router)
 app.include_router(commons_router)
 app.include_router(companies_router)
 app.include_router(skills_router)
+app.include_router(skill_categories_router)
 app.include_router(cv_router)
 app.include_router(matching_router)
 app.include_router(admin_users_router)

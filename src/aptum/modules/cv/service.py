@@ -67,7 +67,7 @@ class CVService:
         return ATSReport(
             page_count=result.pages,
             years_of_experience=YearsOfExperienceOut(total=result.years.total, by_area=result.years.by_area),
-            skills=[SkillLineOut(category=line.category.value, names=list(line.names)) for line in result.document.skill_lines],
+            skills=[SkillLineOut(category=line.category, names=list(line.names)) for line in result.document.skill_lines],
             warnings=[CVWarningOut(**vars(w)) for w in result.warnings],
             fidelity_issues=[FidelityIssueOut(**vars(i)) for i in result.fidelity_issues],
             keyword_coverage=KeywordCoverageOut(**vars(coverage), coverage=coverage.coverage) if coverage else None,

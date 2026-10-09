@@ -16,7 +16,6 @@ from aptum.common.enums import (
     EmploymentType,
     ExperienceArea,
     LinkKind,
-    SkillCategory,
     SkillLevel,
     WorkAuthorization,
     WorkMode,
@@ -29,6 +28,7 @@ from aptum.common.types import (
     YearMonth,
 )
 from aptum.modules.companies.schemas import CompanySummary
+from aptum.modules.skill_categories.schemas import SkillCategoryRef
 from aptum.modules.skills.schemas import SkillRead
 
 
@@ -284,16 +284,16 @@ class ProfileSkillCreate(BaseModel):
     skill_id: int
     level: SkillLevel | None = None
     years_experience: Annotated[int, Field(ge=0, le=80)] | None = None
-    category: SkillCategory | None = Field(
-        default=None, description="CV group. Omitted or null: classified from the skill dictionary."
+    category_id: int | None = Field(
+        default=None, description="One of the caller's CV groups (`GET /profile/me/skill-categories`). Omitted or null: `Other`."
     )
 
 
 class ProfileSkillUpdate(PartialUpdate):
     level: SkillLevel | None = None
     years_experience: Annotated[int, Field(ge=0, le=80)] | None = None
-    category: SkillCategory | None = Field(
-        default=None, description="CV group. `null` re-classifies it from the skill dictionary."
+    category_id: int | None = Field(
+        default=None, description="One of the caller's CV groups (`GET /profile/me/skill-categories`). `null` moves it to `Other`."
     )
 
 
@@ -304,7 +304,7 @@ class ProfileSkillRead(BaseModel):
     skill: SkillRead
     level: SkillLevel | None
     years_experience: int | None
-    category: SkillCategory
+    category: SkillCategoryRef | None = Field(description="The CV group; null is `Other`.")
 
 
 class ProfileSkillItem(BaseModel):
@@ -318,7 +318,7 @@ class ProfileSkillItem(BaseModel):
 
 
 class ProfileSkillGroup(BaseModel):
-    category: SkillCategory
+    category: SkillCategoryRef | None = Field(description="The CV group; null is `Other`, always the last group.")
     skills: list[ProfileSkillItem]
 
 

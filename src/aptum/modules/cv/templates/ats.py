@@ -76,7 +76,7 @@ class ATSTemplate:
             heading("Skills")
             for line in doc.skill_lines:
                 story.append(
-                    Paragraph(f"<b>{escape(line.category.value)}:</b> {escape(', '.join(line.names))}", body)
+                    Paragraph(f"<b>{escape(line.category)}:</b> {escape(', '.join(line.names))}", body)
                 )
 
         if doc.educations:
