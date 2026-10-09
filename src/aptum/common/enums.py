@@ -25,17 +25,6 @@ class SkillLevel(StrEnum):
     expert = "expert"
 
 
-class SkillCategory(StrEnum):
-    """CV skill groups, in the order the CV prints them. Values are what gets stored and printed."""
-
-    llms_ai = "LLMs & AI"
-    backend = "Backend"
-    cloud_devops = "Cloud & DevOps"
-    architecture = "Architecture"
-    mobile = "Mobile"
-    other = "Other"
-
-
 class LinkKind(StrEnum):
     portfolio = "portfolio"
     linkedin = "linkedin"
@@ -73,6 +62,7 @@ class AuditEntity(StrEnum):
     industry = "industry"
     user = "user"
     role = "role"
+    skill_category = "skill_category"
 
 
 class AuditAction(StrEnum):
@@ -88,3 +78,7 @@ class AuditAction(StrEnum):
     role_create = "role.create"
     role_update = "role.update"
     role_delete = "role.delete"
+    skill_category_create = "skill_category.create"
+    skill_category_update = "skill_category.update"
+    skill_category_delete = "skill_category.delete"
+    skill_category_reorder = "skill_category.reorder"

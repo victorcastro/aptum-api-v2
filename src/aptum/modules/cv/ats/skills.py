@@ -14,10 +14,11 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import date
 
-from aptum.common.enums import SkillCategory, SkillLevel
+from aptum.common.enums import SkillLevel
 from aptum.modules.cv.ats.text import TextIndex
 from aptum.modules.profile.models import Experience, ProfileSkill
-from aptum.modules.skills.categories import classify_skill, skill_key, skill_terms
+from aptum.modules.skill_categories.models import SkillCategory
+from aptum.modules.skills.categories import skill_key, skill_terms
 
 MAX_SKILLS = 25
 
@@ -31,17 +32,11 @@ class SelectedSkill:
 
 @dataclass(frozen=True)
 class SkillLine:
-    category: SkillCategory
+    category: str
     names: tuple[str, ...]
 
     def render(self) -> str:
-        return f"{self.category.value}: {', '.join(self.names)}"
-
-
-def _category(profile_skill: ProfileSkill) -> SkillCategory:
-    if profile_skill.category:
-        return SkillCategory(profile_skill.category)
-    return classify_skill(profile_skill.skill.name)
+        return f"{self.category}: {', '.join(self.names)}"
 
 
 _LEVEL_RANK = {SkillLevel.expert: 4, SkillLevel.advanced: 3, SkillLevel.intermediate: 2, SkillLevel.beginner: 1}
@@ -91,14 +86,18 @@ def select_skills(
         key = skill_key(ps.skill.name)
         if key and key not in seen:
             seen.add(key)
-            selected.append(SelectedSkill(ps.skill.name, _category(ps), not evidence(ps)[0]))
+            selected.append(SelectedSkill(ps.skill.name, ps.category, not evidence(ps)[0]))
     return selected[:limit]
 
 
 def skill_lines(selected: Sequence[SelectedSkill]) -> list[SkillLine]:
-    """One line per category, categories in SkillCategory order, empty ones skipped."""
+    """One line per category, categories in `position` order."""
+    names_by_category: dict[int, list[str]] = {}
+    categories: dict[int, SkillCategory] = {}
+    for skill in selected:
+        categories[skill.category.id] = skill.category
+        names_by_category.setdefault(skill.category.id, []).append(skill.name)
     return [
-        SkillLine(category, names)
-        for category in SkillCategory
-        if (names := tuple(s.name for s in selected if s.category is category))
+        SkillLine(category.name, tuple(names_by_category[category.id]))
+        for category in sorted(categories.values(), key=lambda c: (c.position, c.id))
     ]

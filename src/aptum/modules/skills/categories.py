@@ -1,7 +1,8 @@
-"""Deterministic skill classification backed by `data/skill_dictionary.json`.
+"""Skill name aliases backed by `data/skill_dictionary.json`.
 
-No LLM involved: a skill name is normalized and looked up as a whole (name or alias).
-Anything not in the dictionary is `SkillCategory.other`.
+A skill name is normalized and looked up as a whole (name or alias) to recognize it in free
+text (job offers, CVs). It does not decide a skill's CV category: that is the user's choice
+(`profile_skills.category_id`), `Other` by default.
 """
 
 import json
@@ -10,7 +11,6 @@ from dataclasses import dataclass
 from functools import cache
 from pathlib import Path
 
-from aptum.common.enums import SkillCategory
 from aptum.common.utils import normalize_name
 
 DICTIONARY_PATH = Path(__file__).parent / "data" / "skill_dictionary.json"
@@ -25,7 +25,6 @@ def skill_key(name: str) -> str:
 @dataclass(frozen=True)
 class DictionaryEntry:
     name: str
-    category: SkillCategory
     terms: tuple[str, ...]  # name + aliases, as written in the dictionary
 
 
@@ -40,10 +39,9 @@ def load_dictionary(path: Path = DICTIONARY_PATH) -> SkillDictionary:
     raw = json.loads(path.read_text(encoding="utf-8"))
     entries: list[DictionaryEntry] = []
     by_key: dict[str, DictionaryEntry] = {}
-    for category_value, items in raw["categories"].items():
-        category = SkillCategory(category_value)
+    for items in raw["categories"].values():  # the category keys only group the file for reading
         for item in items:
-            entry = DictionaryEntry(item["name"], category, (item["name"], *item.get("aliases", ())))
+            entry = DictionaryEntry(item["name"], (item["name"], *item.get("aliases", ())))
             entries.append(entry)
             for term in entry.terms:
                 key = skill_key(term)
@@ -60,11 +58,6 @@ def get_dictionary() -> SkillDictionary:
 
 def lookup(name: str) -> DictionaryEntry | None:
     return get_dictionary().by_key.get(skill_key(name))
-
-
-def classify_skill(name: str) -> SkillCategory:
-    entry = lookup(name)
-    return entry.category if entry else SkillCategory.other
 
 
 def skill_terms(name: str) -> tuple[str, ...]:

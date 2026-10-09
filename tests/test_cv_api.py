@@ -2,7 +2,7 @@
 
 The golden files were produced by the 1.0.0 code from the same synthetic profile, so they pin
 the legacy templates' output for `?template=`. Since 1.1.0 the skills are grouped by
-`profile_skills.category` (the catalog `skills.category` is gone)."""
+`profile_skills.category_id` (the catalog `skills.category` is gone)."""
 
 from io import BytesIO
 from pathlib import Path

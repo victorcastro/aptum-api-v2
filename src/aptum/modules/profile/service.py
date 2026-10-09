@@ -1,7 +1,6 @@
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
-from aptum.common.enums import SkillCategory
 from aptum.core.exceptions import AptumError, ConflictError, NotFoundError
 from aptum.db.base import Base
 from aptum.modules.commons.repository import CommonsRepository
@@ -24,7 +23,8 @@ from aptum.modules.profile.schemas import (
     ProfileSkillsGrouped,
     ProfileUpdate,
 )
-from aptum.modules.skills.categories import classify_skill
+from aptum.modules.skill_categories.repository import SkillCategoryRepository
+from aptum.modules.skill_categories.schemas import SkillCategoryRef
 from aptum.modules.skills.repository import SkillRepository
 
 _LABELS = {
@@ -52,11 +52,13 @@ _DATE_RANGES = {
 
 
 def group_skills(rows: list[ProfileSkill]) -> ProfileSkillsGrouped:
-    """Groups by CV category in `SkillCategory` order; empty groups are left out and each
+    """Groups by CV category in category `position` order; empty groups are left out and each
     group is sorted by skill name, case-insensitive."""
-    by_category: dict[str, list[ProfileSkillItem]] = {}
+    by_category: dict[int, list[ProfileSkillItem]] = {}
+    categories = {}
     for row in rows:
-        by_category.setdefault(row.category, []).append(
+        categories[row.category.id] = row.category
+        by_category.setdefault(row.category.id, []).append(
             ProfileSkillItem(
                 id=row.id,
                 skill_id=row.skill_id,
@@ -67,11 +69,10 @@ def group_skills(rows: list[ProfileSkill]) -> ProfileSkillsGrouped:
         )
     groups = [
         ProfileSkillGroup(
-            category=category,
-            skills=sorted(by_category[category.value], key=lambda s: (s.name.casefold(), s.id)),
+            category=SkillCategoryRef(id=category.id, name=category.name),
+            skills=sorted(by_category[category.id], key=lambda s: (s.name.casefold(), s.id)),
         )
-        for category in SkillCategory
-        if category.value in by_category
+        for category in sorted(categories.values(), key=lambda c: (c.position, c.id))
     ]
     return ProfileSkillsGrouped(total=len(rows), groups=groups)
 
@@ -86,6 +87,7 @@ class ProfileService:
         self.companies = CompanyRepository(db)
         self.commons = CommonsRepository(db)
         self.skills = SkillRepository(db)
+        self.categories = SkillCategoryRepository(db)
 
     def get_or_create(self, user_id: int) -> Profile:
         profile = self.repository.get_by_user_id(user_id)
@@ -162,8 +164,7 @@ class ProfileService:
                 raise NotFoundError("Skill not found")
             if any(skill.skill_id == fields["skill_id"] for skill in profile.skills):
                 raise ConflictError("Skill already added")
-            if fields.get("category") is None:
-                fields["category"] = classify_skill(catalog_skill.name)
+            fields["category_id"] = self._resolve_category_id(fields.get("category_id"))
         return self._save(self.repository.add_row(model, profile, **fields))
 
     def update_row(self, user_id: int, model: type[Base], row_id: int, data: BaseModel):
@@ -175,14 +176,25 @@ class ProfileService:
             self._check_range(row, fields, "start_year", "end_year")
         if model is ProfileLanguage:
             self._check_language_catalog(fields)
-        if model is ProfileSkill and "category" in fields and fields["category"] is None:
-            fields["category"] = classify_skill(row.skill.name)
+        if model is ProfileSkill and "category_id" in fields:
+            fields["category_id"] = self._resolve_category_id(fields["category_id"])
         return self._save(self.repository.update_row(row, **fields))
 
     def delete_row(self, user_id: int, model: type[Base], row_id: int) -> None:
         row = self._get_owned_row(user_id, model, row_id)
         self.repository.delete_row(row)
         self.db.commit()
+
+    def _resolve_category_id(self, category_id: int | None) -> int:
+        """The chosen category's id, or `Other`'s when none is given. 404 when it does not exist."""
+        if category_id is None:
+            other = self.categories.get_other()
+            if other is None:
+                raise NotFoundError("Skill category not found")
+            return other.id
+        if self.categories.get(category_id) is None:
+            raise NotFoundError("Skill category not found")
+        return category_id
 
     def _check_language_catalog(self, fields: dict) -> None:
         code = fields.get("language_code")

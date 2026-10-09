@@ -4,50 +4,37 @@ from types import SimpleNamespace
 import pytest
 from factories import FakeSession
 
-from aptum.common.enums import SkillCategory
+from aptum.core.exceptions import NotFoundError
 from aptum.modules.profile.models import ProfileSkill
 from aptum.modules.profile.schemas import ProfileSkillCreate, ProfileSkillUpdate
 from aptum.modules.profile.service import ProfileService
 from aptum.modules.skills.categories import (
     DICTIONARY_PATH,
-    classify_skill,
     get_dictionary,
     load_dictionary,
+    lookup,
+    skill_terms,
 )
 
-
-@pytest.mark.parametrize(
-    ("name", "category"),
-    [
-        ("OpenAI API", SkillCategory.llms_ai),
-        ("openai", SkillCategory.llms_ai),
-        ("RAG", SkillCategory.llms_ai),
-        ("Retrieval-Augmented Generation", SkillCategory.llms_ai),
-        ("FastAPI", SkillCategory.backend),
-        ("fast api", SkillCategory.backend),
-        ("NodeJS", SkillCategory.backend),
-        ("Node.js", SkillCategory.backend),
-        ("Docker", SkillCategory.cloud_devops),
-        ("  DOCKER  ", SkillCategory.cloud_devops),
-        ("CI/CD", SkillCategory.cloud_devops),
-        ("Swift", SkillCategory.mobile),
-        ("swiftui", SkillCategory.mobile),
-        ("Hexagonal Architecture", SkillCategory.architecture),
-        ("ports-and-adapters", SkillCategory.architecture),
-        ("Pinecone", SkillCategory.llms_ai),
-        ("Cobol", SkillCategory.other),
-        ("Excel", SkillCategory.other),
-        ("", SkillCategory.other),
-    ],
-)
-def test_classify_is_case_insensitive_with_aliases(name, category):
-    assert classify_skill(name) is category
+OTHER_ID = 6
 
 
-def test_dictionary_is_versioned_and_valid():
+def test_lookup_is_case_insensitive_and_follows_aliases():
+    assert lookup("openai").name == "OpenAI API"
+    assert lookup("  DOCKER  ").name == "Docker"
+    assert lookup("fast api").name == "FastAPI"
+    assert lookup("Cobol") is None
+    assert lookup("") is None
+
+
+def test_skill_terms_adds_the_aliases_of_known_skills():
+    assert "openai" in skill_terms("OpenAI API")
+    assert skill_terms("Cobol") == ("Cobol",)
+
+
+def test_dictionary_is_versioned():
     raw = json.loads(DICTIONARY_PATH.read_text())
     assert isinstance(raw["version"], int) and raw["version"] >= 1
-    assert set(raw["categories"]) <= {c.value for c in SkillCategory}
     assert get_dictionary().version == raw["version"]
 
 
@@ -81,32 +68,42 @@ class _FakeRepo:
         return fields
 
 
-def _service(skill_name: str) -> ProfileService:
+def _service() -> ProfileService:
     service = ProfileService.__new__(ProfileService)
     service.db = FakeSession()
     service.repository = _FakeRepo(SimpleNamespace(skills=[], languages=[]))
-    service.skills = SimpleNamespace(get=lambda skill_id: SimpleNamespace(id=skill_id, name=skill_name))
+    service.skills = SimpleNamespace(get=lambda skill_id: SimpleNamespace(id=skill_id, name="FastAPI"))
+    known = {2: SimpleNamespace(id=2), 4: SimpleNamespace(id=4)}
+    service.categories = SimpleNamespace(
+        get=lambda category_id: known.get(category_id), get_other=lambda: SimpleNamespace(id=OTHER_ID)
+    )
     return service
 
 
-def test_api_classifies_new_skill_unless_category_is_sent():
-    service = _service("FastAPI")
+def test_new_skill_without_category_goes_to_other():
+    service = _service()
     service.add_row(1, ProfileSkill, ProfileSkillCreate(skill_id=7))
-    assert service.repository.saved["category"] == "Backend"
-
-    service.add_row(1, ProfileSkill, ProfileSkillCreate(skill_id=7, category="Architecture"))
-    assert service.repository.saved["category"] == "Architecture"
+    assert service.repository.saved["category_id"] == OTHER_ID
 
 
-def test_api_update_null_category_reclassifies_and_omitted_keeps():
-    service = _service("unused")
-    service.update_row(1, ProfileSkill, 3, ProfileSkillUpdate(category=None))
-    assert service.repository.saved["category"] == "LLMs & AI"
+def test_new_skill_keeps_the_category_sent():
+    service = _service()
+    service.add_row(1, ProfileSkill, ProfileSkillCreate(skill_id=7, category_id=4))
+    assert service.repository.saved["category_id"] == 4
+
+
+def test_unknown_category_is_404_on_create_and_update():
+    service = _service()
+    with pytest.raises(NotFoundError, match="Skill category not found"):
+        service.add_row(1, ProfileSkill, ProfileSkillCreate(skill_id=7, category_id=99))
+    with pytest.raises(NotFoundError, match="Skill category not found"):
+        service.update_row(1, ProfileSkill, 3, ProfileSkillUpdate(category_id=99))
+
+
+def test_update_null_category_moves_to_other_and_omitted_keeps():
+    service = _service()
+    service.update_row(1, ProfileSkill, 3, ProfileSkillUpdate(category_id=None))
+    assert service.repository.saved["category_id"] == OTHER_ID
 
     service.update_row(1, ProfileSkill, 3, ProfileSkillUpdate(years_experience=2))
-    assert "category" not in service.repository.saved
-
-
-def test_api_rejects_unknown_category():
-    with pytest.raises(ValueError):
-        ProfileSkillCreate(skill_id=1, category="Frontend")
+    assert "category_id" not in service.repository.saved

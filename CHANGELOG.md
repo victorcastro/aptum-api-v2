@@ -4,6 +4,32 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 and the project follows [Semantic Versioning](https://semver.org/).
 
+## [1.9.0] - 2026-10-09
+
+### Added
+
+- Skill categories are rows now, editable by API: `GET /skill-categories` (any signed-in user),
+  `POST /skill-categories`, `PATCH /skill-categories/{id}` (rename), `PUT /skill-categories/order`
+  (set the print order with the full list of ids) and `DELETE /skill-categories/{id}`. Writes need
+  the new permission `skill_category:manage` (admin by default; an admin can grant it to any role)
+  and are audited. Deleting a category moves its profile skills to `Other`.
+- `Other` is a system category: it cannot be renamed or deleted (409).
+- Migration 0008 creates `skill_categories`, seeds the six groups of 1.1.0 (`LLMs & AI`, `Backend`,
+  `Cloud & DevOps`, `Architecture`, `Mobile`, `Other`) and keeps every profile skill in its group.
+
+### Changed
+
+- **Breaking:** profile skills use `category_id` (integer) on create and update instead of the
+  `category` text, and read as `category: {id, name}` (also in the grouped list). Omitted or `null`
+  means `Other`; an unknown id is 404.
+- CVs print the skill groups in category `position` order instead of the old fixed order.
+
+### Removed
+
+- Automatic classification of a new skill from the dictionary: skills go to `Other` unless the
+  client sends `category_id`. `skill_dictionary.json` stays, only as the alias list that the ATS
+  keyword matching uses.
+
 ## [1.8.0] - 2026-10-09
 
 ### Added
