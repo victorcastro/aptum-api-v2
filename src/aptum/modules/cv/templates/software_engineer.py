@@ -96,7 +96,7 @@ class SoftwareEngineerTemplate:
             "Headline",
             parent=body,
             fontName="Helvetica",
-            fontSize=11.5,
+            fontSize=12,
             leading=15,
             alignment=TA_CENTER,
             spaceAfter=4,

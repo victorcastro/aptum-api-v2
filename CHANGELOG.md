@@ -12,6 +12,7 @@ and the project follows [Semantic Versioning](https://semver.org/).
   1.5 cm top and bottom), more space between bullets, skill groups, experiences, projects,
   certifications and sections, and the heading rule. An experience keeps its title, description
   and first bullet together, so a page never ends or starts with a lone bullet.
+- Software Engineer CV template: the headline under the name is 12 pt (was 11.5 pt).
 
 ## [1.9.0] - 2026-10-09
 
