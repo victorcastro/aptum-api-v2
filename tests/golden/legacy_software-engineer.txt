@@ -37,13 +37,13 @@ Jan 2012 - Dec 2015
  Supported the QA team during releases.
  Documented the deployment process.
 PROJECTS
+
 Open-source CLI
 A small CLI for prompt testing.
 EDUCATION
 BSc, Computer Science
 Mar 2008 - Dec 2012
 Lakeside University
-
 CERTIFICATIONS
 Cloud Practitioner
 May 2022
