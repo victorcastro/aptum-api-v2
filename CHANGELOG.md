@@ -4,6 +4,15 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 and the project follows [Semantic Versioning](https://semver.org/).
 
+## [1.9.1] - 2026-10-10
+
+### Changed
+
+- Software Engineer CV template and the DOCX export breathe more: wider margins (1.7 cm sides,
+  1.5 cm top and bottom), more space between bullets, skill groups, experiences, projects,
+  certifications and sections, and the heading rule. An experience keeps its title, description
+  and first bullet together, so a page never ends or starts with a lone bullet.
+
 ## [1.9.0] - 2026-10-09
 
 ### Added
