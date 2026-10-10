@@ -121,7 +121,7 @@ def _setup_page(document) -> None:
     section.page_width = _PAGE_WIDTH
     section.page_height = Cm(29.7)
     section.left_margin = section.right_margin = _MARGIN_X
-    section.top_margin = section.bottom_margin = Cm(1)
+    section.top_margin = section.bottom_margin = Cm(1.5)
 
 
 def _set_font(style: ParagraphStyle, size: float, bold: bool = False, color: RGBColor = _INK) -> None:
@@ -191,8 +191,8 @@ def _setup_styles(document) -> None:
 
     heading = styles["Heading 1"]
     _set_font(heading, 10.5, bold=True, color=_ACCENT)
-    heading.paragraph_format.space_before = Pt(14)
-    heading.paragraph_format.space_after = Pt(4)
+    heading.paragraph_format.space_before = Pt(16)
+    heading.paragraph_format.space_after = Pt(6)
     heading.paragraph_format.keep_with_next = True
     _set_bottom_border(heading)
 
@@ -207,7 +207,7 @@ def _setup_styles(document) -> None:
     _set_font(bullet, 10)
     bullet.paragraph_format.left_indent = Cm(0.6)
     bullet.paragraph_format.first_line_indent = Cm(-0.4)
-    bullet.paragraph_format.space_after = Pt(1)
+    bullet.paragraph_format.space_after = Pt(3)
 
 
 def _heading(document, text: str) -> None:
