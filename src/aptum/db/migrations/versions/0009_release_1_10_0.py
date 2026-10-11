@@ -8,6 +8,7 @@ Create Date: 2026-10-11 12:00:00.000000
   constraints. start_year and end_year stay as the only dates.
 - Existing rows keep their dates: a missing year is filled from the month date before the drop.
 - educations.grade is dropped; the CV never printed it.
+- educations.location_city and educations.location_country_code (nullable), like experiences.
 
 Downgrade restores the date columns with the year of each row pinned to January 1st, and grade
 empty.
@@ -35,9 +36,13 @@ def upgrade() -> None:
     op.drop_column('educations', 'start_date')
     op.drop_column('educations', 'end_date')
     op.drop_column('educations', 'grade')
+    op.add_column('educations', sa.Column('location_city', sa.String(length=120), nullable=True))
+    op.add_column('educations', sa.Column('location_country_code', sa.String(length=2), nullable=True))
 
 
 def downgrade() -> None:
+    op.drop_column('educations', 'location_country_code')
+    op.drop_column('educations', 'location_city')
     op.add_column('educations', sa.Column('grade', sa.String(length=80), nullable=True))
     op.add_column('educations', sa.Column('start_date', sa.Date(), nullable=True))
     op.add_column('educations', sa.Column('end_date', sa.Date(), nullable=True))

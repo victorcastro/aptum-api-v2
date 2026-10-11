@@ -226,6 +226,8 @@ class Education(TimestampMixin, Base):
     institution: Mapped[str] = mapped_column(String(255))
     degree: Mapped[str] = mapped_column(String(255))
     field_of_study: Mapped[str | None] = mapped_column(String(255), default=None)
+    location_city: Mapped[str | None] = mapped_column(String(120), default=None)
+    location_country_code: Mapped[str | None] = mapped_column(String(2), default=None)
     start_year: Mapped[int | None] = mapped_column(SmallInteger, default=None)
     end_year: Mapped[int | None] = mapped_column(SmallInteger, default=None)
     is_active: Mapped[bool] = mapped_column(default=True, server_default=true())

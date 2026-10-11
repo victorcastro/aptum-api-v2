@@ -219,6 +219,8 @@ class EducationCreate(BaseModel):
     institution: str
     degree: str
     field_of_study: str | None = None
+    location_city: str | None = None
+    location_country_code: CountryCode | None = None
     start_year: Year | None = Field(default=None, description="Start year.")
     end_year: Year | None = Field(default=None, description="End year (or expected graduation year).")
     is_active: bool = True
@@ -235,6 +237,8 @@ class EducationUpdate(PartialUpdate):
     institution: Annotated[str, Field(min_length=1, max_length=255)] | None = None
     degree: Annotated[str, Field(min_length=1, max_length=255)] | None = None
     field_of_study: str | None = None
+    location_city: str | None = None
+    location_country_code: CountryCode | None = None
     start_year: Year | None = None
     end_year: Year | None = None
     is_active: bool | None = None
