@@ -76,15 +76,15 @@ class SeedUser:
 
 # Firebase accounts of the test project. Admin first, so there is always an active admin.
 ROLE_USERS = (
-    SeedUser(UserRole.admin, "admin@aptum.test", "tNUaTkwhXOMHTdxxhUg9XgtO9ig2", "Lucia", "Vargas", "Platform Admin"),
-    SeedUser(UserRole.moderator, "moderator@aptum.test", "nOkwOStcBocex7EHgeXkcdccKnm2", "Mateo", "Rojas", "Catalog Moderator"),
-    SeedUser(UserRole.user, "user@aptum.test", "cO7ewzLE1tcCWEMsaEZCPyxUHts2", "Ana", "Torres", "Senior Backend Engineer"),
+    SeedUser(UserRole.admin, "admin@aptum.test", "tNUaTkwhXOMHTdxxhUg9XgtO9ig2", "Lucia Fernanda", "Vargas Salazar", "Platform Admin"),
+    SeedUser(UserRole.moderator, "moderator@aptum.test", "nOkwOStcBocex7EHgeXkcdccKnm2", "Mateo Alejandro", "Rojas Quispe", "Catalog Moderator"),
+    SeedUser(UserRole.user, "user@aptum.test", "cO7ewzLE1tcCWEMsaEZCPyxUHts2", "Ana Maria", "Torres Delgado", "Senior Backend Engineer"),
 )  # fmt: skip
 
 # No Firebase account: they only show up in /admin/users, to change their role or status.
 EXTRA_USERS = (
-    SeedUser(UserRole.user, "candidate@aptum.test", None, "Diego", "Paredes", "Data Engineer"),
-    SeedUser(UserRole.user, "inactive@aptum.test", None, "Sofia", "Mendoza", "QA Engineer", is_active=False),
+    SeedUser(UserRole.user, "candidate@aptum.test", None, "Diego Sebastian", "Paredes Huaman", "Data Engineer"),
+    SeedUser(UserRole.user, "inactive@aptum.test", None, "Sofia Valentina", "Mendoza Rios", "QA Engineer", is_active=False),
 )
 
 
@@ -388,6 +388,8 @@ def seed_demo_cv(db: Session, user: User, reset: bool) -> Profile | None:
     profile.educations = [
         Education(
             institution="Universidad Nacional de Ingenieria",
+            location_city="Lima",
+            location_country_code="PE",
             degree=_degree(db, "Bachelor of Science"),
             field_of_study="Computer Science",
             start_year=2013,
@@ -557,6 +559,8 @@ def seed_admin_cv(db: Session, user: User, reset: bool) -> Profile | None:
     profile.educations = [
         Education(
             institution="Universidad Catolica San Pablo",
+            location_city="Arequipa",
+            location_country_code="PE",
             degree=_degree(db, "Bachelor of Science"),
             field_of_study="Systems Engineering",
             start_year=2007,
@@ -564,6 +568,8 @@ def seed_admin_cv(db: Session, user: User, reset: bool) -> Profile | None:
         ),
         Education(
             institution="Pontificia Universidad Catolica del Peru",
+            location_city="Lima",
+            location_country_code="PE",
             degree=_degree(db, "Postgraduate Diploma"),
             field_of_study="Cloud Architecture",
             start_year=2019,

@@ -26,8 +26,8 @@ class EducationEntry:
 
     @property
     def place(self) -> str:
-        """`Lakeside University, Lima, Peru`: the institution with its location, when there is one."""
-        return ", ".join(part for part in (self.institution, self.location) if part)
+        """`Lakeside University - Lima, Peru`: the institution with its location, when there is one."""
+        return " - ".join(part for part in (self.institution, self.location) if part)
 
 
 @dataclass(frozen=True)

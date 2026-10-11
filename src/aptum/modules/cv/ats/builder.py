@@ -32,7 +32,7 @@ def education_location(edu: Education) -> str:
 
 def _ats_education(edu: Education) -> ATSEducation:
     location = education_location(edu)
-    place = ", ".join(part for part in (edu.institution, location) if part)
+    place = " - ".join(part for part in (edu.institution, location) if part)
     field = f", {edu.field_of_study}" if edu.field_of_study else ""
     return ATSEducation(
         title=f"{edu.degree.name}{field} - {place}",

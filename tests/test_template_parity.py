@@ -92,9 +92,9 @@ def test_education_location_is_printed_by_every_template(renderer):
     profile = base_profile()
     profile.educations[0].location_city = "Lima"
     profile.educations[0].location_country_code = "PE"
-    assert _squash("Lakeside University, Lima, Peru") in RENDERERS[renderer](profile)
+    assert _squash("Lakeside University - Lima, Peru") in RENDERERS[renderer](profile)
 
 
 @pytest.mark.parametrize("renderer", RENDERERS)
 def test_education_without_location_prints_no_separator(renderer):
-    assert _squash("Lakeside University,") not in RENDERERS[renderer](base_profile())
+    assert _squash("Lakeside University -") not in RENDERERS[renderer](base_profile())
