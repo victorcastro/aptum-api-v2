@@ -50,7 +50,7 @@ class CVService:
         return template.render(doc), self._filename(doc.full_name)
 
     def export_docx(self, user_id: int) -> tuple[bytes, str]:
-        """Editable Word CV of the authenticated user's own profile. Always the software-engineer
+        """Editable Word CV of the authenticated user's own profile. Always the modern
         layout, whatever template is saved. Returns the docx bytes and the download filename."""
         doc = build_cv_data(self.profiles.get_or_create(user_id))
         return render_cv_docx(doc), self._filename(doc.full_name, "docx")

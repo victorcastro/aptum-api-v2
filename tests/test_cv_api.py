@@ -44,13 +44,13 @@ def test_default_export_is_basic_without_a_saved_template(client):
 
 
 def test_default_export_uses_the_saved_template(client, profile):
-    profile.preferred_template = "software-engineer"
+    profile.preferred_template = "modern"
     text = pdf_text(client.get("/cv/export").content)
-    assert text == (GOLDEN / "legacy_software-engineer.txt").read_text()
+    assert text == (GOLDEN / "legacy_modern.txt").read_text()
 
 
 def test_explicit_template_overrides_the_saved_one(client, profile):
-    profile.preferred_template = "software-engineer"
+    profile.preferred_template = "modern"
     text = pdf_text(client.get("/cv/export", params={"template": "basic"}).content)
     assert "LLMs & AI: OpenAI API, RAG" in text and "TECHNICAL SKILLS" not in text
 
@@ -72,19 +72,19 @@ def test_unknown_export_format_is_rejected(client):
 
 def test_templates_list_basic_first_and_selected_by_default(client):
     templates = client.get("/cv/templates").json()
-    assert [t["id"] for t in templates] == ["basic", "software-engineer"]
+    assert [t["id"] for t in templates] == ["basic", "modern"]
     assert [t["selected"] for t in templates] == [True, False]
 
 
 def test_saved_template_is_the_selected_one(client, profile):
-    profile.preferred_template = "software-engineer"
+    profile.preferred_template = "modern"
     templates = client.get("/cv/templates").json()
-    assert [(t["id"], t["selected"]) for t in templates] == [("basic", False), ("software-engineer", True)]
-    assert client.get("/cv/settings").json() == {"template_id": "software-engineer"}
+    assert [(t["id"], t["selected"]) for t in templates] == [("basic", False), ("modern", True)]
+    assert client.get("/cv/settings").json() == {"template_id": "modern"}
 
 
 def test_basic_can_be_saved_as_the_default(client, profile, monkeypatch):
-    profile.preferred_template = "software-engineer"
+    profile.preferred_template = "modern"
 
     def save(self, saved_profile, template_id):
         saved_profile.preferred_template = template_id
@@ -102,19 +102,19 @@ def test_saving_an_unknown_template_is_404(client):
 
 
 def test_explicit_template_renders_the_legacy_layout_unchanged(client):
-    response = client.get("/cv/export", params={"template": "software-engineer"})
-    assert pdf_text(response.content) == (GOLDEN / "legacy_software-engineer.txt").read_text()
+    response = client.get("/cv/export", params={"template": "modern"})
+    assert pdf_text(response.content) == (GOLDEN / "legacy_modern.txt").read_text()
 
 
 def test_languages_section_matches_between_templates(client):
     default = pdf_text(client.get("/cv/export").content)
-    explicit = pdf_text(client.get("/cv/export", params={"template": "software-engineer"}).content)
+    explicit = pdf_text(client.get("/cv/export", params={"template": "modern"}).content)
     for text in (default, explicit):
         assert "Spanish - Native" in text
         assert "English - C1" in text
 
 
-@pytest.mark.parametrize("params", [{}, {"template": "software-engineer"}])
+@pytest.mark.parametrize("params", [{}, {"template": "modern"}])
 def test_every_template_is_a4(client, params):
     page = PdfReader(BytesIO(client.get("/cv/export", params=params).content)).pages[0]
     assert (round(float(page.mediabox.width)), round(float(page.mediabox.height))) == (595, 842)
@@ -163,7 +163,7 @@ def test_matching_prompt_has_locked_years():
     assert "LOCKED FACTS" in prompts[0] and "Total professional experience:" in prompts[0]
 
 
-@pytest.mark.parametrize("params", [{}, {"template": "software-engineer"}])
+@pytest.mark.parametrize("params", [{}, {"template": "modern"}])
 def test_availability_line_sits_in_the_header_and_never_mentions_sponsorship(client, profile, params):
     profile.work_authorization = "requires_sponsorship"
     profile.work_authorization_country = "PE"

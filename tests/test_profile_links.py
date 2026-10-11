@@ -8,7 +8,7 @@ from pydantic import ValidationError
 from aptum.modules.cv.ats.pipeline import generate_ats_cv
 from aptum.modules.cv.document import build_cv_data
 from aptum.modules.cv.links import visible_link_urls
-from aptum.modules.cv.templates.software_engineer import SoftwareEngineerTemplate
+from aptum.modules.cv.templates.modern import ModernTemplate
 from aptum.modules.profile.schemas import MAX_LINKS, ProfileUpdate
 
 GITHUB = "https://github.com/example-alex"
@@ -22,7 +22,7 @@ def _link(kind, url, visible=True):
 def test_hidden_link_is_left_out_of_both_cv_templates():
     profile = base_profile(links=[_link("linkedin", LINKEDIN), _link("github", GITHUB, visible=False)])
     assert visible_link_urls(profile) == [LINKEDIN]
-    assert GITHUB not in pdf_text(SoftwareEngineerTemplate().render(build_cv_data(profile)))
+    assert GITHUB not in pdf_text(ModernTemplate().render(build_cv_data(profile)))
     assert GITHUB not in pdf_text(generate_ats_cv(profile, today=date(2026, 10, 1)).pdf)
 
 

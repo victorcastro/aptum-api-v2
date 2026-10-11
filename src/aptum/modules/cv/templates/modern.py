@@ -72,7 +72,7 @@ class _DatedLine(Flowable):
             self.canv.drawRightString(self.width, baseline, self._dates)
 
 
-class SoftwareEngineerTemplate:
+class ModernTemplate:
     """Single column, dark text on white, one navy accent, standard fonts, no images or tables:
     plain text flow for ATS parsers. Skills come before Experience so keywords sit at the top."""
 
