@@ -221,7 +221,6 @@ class EducationCreate(BaseModel):
     field_of_study: str | None = None
     start_year: Year | None = Field(default=None, description="Start year.")
     end_year: Year | None = Field(default=None, description="End year (or expected graduation year).")
-    grade: str | None = None
     is_active: bool = True
 
     @model_validator(mode="after")
@@ -238,7 +237,6 @@ class EducationUpdate(PartialUpdate):
     field_of_study: str | None = None
     start_year: Year | None = None
     end_year: Year | None = None
-    grade: str | None = None
     is_active: bool | None = None
 
 

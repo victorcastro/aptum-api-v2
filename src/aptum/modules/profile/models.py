@@ -228,7 +228,6 @@ class Education(TimestampMixin, Base):
     field_of_study: Mapped[str | None] = mapped_column(String(255), default=None)
     start_year: Mapped[int | None] = mapped_column(SmallInteger, default=None)
     end_year: Mapped[int | None] = mapped_column(SmallInteger, default=None)
-    grade: Mapped[str | None] = mapped_column(String(80), default=None)
     is_active: Mapped[bool] = mapped_column(default=True, server_default=true())
 
     profile: Mapped["Profile"] = relationship(back_populates="educations")

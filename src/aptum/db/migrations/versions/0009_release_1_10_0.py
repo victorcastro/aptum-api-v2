@@ -1,4 +1,4 @@
-"""release 1.10.0: education dates are years only
+"""release 1.10.0: education dates are years only, no grade
 
 Revision ID: 0009
 Revises: 0008
@@ -7,8 +7,10 @@ Create Date: 2026-10-11 12:00:00.000000
 - educations.start_date and educations.end_date are dropped together with their CHECK
   constraints. start_year and end_year stay as the only dates.
 - Existing rows keep their dates: a missing year is filled from the month date before the drop.
+- educations.grade is dropped; the CV never printed it.
 
-Downgrade restores the columns empty, with the year of each row pinned to January 1st.
+Downgrade restores the date columns with the year of each row pinned to January 1st, and grade
+empty.
 """
 from collections.abc import Sequence
 
@@ -32,9 +34,11 @@ def upgrade() -> None:
     op.drop_constraint(op.f('ck_educations_end_date_first_day'), 'educations', type_='check')
     op.drop_column('educations', 'start_date')
     op.drop_column('educations', 'end_date')
+    op.drop_column('educations', 'grade')
 
 
 def downgrade() -> None:
+    op.add_column('educations', sa.Column('grade', sa.String(length=80), nullable=True))
     op.add_column('educations', sa.Column('start_date', sa.Date(), nullable=True))
     op.add_column('educations', sa.Column('end_date', sa.Date(), nullable=True))
     op.execute(
