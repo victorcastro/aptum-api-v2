@@ -1,6 +1,10 @@
 from dataclasses import dataclass
 
-from aptum.modules.cv.ats.builder import education_dates, education_location, language_lines
+from aptum.modules.cv.ats.builder import (
+    education_dates,
+    education_location,
+    language_lines,
+)
 from aptum.modules.cv.ats.document import format_range
 from aptum.modules.cv.header import availability_line
 from aptum.modules.cv.links import LinkEntry, header_links

@@ -1,7 +1,11 @@
 import re
 
 from aptum.modules.cv.document import CVDocument
-from aptum.modules.cv.links import CREDENTIAL_LINK_TEXT, format_link_display, normalize_link_href
+from aptum.modules.cv.links import (
+    CREDENTIAL_LINK_TEXT,
+    format_link_display,
+    normalize_link_href,
+)
 
 _SPECIAL = re.compile(r"([\\*_\[\]`])")
 
