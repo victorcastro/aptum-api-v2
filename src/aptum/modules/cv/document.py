@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from aptum.modules.cv.ats.builder import education_dates, language_lines
+from aptum.modules.cv.ats.builder import education_dates, education_location, language_lines
 from aptum.modules.cv.ats.document import format_range
 from aptum.modules.cv.header import availability_line
 from aptum.modules.cv.links import LinkEntry, header_links
@@ -22,6 +22,12 @@ class EducationEntry:
     title: str
     institution: str
     dates: str
+    location: str = ""
+
+    @property
+    def place(self) -> str:
+        """`Lakeside University, Lima, Peru`: the institution with its location, when there is one."""
+        return ", ".join(part for part in (self.institution, self.location) if part)
 
 
 @dataclass(frozen=True)
@@ -96,6 +102,7 @@ def build_cv_data(profile: Profile) -> CVDocument:
             title=f"{edu.degree.name}{f', {edu.field_of_study}' if edu.field_of_study else ''}",
             institution=edu.institution,
             dates=education_dates(edu),
+            location=education_location(edu),
         )
         for edu in profile.educations
         if edu.is_active

@@ -10,7 +10,7 @@ and the project follows [Semantic Versioning](https://semver.org/).
 
 - Education dates are years only: `start_date` and `end_date` are removed from education (create, update, read, CV and ATS exports). Use `start_year` and `end_year`. The migration copies each existing month date into its year before dropping the columns. Education is ordered by `end_year`.
 - Degrees are a catalog table `degrees` (`id`, `name`, `level`, `rank`). `GET /commons/degrees` lists them grouped by level as `{heading, options: [{id, name}]}`. Education takes `degree_id` (404 `Degree not found` if unknown) instead of the free-text `degree`, and returns both `degree_id` and `degree: {id, name}`. The migration matches each existing degree text to the catalog ignoring case and adds the ones that match nothing under the level `Other`.
-- Education: optional `location_city` and `location_country_code`, like experiences.
+- Education: optional `location_city` and `location_country_code`, like experiences. All CV templates (PDF, DOCX and ATS) print them next to the institution (`Lakeside University, Lima, Peru`).
 - Education: `grade` is removed (create, update, read). The CV exports never printed it.
 
 ## [1.9.1] - 2026-10-10

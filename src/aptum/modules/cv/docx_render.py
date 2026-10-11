@@ -92,7 +92,7 @@ def render_cv_docx(doc: CVDocument) -> bytes:
         _heading(document, "Education")
         for edu in doc.educations:
             _dated(document, edu.title, edu.dates)
-            document.add_paragraph(edu.institution)
+            document.add_paragraph(edu.place)
 
     if doc.certifications:
         _heading(document, "Certifications")

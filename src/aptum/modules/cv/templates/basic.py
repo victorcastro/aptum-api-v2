@@ -29,7 +29,7 @@ class RenderedPDF:
     pages: int
 
 
-class ATSTemplate:
+class BasicTemplate:
     """ATS-safe layout: one column of plain text in a standard font (Helvetica), black on white.
     No tables, images, icons, charts, drawn lines, text boxes or photo. The centered header prints
     links as visible text with a real link annotation. A4, like every other template."""
