@@ -17,7 +17,7 @@ class DuplicateEducation:
 
 
 def _title_tokens(education: Education) -> set[str]:
-    text = normalize_text(f"{education.degree} {education.field_of_study or ''}")
+    text = normalize_text(f"{education.degree.name} {education.field_of_study or ''}")
     return {token for token in text.split() if token not in _DEGREE_STOPWORDS}
 
 
@@ -38,6 +38,6 @@ def duplicate_educations(educations: Sequence[Education]) -> list[DuplicateEduca
     for i, a in enumerate(active):
         for b in active[i + 1 :]:
             if normalize_name(a.institution) == normalize_name(b.institution) and _titles_overlap(a, b):
-                titles = tuple(f"{e.degree}{f', {e.field_of_study}' if e.field_of_study else ''}" for e in (a, b))
+                titles = tuple(f"{e.degree.name}{f', {e.field_of_study}' if e.field_of_study else ''}" for e in (a, b))
                 duplicates.append(DuplicateEducation(a.institution, titles))
     return duplicates

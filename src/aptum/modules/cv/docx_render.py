@@ -30,7 +30,7 @@ _TEXT_WIDTH = _PAGE_WIDTH - 2 * _MARGIN_X
 
 
 def render_cv_docx(doc: CVDocument) -> bytes:
-    """Editable Word version of the software-engineer layout. Only native features, so Word and
+    """Editable Word version of the modern layout. Only native features, so Word and
     Google Docs keep it editable: named styles, a right tab stop for dates, real bullet lists and
     hyperlinks. No tables, text boxes, images or empty spacer paragraphs."""
     document = Document()
@@ -92,7 +92,7 @@ def render_cv_docx(doc: CVDocument) -> bytes:
         _heading(document, "Education")
         for edu in doc.educations:
             _dated(document, edu.title, edu.dates)
-            document.add_paragraph(edu.institution)
+            document.add_paragraph(edu.place)
 
     if doc.certifications:
         _heading(document, "Certifications")

@@ -35,7 +35,7 @@ from aptum.db.constraints import (
     in_values_check,
     month_precision_checks,
 )
-from aptum.modules.commons.models import Language, LanguageLevel
+from aptum.modules.commons.models import Degree, Language, LanguageLevel
 from aptum.modules.companies.models import Company
 from aptum.modules.skill_categories.models import SkillCategory
 from aptum.modules.skills.models import Skill
@@ -85,7 +85,7 @@ class Profile(TimestampMixin, Base):
     )
     educations: Mapped[list["Education"]] = relationship(
         back_populates="profile",
-        order_by="Education.end_date.desc().nulls_first()",
+        order_by="Education.end_year.desc().nulls_first()",
         **_OWNED,
     )
     languages: Mapped[list["ProfileLanguage"]] = relationship(
@@ -214,8 +214,6 @@ class ExperienceSkill(Base):
 class Education(TimestampMixin, Base):
     __tablename__ = "educations"
     __table_args__ = (
-        date_range_check(),
-        *month_precision_checks("start_date", "end_date"),
         CheckConstraint(
             "start_year IS NULL OR end_year IS NULL OR end_year >= start_year", name="year_range"
         ),
@@ -226,17 +224,16 @@ class Education(TimestampMixin, Base):
         ForeignKey("profiles.id", ondelete="CASCADE"), index=True
     )
     institution: Mapped[str] = mapped_column(String(255))
-    degree: Mapped[str] = mapped_column(String(255))
+    degree_id: Mapped[int] = mapped_column(ForeignKey("degrees.id", ondelete="RESTRICT"), index=True)
     field_of_study: Mapped[str | None] = mapped_column(String(255), default=None)
-    start_date: Mapped[date | None] = mapped_column(Date, default=None)
-    end_date: Mapped[date | None] = mapped_column(Date, default=None)
-    # Year-only alternative for when the month is unknown; the CV prefers the month dates.
+    location_city: Mapped[str | None] = mapped_column(String(120), default=None)
+    location_country_code: Mapped[str | None] = mapped_column(String(2), default=None)
     start_year: Mapped[int | None] = mapped_column(SmallInteger, default=None)
     end_year: Mapped[int | None] = mapped_column(SmallInteger, default=None)
-    grade: Mapped[str | None] = mapped_column(String(80), default=None)
     is_active: Mapped[bool] = mapped_column(default=True, server_default=true())
 
     profile: Mapped["Profile"] = relationship(back_populates="educations")
+    degree: Mapped[Degree] = relationship(lazy="joined")
 
 
 class Certification(TimestampMixin, Base):

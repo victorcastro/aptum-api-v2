@@ -4,6 +4,7 @@ from datetime import date
 from conftest import pdf_text
 from factories import base_profile, experience
 
+from aptum.modules.commons.models import Degree
 from aptum.modules.cv.ats import rules
 from aptum.modules.cv.ats.builder import build_ats_document
 from aptum.modules.cv.ats.pipeline import generate_ats_cv
@@ -161,10 +162,13 @@ def test_bullets_without_metrics_are_warned_not_invented():
 
 
 def test_duplicate_education_detection():
-    a = Education(institution="Lakeside University", degree="BSc", field_of_study="Computer Science", is_active=True)
-    b = Education(institution="lakeside  university", degree="Bachelor of Science in Computer Science", is_active=True)
-    c = Education(institution="Lakeside University", degree="MBA", is_active=True)
-    b.degree, b.field_of_study = "BSc", "Computer Science and Engineering"
+    def degree(name: str) -> Degree:
+        return Degree(name=name, level="Undergraduate", rank=1)
+
+    a = Education(institution="Lakeside University", degree=degree("BSc"), field_of_study="Computer Science", is_active=True)
+    b = Education(institution="lakeside  university", degree=degree("Bachelor of Science in Computer Science"), is_active=True)
+    c = Education(institution="Lakeside University", degree=degree("MBA"), is_active=True)
+    b.degree, b.field_of_study = degree("BSc"), "Computer Science and Engineering"
     found = duplicate_educations([a, b, c])
     assert len(found) == 1 and found[0].institution == "Lakeside University"
 

@@ -3,7 +3,6 @@ from io import BytesIO
 from xml.sax.saxutils import escape
 
 from reportlab.lib.colors import black
-from reportlab.lib.enums import TA_CENTER
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import ParagraphStyle
 from reportlab.lib.units import cm
@@ -11,12 +10,13 @@ from reportlab.platypus import KeepTogether, Paragraph, SimpleDocTemplate, Space
 
 from aptum.common.richtext import to_reportlab
 from aptum.modules.cv.ats.document import ATSDocument
+from aptum.modules.cv.links import LinkEntry, normalize_link_href
 from aptum.modules.cv.templates.common import (
     credential_markup,
     header_paragraphs,
+    link_markup,
     p,
     rich,
-    url_markup,
 )
 
 # Standard headings, in the order ATS parsers expect them.
@@ -29,30 +29,31 @@ class RenderedPDF:
     pages: int
 
 
-class ATSTemplate:
+class BasicTemplate:
     """ATS-safe layout: one column of plain text in a standard font (Helvetica), black on white.
-    No tables, images, icons, charts, drawn lines, text boxes or photo. The centered header prints
-    links as visible text with a real link annotation. A4, like every other template."""
+    No tables, images, icons, charts, drawn lines, text boxes or photo. The left-aligned header prints
+    links as the full `https://` URL, visible text with a real link annotation. A4, like every other template."""
 
     def render(self, doc: ATSDocument) -> RenderedPDF:
-        body = ParagraphStyle("Body", fontName="Helvetica", fontSize=10, leading=12.5, spaceAfter=1, textColor=black)
-        header = ParagraphStyle("Header", parent=body, fontSize=9.5, leading=12, alignment=TA_CENTER)
-        name = ParagraphStyle(
-            "Name", parent=body, fontName="Helvetica-Bold", fontSize=18, leading=22, spaceAfter=2, alignment=TA_CENTER
-        )
+        body = ParagraphStyle("Body", fontName="Helvetica", fontSize=10, leading=13, spaceAfter=2, textColor=black)
+        header = ParagraphStyle("Header", parent=body, fontSize=9.5, leading=12.5, spaceAfter=1)
+        name = ParagraphStyle("Name", parent=body, fontName="Helvetica-Bold", fontSize=18, leading=22, spaceAfter=3)
         headline = ParagraphStyle(
-            "Headline", parent=body, fontName="Helvetica-Bold", fontSize=11, leading=14, alignment=TA_CENTER
+            "Headline", parent=body, fontName="Helvetica-Bold", fontSize=11, leading=14, spaceAfter=3
         )
         section = ParagraphStyle(
-            "Section", parent=body, fontName="Helvetica-Bold", fontSize=11.5, leading=14, spaceBefore=18, spaceAfter=4
+            "Section", parent=body, fontName="Helvetica-Bold", fontSize=11.5, leading=14, spaceBefore=20, spaceAfter=7
         )
-        item = ParagraphStyle("Item", parent=body, fontName="Helvetica-Bold", spaceBefore=5, spaceAfter=0)
-        bullet = ParagraphStyle("Bullet", parent=body, leftIndent=12, bulletIndent=2)
+        item = ParagraphStyle("Item", parent=body, fontName="Helvetica-Bold", spaceBefore=9, spaceAfter=1)
+        bullet = ParagraphStyle("Bullet", parent=body, leftIndent=12, bulletIndent=2, spaceAfter=3)
+        detail = ParagraphStyle("Detail", parent=body, spaceBefore=3)
+        entry = ParagraphStyle("Entry", parent=body, spaceBefore=6, spaceAfter=0)
 
         story: list = [p(doc.full_name, name)]
         if doc.headline:
             story.append(p(doc.headline, headline))
-        story.extend(header_paragraphs(doc.availability_line, doc.phone, doc.email, doc.links, header))
+        links = [LinkEntry(link.url, link.url) for link in doc.links]
+        story.extend(header_paragraphs(doc.availability_line, doc.phone, doc.email, links, header))
 
         def heading(title: str) -> None:
             story.append(p(title.upper(), section))
@@ -70,7 +71,7 @@ class ATSTemplate:
                 for text in exp.bullets:
                     story.append(rich(text, bullet, "•"))
                 if exp.skills_line:
-                    story.append(Paragraph(f"<b>Technologies:</b> {escape(exp.skills_line)}", body))
+                    story.append(Paragraph(f"<b>Technologies:</b> {escape(exp.skills_line)}", detail))
 
         if doc.skill_lines:
             heading("Skills")
@@ -89,7 +90,7 @@ class ATSTemplate:
             for cert in doc.certifications:
                 line = f"{cert.title} - {cert.issuer}{f' ({cert.dates})' if cert.dates else ''}"
                 markup = escape(line) + (f" | {credential_markup(cert.url)}" if cert.url else "")
-                story.append(Paragraph(markup, body))
+                story.append(Paragraph(markup, entry))
 
         if doc.projects:
             heading("Projects")
@@ -97,9 +98,10 @@ class ATSTemplate:
                 text = f"<b>{escape(project.name)}</b>"
                 if project.description:
                     text += f": {to_reportlab(project.description)}"
-                story.append(Paragraph(text, body))
+                story.append(Paragraph(text, entry))
                 if project.url:
-                    story.append(Paragraph(url_markup(project.url), body))
+                    href = normalize_link_href(project.url)
+                    story.append(Paragraph(link_markup(href, href), body))
 
         if doc.languages:
             heading("Languages")

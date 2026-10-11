@@ -60,6 +60,7 @@ class ATSEducation:
     title: str
     institution: str
     dates: str
+    location: str = ""
 
 
 @dataclass

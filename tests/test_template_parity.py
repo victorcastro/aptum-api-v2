@@ -8,7 +8,8 @@ from factories import base_profile
 from aptum.modules.cv.ats.pipeline import generate_ats_cv
 from aptum.modules.cv.document import build_cv_data
 from aptum.modules.cv.docx_render import render_cv_docx
-from aptum.modules.cv.templates.software_engineer import SoftwareEngineerTemplate
+from aptum.modules.cv.markdown_render import render_cv_markdown
+from aptum.modules.cv.templates.modern import ModernTemplate
 
 PROJECT_URL = "https://github.com/example-alex/cli"
 PROJECT_URL_TEXT = "github.com/example-alex/cli"
@@ -24,8 +25,8 @@ def _basic(profile) -> str:
     return _squash(pdf_text(generate_ats_cv(profile).pdf))
 
 
-def _software_engineer(profile) -> str:
-    return _squash(pdf_text(SoftwareEngineerTemplate().render(build_cv_data(profile))))
+def _modern(profile) -> str:
+    return _squash(pdf_text(ModernTemplate().render(build_cv_data(profile))))
 
 
 def _docx(profile) -> str:
@@ -33,7 +34,11 @@ def _docx(profile) -> str:
     return _squash("".join(p.text for p in document.paragraphs))
 
 
-RENDERERS = {"basic": _basic, "software-engineer": _software_engineer, "docx": _docx}
+def _markdown(profile) -> str:
+    return _squash(render_cv_markdown(build_cv_data(profile)))
+
+
+RENDERERS = {"basic": _basic, "modern": _modern, "docx": _docx, "markdown": _markdown}
 
 
 def _with_urls(profile):
@@ -60,7 +65,6 @@ def _inactive(collection: str):
 
 def _years_only_education(profile):
     edu = profile.educations[0]
-    edu.start_date = edu.end_date = None
     edu.start_year, edu.end_year = 2008, 2012
 
 
@@ -86,3 +90,16 @@ def test_every_template_shows_and_hides_the_same_data(renderer, mutate, needle, 
     profile = base_profile()
     mutate(profile)
     assert (needle in renderer(profile)) is present
+
+
+@pytest.mark.parametrize("renderer", RENDERERS)
+def test_education_location_is_printed_by_every_template(renderer):
+    profile = base_profile()
+    profile.educations[0].location_city = "Lima"
+    profile.educations[0].location_country_code = "PE"
+    assert _squash("Lakeside University - Lima, Peru") in RENDERERS[renderer](profile)
+
+
+@pytest.mark.parametrize("renderer", RENDERERS)
+def test_education_without_location_prints_no_separator(renderer):
+    assert _squash("Lakeside University -") not in RENDERERS[renderer](base_profile())

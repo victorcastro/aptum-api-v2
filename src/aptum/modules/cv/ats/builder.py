@@ -1,5 +1,6 @@
 """Profile -> ATSDocument. Every value comes from the profile; nothing is generated here."""
 
+from aptum.common.countries import country_name
 from aptum.modules.cv.ats.document import (
     ATSCertification,
     ATSDocument,
@@ -21,9 +22,24 @@ def language_lines(profile: Profile) -> list[str]:
 
 
 def education_dates(edu: Education) -> str:
-    if edu.start_date or edu.end_date:
-        return format_range(edu.start_date, edu.end_date)
     return format_year_range(edu.start_year, edu.end_year)
+
+
+def education_location(edu: Education) -> str:
+    """`Lima, Peru`: the city and the country name, whichever are set."""
+    return ", ".join(part for part in (edu.location_city, country_name(edu.location_country_code)) if part)
+
+
+def _ats_education(edu: Education) -> ATSEducation:
+    location = education_location(edu)
+    place = " - ".join(part for part in (edu.institution, location) if part)
+    field = f", {edu.field_of_study}" if edu.field_of_study else ""
+    return ATSEducation(
+        title=f"{edu.degree.name}{field} - {place}",
+        institution=edu.institution,
+        dates=education_dates(edu),
+        location=location,
+    )
 
 
 def build_ats_document(profile: Profile, offer: str | None = None) -> ATSDocument:
@@ -57,11 +73,7 @@ def build_ats_document(profile: Profile, offer: str | None = None) -> ATSDocumen
             if exp.is_active
         ],
         educations=[
-            ATSEducation(
-                title=f"{edu.degree}{f', {edu.field_of_study}' if edu.field_of_study else ''} - {edu.institution}",
-                institution=edu.institution,
-                dates=education_dates(edu),
-            )
+            _ats_education(edu)
             for edu in profile.educations
             if edu.is_active
         ],
