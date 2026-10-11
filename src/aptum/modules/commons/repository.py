@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
 
-from aptum.modules.commons.models import Language, LanguageLevel
+from aptum.modules.commons.models import Degree, Language, LanguageLevel
 
 
 class CommonsRepository:
@@ -18,3 +18,9 @@ class CommonsRepository:
 
     def has_language_level(self, code: str) -> bool:
         return self.db.get(LanguageLevel, code) is not None
+
+    def list_degrees(self) -> list[Degree]:
+        return self.db.query(Degree).order_by(Degree.rank).all()
+
+    def has_degree(self, degree_id: int) -> bool:
+        return self.db.get(Degree, degree_id) is not None

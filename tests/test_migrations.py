@@ -108,6 +108,14 @@ def test_upgrade_backfills_and_downgrade_round_trips(engine):
     assert profile["open_to_relocation"] is False
     assert experience["area"] is None
 
+    with engine.connect() as conn:
+        degree = conn.execute(sa.text(  # free text that matches no catalog entry is added under Other
+            "SELECT degrees.name, degrees.level FROM educations JOIN degrees ON degrees.id = educations.degree_id"
+        )).one()
+        catalog_size = conn.execute(sa.text("SELECT count(*) FROM degrees")).scalar_one()
+    assert tuple(degree) == ("BSc", "Other")
+    assert catalog_size > 1
+
     with engine.begin() as conn, pytest.raises(sa.exc.IntegrityError):
         conn.execute(sa.text("UPDATE profile_skills SET category_id = 999 WHERE id = 1"))
     with engine.connect() as conn:

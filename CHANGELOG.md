@@ -4,6 +4,21 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 and the project follows [Semantic Versioning](https://semver.org/).
 
+## [1.10.0] - 2026-10-11
+
+### Added
+
+- `GET /cv/export/markdown`: the complete CV as Markdown, returned as `{filename, content}` (`CV-YYYY.MM-First_Last-YYYYMMDDHHMMSS.md`). Same active data and section order as `modern`, no 2-page trimming, links as `[label](url)`. It ignores the saved template.
+
+### Changed
+
+- `basic` CV template: the header (name, headline, contact, links) is left-aligned, and there is more space between sections, between experiences, education, certifications and projects, and between bullets. The header and project links print the full `https://` URL as visible text (the other templates keep the clean URL). Still one column of plain text, no lines. More spacing can make the 2-page limit trim more bullets on long CVs.
+- The `software-engineer` CV template is now `modern` (name `Modern`). `GET /cv/templates` lists `basic` and `modern`; `?template=` and `PATCH /cv/settings` take `modern`. A saved preference for the old id falls back to the default template (`basic`).
+- Education dates are years only: `start_date` and `end_date` are removed from education (create, update, read, CV and ATS exports). Use `start_year` and `end_year`. The migration copies each existing month date into its year before dropping the columns. Education is ordered by `end_year`.
+- Degrees are a catalog table `degrees` (`id`, `name`, `level`, `rank`). `GET /commons/degrees` lists them grouped by level as `{heading, options: [{id, name}]}`. Education takes `degree_id` (404 `Degree not found` if unknown) instead of the free-text `degree`, and returns both `degree_id` and `degree: {id, name}`. The migration matches each existing degree text to the catalog ignoring case and adds the ones that match nothing under the level `Other`.
+- Education: optional `location_city` and `location_country_code`, like experiences. All CV templates (PDF, DOCX and ATS) print them next to the institution (`Lakeside University - Lima, Peru`).
+- Education: `grade` is removed (create, update, read). The CV exports never printed it.
+
 ## [1.9.1] - 2026-10-10
 
 ### Changed

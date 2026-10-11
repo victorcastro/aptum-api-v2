@@ -27,6 +27,7 @@ from aptum.common.types import (
     RichTextLine,
     YearMonth,
 )
+from aptum.modules.commons.schemas import DegreeRead
 from aptum.modules.companies.schemas import CompanySummary
 from aptum.modules.skill_categories.schemas import SkillCategoryRef
 from aptum.modules.skills.schemas import SkillRead
@@ -217,33 +218,30 @@ class ExperienceUpdate(PartialUpdate):
 
 class EducationCreate(BaseModel):
     institution: str
-    degree: str
+    degree_id: int
     field_of_study: str | None = None
-    start_date: YearMonth | None = None
-    end_date: YearMonth | None = None
-    start_year: Year | None = Field(default=None, description="Year-only start, when the month is unknown.")
-    end_year: Year | None = Field(default=None, description="Year-only end (or expected graduation year).")
-    grade: str | None = None
+    location_city: str | None = None
+    location_country_code: CountryCode | None = None
+    start_year: Year | None = Field(default=None, description="Start year.")
+    end_year: Year | None = Field(default=None, description="End year (or expected graduation year).")
     is_active: bool = True
 
     @model_validator(mode="after")
     def _validate(self):
-        _check_range(self.start_date, self.end_date)
         _check_years(self.start_year, self.end_year)
         return self
 
 
 class EducationUpdate(PartialUpdate):
-    non_nullable = ("institution", "degree", "is_active")
+    non_nullable = ("institution", "degree_id", "is_active")
 
     institution: Annotated[str, Field(min_length=1, max_length=255)] | None = None
-    degree: Annotated[str, Field(min_length=1, max_length=255)] | None = None
+    degree_id: int | None = None
     field_of_study: str | None = None
-    start_date: YearMonth | None = None
-    end_date: YearMonth | None = None
+    location_city: str | None = None
+    location_country_code: CountryCode | None = None
     start_year: Year | None = None
     end_year: Year | None = None
-    grade: str | None = None
     is_active: bool | None = None
 
 
@@ -251,6 +249,7 @@ class EducationRead(EducationCreate):
     model_config = ConfigDict(from_attributes=True)
 
     id: int
+    degree: DegreeRead
 
 
 LanguageLevelCode = Annotated[

@@ -22,7 +22,7 @@ from aptum.modules.cv.ats.pipeline import generate_ats_cv
 from aptum.modules.cv.ats.years import years_of_experience
 from aptum.modules.cv.document import build_cv_data
 from aptum.modules.cv.docx_render import render_cv_docx
-from aptum.modules.cv.templates.software_engineer import SoftwareEngineerTemplate
+from aptum.modules.cv.templates.modern import ModernTemplate
 from aptum.modules.profile.schemas import ExperienceCreate, ExperienceUpdate
 
 TODAY = date(2026, 10, 1)
@@ -127,9 +127,9 @@ def _fonts(pdf: bytes) -> set[str]:
     "render",
     [
         lambda profile: generate_ats_cv(profile, today=TODAY).pdf,
-        lambda profile: SoftwareEngineerTemplate().render(build_cv_data(profile)),
+        lambda profile: ModernTemplate().render(build_cv_data(profile)),
     ],
-    ids=["basic", "software-engineer"],
+    ids=["basic", "modern"],
 )
 def test_pdf_prints_formatting_not_markers(render):
     pdf = render(_profile())

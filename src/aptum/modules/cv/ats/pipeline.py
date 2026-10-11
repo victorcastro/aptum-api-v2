@@ -14,7 +14,7 @@ from aptum.modules.cv.ats.fidelity import FidelityIssue, enforce_fidelity, profi
 from aptum.modules.cv.ats.keywords import KeywordCoverage, keyword_coverage
 from aptum.modules.cv.ats.report import CVWarning
 from aptum.modules.cv.ats.years import YearsOfExperience, years_of_experience
-from aptum.modules.cv.templates.ats import ATSTemplate
+from aptum.modules.cv.templates.basic import BasicTemplate
 from aptum.modules.profile.checks import duplicate_educations
 from aptum.modules.profile.models import Profile
 
@@ -33,7 +33,7 @@ class ATSResult:
 def generate_ats_cv(profile: Profile, offer: str | None = None, today: date | None = None) -> ATSResult:
     today = today or datetime.now(UTC).date()
     warnings: list[CVWarning] = []
-    template = ATSTemplate()
+    template = BasicTemplate()
     years = years_of_experience(profile.experiences, today)
     words = rules.offer_words(offer)
 

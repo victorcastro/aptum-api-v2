@@ -2,7 +2,7 @@ from dataclasses import dataclass
 
 from aptum.core.exceptions import NotFoundError
 from aptum.modules.cv.templates.base import CVTemplate
-from aptum.modules.cv.templates.software_engineer import SoftwareEngineerTemplate
+from aptum.modules.cv.templates.modern import ModernTemplate
 
 BASIC_TEMPLATE = "basic"
 DEFAULT_TEMPLATE = BASIC_TEMPLATE
@@ -23,13 +23,13 @@ _BASIC_INFO = TemplateInfo(
 )
 
 _TEMPLATES: dict[str, tuple[TemplateInfo, CVTemplate]] = {
-    "software-engineer": (
+    "modern": (
         TemplateInfo(
-            "software-engineer",
-            "Software Engineer",
+            "modern",
+            "Modern",
             "Plain black-on-white layout for ATS, technical skills grouped by category before experience.",
         ),
-        SoftwareEngineerTemplate(),
+        ModernTemplate(),
     ),
 }
 

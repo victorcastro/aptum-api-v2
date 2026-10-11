@@ -8,6 +8,7 @@ from aptum.core.exceptions import NotFoundError
 from aptum.modules.cv.ats.pipeline import ATSResult, generate_ats_cv
 from aptum.modules.cv.document import build_cv_data
 from aptum.modules.cv.docx_render import render_cv_docx
+from aptum.modules.cv.markdown_render import render_cv_markdown
 from aptum.modules.cv.schemas import (
     ATSReport,
     CVSettingsRead,
@@ -50,10 +51,16 @@ class CVService:
         return template.render(doc), self._filename(doc.full_name)
 
     def export_docx(self, user_id: int) -> tuple[bytes, str]:
-        """Editable Word CV of the authenticated user's own profile. Always the software-engineer
+        """Editable Word CV of the authenticated user's own profile. Always the modern
         layout, whatever template is saved. Returns the docx bytes and the download filename."""
         doc = build_cv_data(self.profiles.get_or_create(user_id))
         return render_cv_docx(doc), self._filename(doc.full_name, "docx")
+
+    def export_markdown(self, user_id: int) -> tuple[str, str]:
+        """The authenticated user's own CV as Markdown, complete (no page limit), whatever template is
+        saved. Returns the text and the download filename."""
+        doc = build_cv_data(self.profiles.get_or_create(user_id))
+        return render_cv_markdown(doc), self._filename(doc.full_name, "md")
 
     def generate_ats(self, user_id: int, job_description: str | None) -> tuple[ATSResult, str]:
         """ATS CV for the authenticated user's own profile, optionally tailored to a job offer."""

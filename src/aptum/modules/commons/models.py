@@ -22,3 +22,14 @@ class LanguageLevel(Base):
     name: Mapped[str] = mapped_column(String(40))
     description: Mapped[str] = mapped_column(String(255))
     rank: Mapped[int] = mapped_column(SmallInteger, unique=True)
+
+
+class Degree(Base):
+    """Degree names an education can point to, grouped by `level` and ordered by `rank`."""
+
+    __tablename__ = "degrees"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String(120), unique=True)
+    level: Mapped[str] = mapped_column(String(40))
+    rank: Mapped[int] = mapped_column(SmallInteger, unique=True)

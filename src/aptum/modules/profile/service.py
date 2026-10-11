@@ -38,7 +38,7 @@ _LABELS = {
 }
 
 _ORDER = {
-    Education: (Education.end_date.desc().nulls_first(), Education.id),
+    Education: (Education.end_year.desc().nulls_first(), Education.id),
     Certification: (Certification.issue_date.desc().nulls_last(), Certification.id),
     Project: (Project.start_date.desc().nulls_last(), Project.id),
     ProfileLanguage: (ProfileLanguage.level_rank.desc(), ProfileLanguage.language_code),
@@ -46,7 +46,6 @@ _ORDER = {
 }
 
 _DATE_RANGES = {
-    Education: ("start_date", "end_date"),
     Project: ("start_date", "end_date"),
     Certification: ("issue_date", "expiration_date"),
 }
@@ -168,6 +167,8 @@ class ProfileService:
             raise ConflictError("Language already added")
         if model is ProfileLanguage:
             self._check_language_catalog(fields)
+        if model is Education:
+            self._check_degree_catalog(fields)
         if model is ProfileSkill:
             catalog_skill = self.skills.get(fields["skill_id"])
             if catalog_skill is None:
@@ -186,6 +187,8 @@ class ProfileService:
             self._check_range(row, fields, "start_year", "end_year")
         if model is ProfileLanguage:
             self._check_language_catalog(fields)
+        if model is Education:
+            self._check_degree_catalog(fields)
         if model is ProfileSkill and "category_id" in fields:
             fields["category_id"] = self._resolve_category_id(row.profile_id, fields["category_id"])
         return self._save(self.repository.update_row(row, **fields))
@@ -208,6 +211,11 @@ class ProfileService:
         level = fields.get("proficiency")
         if level is not None and not self.commons.has_language_level(level):
             raise NotFoundError("Language level not found")
+
+    def _check_degree_catalog(self, fields: dict) -> None:
+        degree_id = fields.get("degree_id")
+        if degree_id is not None and not self.commons.has_degree(degree_id):
+            raise NotFoundError("Degree not found")
 
     def _resolve_skills(self, skill_ids: list[int]) -> list:
         skills = []
