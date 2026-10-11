@@ -6,6 +6,18 @@ class CountryRead(BaseModel):
     name: str
 
 
+class DegreeRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    name: str
+
+
+class DegreeGroupRead(BaseModel):
+    heading: str
+    options: list[DegreeRead]
+
+
 class LanguageOption(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 

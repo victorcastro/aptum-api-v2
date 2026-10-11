@@ -6,6 +6,8 @@ from aptum.core.dependencies import get_db
 from aptum.modules.commons.repository import CommonsRepository
 from aptum.modules.commons.schemas import (
     CountryRead,
+    DegreeGroupRead,
+    DegreeRead,
     LanguageLevelOption,
     LanguageOption,
 )
@@ -21,6 +23,16 @@ _COUNTRIES = [
 @router.get("/countries", response_model=list[CountryRead])
 def list_countries():
     return _COUNTRIES
+
+
+@router.get("/degrees", response_model=list[DegreeGroupRead])
+def list_degrees(db: Session = Depends(get_db)):
+    """Degrees an education can point to, grouped by level, in catalog order."""
+    groups: dict[str, DegreeGroupRead] = {}
+    for degree in CommonsRepository(db).list_degrees():
+        group = groups.setdefault(degree.level, DegreeGroupRead(heading=degree.level, options=[]))
+        group.options.append(DegreeRead.model_validate(degree))
+    return list(groups.values())
 
 
 @router.get("/languages", response_model=list[LanguageOption])

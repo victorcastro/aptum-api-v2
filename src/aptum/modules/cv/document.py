@@ -93,7 +93,7 @@ def build_cv_data(profile: Profile) -> CVDocument:
     )
     educations = tuple(
         EducationEntry(
-            title=f"{edu.degree}{f', {edu.field_of_study}' if edu.field_of_study else ''}",
+            title=f"{edu.degree.name}{f', {edu.field_of_study}' if edu.field_of_study else ''}",
             institution=edu.institution,
             dates=education_dates(edu),
         )

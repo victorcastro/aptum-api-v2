@@ -27,6 +27,7 @@ from aptum.common.types import (
     RichTextLine,
     YearMonth,
 )
+from aptum.modules.commons.schemas import DegreeRead
 from aptum.modules.companies.schemas import CompanySummary
 from aptum.modules.skill_categories.schemas import SkillCategoryRef
 from aptum.modules.skills.schemas import SkillRead
@@ -217,7 +218,7 @@ class ExperienceUpdate(PartialUpdate):
 
 class EducationCreate(BaseModel):
     institution: str
-    degree: str
+    degree_id: int
     field_of_study: str | None = None
     location_city: str | None = None
     location_country_code: CountryCode | None = None
@@ -232,10 +233,10 @@ class EducationCreate(BaseModel):
 
 
 class EducationUpdate(PartialUpdate):
-    non_nullable = ("institution", "degree", "is_active")
+    non_nullable = ("institution", "degree_id", "is_active")
 
     institution: Annotated[str, Field(min_length=1, max_length=255)] | None = None
-    degree: Annotated[str, Field(min_length=1, max_length=255)] | None = None
+    degree_id: int | None = None
     field_of_study: str | None = None
     location_city: str | None = None
     location_country_code: CountryCode | None = None
@@ -248,6 +249,7 @@ class EducationRead(EducationCreate):
     model_config = ConfigDict(from_attributes=True)
 
     id: int
+    degree: DegreeRead
 
 
 LanguageLevelCode = Annotated[

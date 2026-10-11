@@ -56,7 +56,7 @@ def build_ats_document(profile: Profile, offer: str | None = None) -> ATSDocumen
         ],
         educations=[
             ATSEducation(
-                title=f"{edu.degree}{f', {edu.field_of_study}' if edu.field_of_study else ''} - {edu.institution}",
+                title=f"{edu.degree.name}{f', {edu.field_of_study}' if edu.field_of_study else ''} - {edu.institution}",
                 institution=edu.institution,
                 dates=education_dates(edu),
             )

@@ -17,6 +17,8 @@ before being created, so it can run again at any time.
   (skills and industries only), to edit, assign or delete from /admin/roles.
 
 Runs the roles sync first, as the container does on start, so permissions and system roles exist.
+The language, language level and degree catalogs come from the migrations: run
+`uv run alembic upgrade head` first (the seeder stops with a message when they are empty).
 
 The three role users must exist in Firebase with these uids (and a verified email) to log in.
 """
@@ -37,6 +39,7 @@ from aptum.common.enums import (
 )
 from aptum.common.utils import normalize_name, slugify
 from aptum.db.session import SessionLocal
+from aptum.modules.commons.models import Degree, Language, LanguageLevel
 from aptum.modules.companies.models import Company, Industry
 from aptum.modules.cv.pdf import render_cv_pdf
 from aptum.modules.profile.models import (
@@ -145,6 +148,10 @@ def _profile_skill(db: Session, profile: Profile, skill: Skill, **fields) -> Pro
         db.add(category)
         db.flush()
     return ProfileSkill(skill_id=skill.id, category_id=category.id, **fields)
+
+
+def _degree(db: Session, name: str) -> Degree:
+    return db.query(Degree).filter(Degree.name == name).one()
 
 
 def _industry(db: Session, name: str) -> Industry:
@@ -381,7 +388,7 @@ def seed_demo_cv(db: Session, user: User, reset: bool) -> Profile | None:
     profile.educations = [
         Education(
             institution="Universidad Nacional de Ingenieria",
-            degree="BSc",
+            degree=_degree(db, "Bachelor of Science"),
             field_of_study="Computer Science",
             start_year=2013,
             end_year=2018,
@@ -550,14 +557,14 @@ def seed_admin_cv(db: Session, user: User, reset: bool) -> Profile | None:
     profile.educations = [
         Education(
             institution="Universidad Catolica San Pablo",
-            degree="BSc",
+            degree=_degree(db, "Bachelor of Science"),
             field_of_study="Systems Engineering",
             start_year=2007,
             end_year=2012,
         ),
         Education(
             institution="Pontificia Universidad Catolica del Peru",
-            degree="Postgraduate Diploma",
+            degree=_degree(db, "Postgraduate Diploma"),
             field_of_study="Cloud Architecture",
             start_year=2019,
             end_year=2020,
@@ -625,6 +632,17 @@ def seed_admin_cv(db: Session, user: User, reset: bool) -> Profile | None:
     return profile
 
 
+def check_catalogs(db: Session) -> None:
+    """The catalogs the demo CV points to are seeded by the migrations, not by this script."""
+    empty = [
+        name
+        for name, model in (("languages", Language), ("language_levels", LanguageLevel), ("degrees", Degree))
+        if db.query(model).first() is None
+    ]
+    if empty:
+        raise SystemExit(f"Empty catalogs: {', '.join(empty)}. Run `uv run alembic upgrade head` first.")
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--reset", action="store_true", help="Replace the demo CV of user@aptum.test")
@@ -632,6 +650,7 @@ def main() -> None:
     args = parser.parse_args()
 
     with SessionLocal() as db:
+        check_catalogs(db)
         for line in sync_roles(db):
             print(f"roles sync: {line}")
         seed_custom_role(db)

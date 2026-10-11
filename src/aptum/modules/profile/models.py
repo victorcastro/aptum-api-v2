@@ -35,7 +35,7 @@ from aptum.db.constraints import (
     in_values_check,
     month_precision_checks,
 )
-from aptum.modules.commons.models import Language, LanguageLevel
+from aptum.modules.commons.models import Degree, Language, LanguageLevel
 from aptum.modules.companies.models import Company
 from aptum.modules.skill_categories.models import SkillCategory
 from aptum.modules.skills.models import Skill
@@ -224,7 +224,7 @@ class Education(TimestampMixin, Base):
         ForeignKey("profiles.id", ondelete="CASCADE"), index=True
     )
     institution: Mapped[str] = mapped_column(String(255))
-    degree: Mapped[str] = mapped_column(String(255))
+    degree_id: Mapped[int] = mapped_column(ForeignKey("degrees.id", ondelete="RESTRICT"), index=True)
     field_of_study: Mapped[str | None] = mapped_column(String(255), default=None)
     location_city: Mapped[str | None] = mapped_column(String(120), default=None)
     location_country_code: Mapped[str | None] = mapped_column(String(2), default=None)
@@ -233,6 +233,7 @@ class Education(TimestampMixin, Base):
     is_active: Mapped[bool] = mapped_column(default=True, server_default=true())
 
     profile: Mapped["Profile"] = relationship(back_populates="educations")
+    degree: Mapped[Degree] = relationship(lazy="joined")
 
 
 class Certification(TimestampMixin, Base):

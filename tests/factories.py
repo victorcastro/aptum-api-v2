@@ -11,7 +11,7 @@ from types import SimpleNamespace
 from aptum.common.enums import UserRole
 from aptum.common.utils import normalize_name, slugify
 from aptum.core.permissions import DEFAULT_ROLE_PERMISSIONS
-from aptum.modules.commons.models import Language
+from aptum.modules.commons.models import Degree, Language
 from aptum.modules.companies.models import Company
 from aptum.modules.profile.models import (
     Certification,
@@ -206,7 +206,7 @@ def base_profile(**fields) -> Profile:
         Education(
             id=next(_ids),
             institution="Lakeside University",
-            degree="BSc",
+            degree=Degree(id=1, name="BSc", level="Undergraduate", rank=1),
             field_of_study="Computer Science",
             start_year=2008,
             end_year=2012,
