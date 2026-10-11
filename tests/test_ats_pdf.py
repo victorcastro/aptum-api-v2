@@ -66,7 +66,7 @@ def test_header_is_name_title_availability_contact_then_links():
         "Senior Software Engineer",
         "Toronto, Canada (EST) | Open to remote | Authorized to work in Canada | Open to relocation",
         "+1 555 0100 | alex.rivera@example.com",
-        "linkedin.com/in/example-alex | github.com/example-alex | alex.example.dev",
+        "https://www.linkedin.com/in/example-alex | https://github.com/example-alex | https://alex.example.dev",
     ]
 
 
