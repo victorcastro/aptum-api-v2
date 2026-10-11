@@ -85,7 +85,7 @@ def test_dates_are_consistent_mon_yyyy():
     lines = _lines(generate_ats_cv(_profile(), today=TODAY).pdf)
     date_lines = [line for line in lines if re.search(r"\b(19|20)\d{2}\b", line) and " - " in line and len(line) < 25]
     assert date_lines, "expected date lines"
-    pattern = re.compile(r"^[A-Z][a-z]{2} \d{4} - ([A-Z][a-z]{2} \d{4}|Present)$")
+    pattern = re.compile(r"^([A-Z][a-z]{2} \d{4} - ([A-Z][a-z]{2} \d{4}|Present)|\d{4} - \d{4})$")
     assert all(pattern.match(line) for line in date_lines), date_lines
     assert "Jan 2023 - Present" in lines
 
@@ -98,7 +98,6 @@ def test_languages_print_name_and_level_code():
 def test_education_year_fallback():
     profile = _profile()
     edu = profile.educations[0]
-    edu.start_date = edu.end_date = None
     edu.start_year, edu.end_year = 2008, 2012
     assert "2008 - 2012" in _lines(generate_ats_cv(profile, today=TODAY).pdf)
 

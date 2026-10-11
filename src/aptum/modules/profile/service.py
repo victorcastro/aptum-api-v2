@@ -38,7 +38,7 @@ _LABELS = {
 }
 
 _ORDER = {
-    Education: (Education.end_date.desc().nulls_first(), Education.id),
+    Education: (Education.end_year.desc().nulls_first(), Education.id),
     Certification: (Certification.issue_date.desc().nulls_last(), Certification.id),
     Project: (Project.start_date.desc().nulls_last(), Project.id),
     ProfileLanguage: (ProfileLanguage.level_rank.desc(), ProfileLanguage.language_code),
@@ -46,7 +46,6 @@ _ORDER = {
 }
 
 _DATE_RANGES = {
-    Education: ("start_date", "end_date"),
     Project: ("start_date", "end_date"),
     Certification: ("issue_date", "expiration_date"),
 }

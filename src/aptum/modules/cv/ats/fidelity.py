@@ -53,7 +53,6 @@ def profile_text_blocks(profile: Profile) -> list[str]:
 
 def _profile_dates(profile: Profile) -> list[date]:
     dates = [d for exp in profile.experiences for d in (exp.start_date, exp.end_date)]
-    dates += [d for edu in profile.educations for d in (edu.start_date, edu.end_date)]
     dates += [d for cert in profile.certifications for d in (cert.issue_date, cert.expiration_date)]
     dates += [d for project in profile.projects for d in (project.start_date, project.end_date)]
     return [d for d in dates if d]

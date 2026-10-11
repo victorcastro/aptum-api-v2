@@ -85,7 +85,7 @@ class Profile(TimestampMixin, Base):
     )
     educations: Mapped[list["Education"]] = relationship(
         back_populates="profile",
-        order_by="Education.end_date.desc().nulls_first()",
+        order_by="Education.end_year.desc().nulls_first()",
         **_OWNED,
     )
     languages: Mapped[list["ProfileLanguage"]] = relationship(
@@ -214,8 +214,6 @@ class ExperienceSkill(Base):
 class Education(TimestampMixin, Base):
     __tablename__ = "educations"
     __table_args__ = (
-        date_range_check(),
-        *month_precision_checks("start_date", "end_date"),
         CheckConstraint(
             "start_year IS NULL OR end_year IS NULL OR end_year >= start_year", name="year_range"
         ),
@@ -228,9 +226,6 @@ class Education(TimestampMixin, Base):
     institution: Mapped[str] = mapped_column(String(255))
     degree: Mapped[str] = mapped_column(String(255))
     field_of_study: Mapped[str | None] = mapped_column(String(255), default=None)
-    start_date: Mapped[date | None] = mapped_column(Date, default=None)
-    end_date: Mapped[date | None] = mapped_column(Date, default=None)
-    # Year-only alternative for when the month is unknown; the CV prefers the month dates.
     start_year: Mapped[int | None] = mapped_column(SmallInteger, default=None)
     end_year: Mapped[int | None] = mapped_column(SmallInteger, default=None)
     grade: Mapped[str | None] = mapped_column(String(80), default=None)

@@ -4,6 +4,12 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 and the project follows [Semantic Versioning](https://semver.org/).
 
+## [1.10.0] - 2026-10-11
+
+### Changed
+
+- Education dates are years only: `start_date` and `end_date` are removed from education (create, update, read, CV and ATS exports). Use `start_year` and `end_year`. The migration copies each existing month date into its year before dropping the columns. Education is ordered by `end_year`.
+
 ## [1.9.1] - 2026-10-10
 
 ### Changed

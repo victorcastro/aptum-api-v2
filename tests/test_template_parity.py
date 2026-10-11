@@ -60,7 +60,6 @@ def _inactive(collection: str):
 
 def _years_only_education(profile):
     edu = profile.educations[0]
-    edu.start_date = edu.end_date = None
     edu.start_year, edu.end_year = 2008, 2012
 
 

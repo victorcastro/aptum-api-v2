@@ -21,8 +21,6 @@ def language_lines(profile: Profile) -> list[str]:
 
 
 def education_dates(edu: Education) -> str:
-    if edu.start_date or edu.end_date:
-        return format_range(edu.start_date, edu.end_date)
     return format_year_range(edu.start_year, edu.end_year)
 
 

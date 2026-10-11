@@ -383,8 +383,8 @@ def seed_demo_cv(db: Session, user: User, reset: bool) -> Profile | None:
             institution="Universidad Nacional de Ingenieria",
             degree="BSc",
             field_of_study="Computer Science",
-            start_date=date(2013, 3, 1),
-            end_date=date(2018, 12, 1),
+            start_year=2013,
+            end_year=2018,
         )
     ]
     profile.skills = [
@@ -552,15 +552,15 @@ def seed_admin_cv(db: Session, user: User, reset: bool) -> Profile | None:
             institution="Universidad Catolica San Pablo",
             degree="BSc",
             field_of_study="Systems Engineering",
-            start_date=date(2007, 3, 1),
-            end_date=date(2012, 12, 1),
+            start_year=2007,
+            end_year=2012,
         ),
         Education(
             institution="Pontificia Universidad Catolica del Peru",
             degree="Postgraduate Diploma",
             field_of_study="Cloud Architecture",
-            start_date=date(2019, 4, 1),
-            end_date=date(2020, 3, 1),
+            start_year=2019,
+            end_year=2020,
         ),
     ]
     profile.skills = [

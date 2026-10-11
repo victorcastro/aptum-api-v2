@@ -208,8 +208,8 @@ def base_profile(**fields) -> Profile:
             institution="Lakeside University",
             degree="BSc",
             field_of_study="Computer Science",
-            start_date=date(2008, 3, 1),
-            end_date=date(2012, 12, 1),
+            start_year=2008,
+            end_year=2012,
             is_active=True,
         )
     ]
