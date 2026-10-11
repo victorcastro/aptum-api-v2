@@ -101,6 +101,8 @@ The ATS CV is the default for every user; there is no switch.
   no tables/images/icons/lines, standard headings (Summary, Experience, Skills, Education,
   Certifications, Projects, Languages), `Mon YYYY - Mon YYYY` dates, at most 2 pages. An
   explicit `?template=<id>` applies to that download only (`basic` or `modern`).
+- `GET /cv/export/markdown` returns `{filename, content}`: the complete CV (no page limit) as Markdown,
+  same data and section order as `modern`, to show, copy or save as `.md` for another AI agent.
 - `POST /cv/ats/export` with `{"job_description": "..."}` (optional) renders the ATS PDF tailored to
   the offer: offer-relevant skills first (max 25), only skills from the profile.
 - `POST /cv/ats/report` with the same body returns the JSON report of that same CV:

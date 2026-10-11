@@ -10,6 +10,13 @@ class CVTemplateOut(BaseModel):
     selected: bool
 
 
+class CVMarkdownOut(BaseModel):
+    """The CV as Markdown text, to show, copy or save as a `.md` file."""
+
+    filename: str
+    content: str
+
+
 class CVSettingsRead(BaseModel):
     """`template_id` is the template `/cv/export` uses by default: the saved one, or `basic`."""
 

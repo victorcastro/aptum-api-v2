@@ -6,6 +6,10 @@ and the project follows [Semantic Versioning](https://semver.org/).
 
 ## [1.10.0] - 2026-10-11
 
+### Added
+
+- `GET /cv/export/markdown`: the complete CV as Markdown, returned as `{filename, content}` (`CV-YYYY.MM-First_Last-YYYYMMDDHHMMSS.md`). Same active data and section order as `modern`, no 2-page trimming, links as `[label](url)`. It ignores the saved template.
+
 ### Changed
 
 - `basic` CV template: the header (name, headline, contact, links) is left-aligned, and there is more space between sections, between experiences, education, certifications and projects, and between bullets. The header and project links print the full `https://` URL as visible text (the other templates keep the clean URL). Still one column of plain text, no lines. More spacing can make the 2-page limit trim more bullets on long CVs.

@@ -8,6 +8,7 @@ from factories import base_profile
 from aptum.modules.cv.ats.pipeline import generate_ats_cv
 from aptum.modules.cv.document import build_cv_data
 from aptum.modules.cv.docx_render import render_cv_docx
+from aptum.modules.cv.markdown_render import render_cv_markdown
 from aptum.modules.cv.templates.modern import ModernTemplate
 
 PROJECT_URL = "https://github.com/example-alex/cli"
@@ -33,7 +34,11 @@ def _docx(profile) -> str:
     return _squash("".join(p.text for p in document.paragraphs))
 
 
-RENDERERS = {"basic": _basic, "modern": _modern, "docx": _docx}
+def _markdown(profile) -> str:
+    return _squash(render_cv_markdown(build_cv_data(profile)))
+
+
+RENDERERS = {"basic": _basic, "modern": _modern, "docx": _docx, "markdown": _markdown}
 
 
 def _with_urls(profile):

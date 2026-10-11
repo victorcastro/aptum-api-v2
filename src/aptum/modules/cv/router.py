@@ -7,6 +7,7 @@ from aptum.core.dependencies import get_current_user, get_db
 from aptum.modules.cv.schemas import (
     ATSGenerateRequest,
     ATSReport,
+    CVMarkdownOut,
     CVSettingsRead,
     CVSettingsUpdate,
     CVTemplateOut,
@@ -98,6 +99,16 @@ def export_cv(
         media_type=media_type,
         headers={"Content-Disposition": f'attachment; filename="{filename}"'},
     )
+
+
+@router.get("/export/markdown", response_model=CVMarkdownOut)
+def export_cv_markdown(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> CVMarkdownOut:
+    """The complete CV as Markdown text, to show, copy or download as `.md` and hand to another AI agent."""
+    content, filename = CVService(db).export_markdown(current_user.id)
+    return CVMarkdownOut(filename=filename, content=content)
 
 
 @router.post(

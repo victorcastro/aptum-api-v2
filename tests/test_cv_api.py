@@ -66,6 +66,15 @@ def test_docx_export_returns_an_editable_word_file(client, profile):
     assert response.content.startswith(b"PK")
 
 
+def test_markdown_export_returns_the_cv_as_text(client, profile):
+    response = client.get("/cv/export/markdown")
+    assert response.status_code == 200
+    body = response.json()
+    assert body["filename"].startswith("CV-") and "-Alex_Rivera-" in body["filename"]
+    assert body["filename"].endswith(".md")
+    assert body["content"].startswith("# Alex Rivera\n")
+
+
 def test_unknown_export_format_is_rejected(client):
     assert client.get("/cv/export", params={"format": "xml"}).status_code == 422
 
