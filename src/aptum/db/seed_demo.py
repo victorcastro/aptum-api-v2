@@ -32,10 +32,10 @@ from sqlalchemy.orm import Session
 from aptum.common.enums import (
     EmploymentType,
     ExperienceArea,
-    SkillLevel,
     UserRole,
     WorkAuthorization,
     WorkMode,
+    WorkPreference,
 )
 from aptum.common.utils import normalize_name, slugify
 from aptum.db.session import SessionLocal
@@ -278,19 +278,29 @@ def seed_demo_cv(db: Session, user: User, reset: bool) -> Profile | None:
 
     profile.summary = (
         "Backend engineer with 8 years of experience building APIs and data platforms for "
-        "banking and e-commerce. Focused on clean architecture, observability and mentoring."
+        "banking and e-commerce. Focused on clean architecture, observability and mentoring.\n\n"
+        "I have led the design of payment and onboarding services that handle millions of requests "
+        "a day, cutting p95 latency by 40% and incident volume by half through tracing, structured "
+        "logging and clear service boundaries. I am comfortable owning a system end to end, from "
+        "the data model and the API contract to deployment, monitoring and on-call.\n\n"
+        "Outside delivery work I mentor mid-level engineers, run code review and design review "
+        "sessions, and write the documentation and runbooks that let new teammates ship in their "
+        "first week. I enjoy working with product and data teams to turn ambiguous problems into "
+        "simple, reliable and well-tested solutions."
     )
     profile.phone = "+51 999 888 777"
     profile.contact_email = "ana.torres@example.com"
-    profile.city = "Lima"
-    profile.country_code = "PE"
+    profile.based_in = "PE"
+    profile.timezone_label = "PET"
+    profile.preferred_template = "modern"
     profile.links = [
         {"kind": "linkedin", "label": "LinkedIn", "url": "https://linkedin.com/in/ana-torres-demo", "visible": True},
         {"kind": "github", "label": "GitHub", "url": "https://github.com/ana-torres-demo", "visible": True},
     ]
     profile.work_authorization = WorkAuthorization.requires_sponsorship
     profile.work_authorization_country = "CA"
-    profile.open_to_relocation = True
+    profile.available_immediately = True
+    profile.work_preferences = [WorkPreference.remote, WorkPreference.relocation]
 
     profile.experiences = [
         Experience(
@@ -337,11 +347,13 @@ def seed_demo_cv(db: Session, user: User, reset: bool) -> Profile | None:
             employer_id=rappi.id,
             employment_type=EmploymentType.full_time,
             work_mode=WorkMode.remote,
+            location_city="Lima",
             location_country_code="PE",
             start_date=date(2018, 6, 1),
             end_date=date(2020, 8, 1),
             is_current=False,
             area=ExperienceArea.backend,
+            description="Delivery and order tracking platform for a Latin American super app.",
             functions=[
                 ExperienceFunction(description="Built the order tracking API used by 5 countries."),
                 ExperienceFunction(description="Migrated services to AWS with Docker and CI/CD."),
@@ -378,6 +390,7 @@ def seed_demo_cv(db: Session, user: User, reset: bool) -> Profile | None:
             end_date=date(2016, 12, 1),
             is_current=False,
             area=ExperienceArea.other,
+            description="Internal tooling and billing support for the largest telecom operator in Peru.",
             functions=[
                 ExperienceFunction(description="Automated internal reports with Python scripts."),
                 ExperienceFunction(description="Fixed defects in a customer billing tool."),
@@ -394,15 +407,27 @@ def seed_demo_cv(db: Session, user: User, reset: bool) -> Profile | None:
             field_of_study="Computer Science",
             start_year=2013,
             end_year=2018,
-        )
+        ),
+        Education(
+            institution="Universidad del Pacifico",
+            location_city="Lima",
+            location_country_code="PE",
+            degree=_degree(db, "Postgraduate Diploma"),
+            field_of_study="Data Engineering",
+            start_year=2021,
+            end_year=2022,
+        ),
     ]
     profile.skills = [
-        _profile_skill(db, profile, python, level=SkillLevel.expert, years_experience=8),
-        _profile_skill(db, profile, fastapi, level=SkillLevel.advanced, years_experience=4),
-        _profile_skill(db, profile, postgres, level=SkillLevel.advanced, years_experience=7),
-        _profile_skill(db, profile, docker, level=SkillLevel.advanced, years_experience=6),
-        _profile_skill(db, profile, aws, level=SkillLevel.intermediate, years_experience=4),
-        _profile_skill(db, profile, react, level=SkillLevel.beginner, years_experience=1),
+        _profile_skill(db, profile, python),
+        _profile_skill(db, profile, fastapi),
+        _profile_skill(db, profile, postgres),
+        _profile_skill(db, profile, docker),
+        _profile_skill(db, profile, aws),
+        _profile_skill(db, profile, java),
+        _profile_skill(db, profile, kafka),
+        _profile_skill(db, profile, redis),
+        _profile_skill(db, profile, react),
     ]
     profile.languages = [
         ProfileLanguage(language_code="es", proficiency="Native"),
@@ -483,12 +508,19 @@ def seed_admin_cv(db: Session, user: User, reset: bool) -> Profile | None:
     profile.summary = (
         "Platform engineer and technical lead with 12 years of experience running cloud infrastructure, "
         "developer platforms and data pipelines for fintech and e-commerce. Focused on reliability, "
-        "cost control and growing engineering teams."
+        "cost control and growing engineering teams.\n\n"
+        "I have built and run multi-region Kubernetes and Terraform platforms serving dozens of "
+        "product teams, reaching 99.95% availability while lowering the monthly cloud bill by 30% "
+        "through right-sizing, autoscaling and reserved capacity. I introduced self-service "
+        "pipelines, golden paths and SLO-based alerting that reduced lead time from days to hours.\n\n"
+        "As a technical lead I have hired and grown teams of up to ten engineers, set the "
+        "engineering roadmap with product and finance, and coached people into senior and staff "
+        "roles. I value blameless postmortems, written decisions and pragmatic architecture that "
+        "the whole team can operate."
     )
     profile.phone = "+51 987 654 321"
     profile.contact_email = "lucia.vargas@example.com"
-    profile.city = "Arequipa"
-    profile.country_code = "PE"
+    profile.based_in = "PE"
     profile.links = [
         {"kind": "linkedin", "label": "LinkedIn", "url": "https://linkedin.com/in/lucia-vargas-demo", "visible": True},
         {"kind": "github", "label": "GitHub", "url": "https://github.com/lucia-vargas-demo", "visible": True},
@@ -496,7 +528,6 @@ def seed_admin_cv(db: Session, user: User, reset: bool) -> Profile | None:
     ]
     profile.work_authorization = WorkAuthorization.authorized
     profile.work_authorization_country = "PE"
-    profile.open_to_relocation = False
 
     profile.experiences = [
         Experience(
@@ -577,15 +608,15 @@ def seed_admin_cv(db: Session, user: User, reset: bool) -> Profile | None:
         ),
     ]
     profile.skills = [
-        _profile_skill(db, profile, aws, level=SkillLevel.expert, years_experience=9),
-        _profile_skill(db, profile, terraform, level=SkillLevel.expert, years_experience=6),
-        _profile_skill(db, profile, kubernetes, level=SkillLevel.advanced, years_experience=6),
-        _profile_skill(db, profile, docker, level=SkillLevel.expert, years_experience=9),
-        _profile_skill(db, profile, python, level=SkillLevel.advanced, years_experience=10),
-        _profile_skill(db, profile, postgres, level=SkillLevel.advanced, years_experience=10),
-        _profile_skill(db, profile, java, level=SkillLevel.intermediate, years_experience=5),
-        _profile_skill(db, profile, fastapi, level=SkillLevel.intermediate, years_experience=3),
-        _profile_skill(db, profile, react, level=SkillLevel.beginner, years_experience=1),
+        _profile_skill(db, profile, aws),
+        _profile_skill(db, profile, terraform),
+        _profile_skill(db, profile, kubernetes),
+        _profile_skill(db, profile, docker),
+        _profile_skill(db, profile, python),
+        _profile_skill(db, profile, postgres),
+        _profile_skill(db, profile, java),
+        _profile_skill(db, profile, fastapi),
+        _profile_skill(db, profile, react),
     ]
     profile.languages = [
         ProfileLanguage(language_code="es", proficiency="Native"),

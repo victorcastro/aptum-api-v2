@@ -176,7 +176,7 @@ def test_matching_prompt_has_locked_years():
 def test_availability_line_sits_in_the_header_and_never_mentions_sponsorship(client, profile, params):
     profile.work_authorization = "requires_sponsorship"
     profile.work_authorization_country = "PE"
-    profile.open_to_relocation = True
+    profile.work_preferences = ["relocation"]
     lines = [line.strip() for line in pdf_text(client.get("/cv/export", params=params).content).splitlines()]
-    assert lines[2] == "Toronto, Canada | Open to relocation"
+    assert lines[2] == "Based in Canada | Open to relocation"
     assert not any("sponsorship" in line.lower() for line in lines)

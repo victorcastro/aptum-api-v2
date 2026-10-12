@@ -20,9 +20,11 @@ from aptum.modules.profile.schemas import (
     ExperienceUpdate,
     ProfileSkillGroup,
     ProfileSkillItem,
+    ProfileSkillOrder,
     ProfileSkillsGrouped,
     ProfileUpdate,
 )
+from aptum.modules.skill_categories import policy
 from aptum.modules.skill_categories.models import print_order
 from aptum.modules.skill_categories.repository import SkillCategoryRepository
 from aptum.modules.skill_categories.schemas import SkillCategoryRef
@@ -42,7 +44,7 @@ _ORDER = {
     Certification: (Certification.issue_date.desc().nulls_last(), Certification.id),
     Project: (Project.start_date.desc().nulls_last(), Project.id),
     ProfileLanguage: (ProfileLanguage.level_rank.desc(), ProfileLanguage.language_code),
-    ProfileSkill: (ProfileSkill.id,),
+    ProfileSkill: (ProfileSkill.position, ProfileSkill.id),
 }
 
 _DATE_RANGES = {
@@ -51,12 +53,17 @@ _DATE_RANGES = {
 }
 
 
+def _next_skill_position(skills, category_id: int | None) -> int:
+    """The slot after the last skill of the category."""
+    return max((skill.position for skill in skills if skill.category_id == category_id), default=0) + 1
+
+
 def group_skills(rows: list[ProfileSkill]) -> ProfileSkillsGrouped:
     """Groups by CV category in category `position` order, `Other` (no category) last; empty
-    groups are left out and each group is sorted by skill name, case-insensitive."""
+    groups are left out and each group follows the user's skill `position`, then `id`."""
     by_category: dict[int | None, list[ProfileSkillItem]] = {}
     categories = {}
-    for row in rows:
+    for row in sorted(rows, key=lambda row: (row.position or 0, row.id)):
         key = row.category.id if row.category else None
         if row.category:
             categories[key] = row.category
@@ -65,14 +72,12 @@ def group_skills(rows: list[ProfileSkill]) -> ProfileSkillsGrouped:
                 id=row.id,
                 skill_id=row.skill_id,
                 name=row.skill.name,
-                level=row.level,
-                years_experience=row.years_experience,
             )
         )
     groups = [
         ProfileSkillGroup(
             category=SkillCategoryRef(id=category.id, name=category.name),
-            skills=sorted(by_category[category.id], key=lambda s: (s.name.casefold(), s.id)),
+            skills=by_category[category.id],
         )
         for category in sorted(categories.values(), key=print_order)
     ]
@@ -80,7 +85,7 @@ def group_skills(rows: list[ProfileSkill]) -> ProfileSkillsGrouped:
         groups.append(
             ProfileSkillGroup(
                 category=None,
-                skills=sorted(by_category[None], key=lambda s: (s.name.casefold(), s.id)),
+                skills=by_category[None],
             )
         )
     return ProfileSkillsGrouped(total=len(rows), groups=groups)
@@ -158,6 +163,17 @@ class ProfileService:
     def list_skills_grouped(self, user_id: int) -> ProfileSkillsGrouped:
         return group_skills(self.list_rows(user_id, ProfileSkill))
 
+    def reorder_skills(self, user_id: int, data: ProfileSkillOrder) -> ProfileSkillsGrouped:
+        profile = self._get_owned(user_id)
+        category_id = self._resolve_category_id(profile.id, data.category_id)
+        rows = [skill for skill in profile.skills if skill.category_id == category_id]
+        policy.check_skill_order(data.ids, [skill.id for skill in rows])
+        by_id = {skill.id: skill for skill in rows}
+        for position, skill_id in enumerate(data.ids, start=1):
+            by_id[skill_id].position = position
+        self.db.commit()
+        return self.list_skills_grouped(user_id)
+
     def add_row(self, user_id: int, model: type[Base], data: BaseModel):
         profile = self._get_owned(user_id)
         fields = data.model_dump()
@@ -176,6 +192,7 @@ class ProfileService:
             if any(skill.skill_id == fields["skill_id"] for skill in profile.skills):
                 raise ConflictError("Skill already added")
             fields["category_id"] = self._resolve_category_id(profile.id, fields.get("category_id"))
+            fields["position"] = _next_skill_position(profile.skills, fields["category_id"])
         return self._save(self.repository.add_row(model, profile, **fields))
 
     def update_row(self, user_id: int, model: type[Base], row_id: int, data: BaseModel):
@@ -191,6 +208,9 @@ class ProfileService:
             self._check_degree_catalog(fields)
         if model is ProfileSkill and "category_id" in fields:
             fields["category_id"] = self._resolve_category_id(row.profile_id, fields["category_id"])
+            if fields["category_id"] != row.category_id:
+                siblings = [skill for skill in self._get_owned(user_id).skills if skill is not row]
+                fields["position"] = _next_skill_position(siblings, fields["category_id"])
         return self._save(self.repository.update_row(row, **fields))
 
     def delete_row(self, user_id: int, model: type[Base], row_id: int) -> None:

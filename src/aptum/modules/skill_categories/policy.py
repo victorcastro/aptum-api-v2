@@ -9,3 +9,9 @@ def check_order(ids: Sequence[int], current_ids: Sequence[int]) -> None:
     """The new order must list every category of the profile exactly once."""
     if len(set(ids)) != len(ids) or set(ids) != set(current_ids):
         raise AptumError("ids must list every skill category exactly once")
+
+
+def check_skill_order(ids: Sequence[int], current_ids: Sequence[int]) -> None:
+    """The new order must list every skill of the category exactly once."""
+    if len(set(ids)) != len(ids) or set(ids) != set(current_ids):
+        raise AptumError("ids must list every skill of the category exactly once")

@@ -105,7 +105,7 @@ def test_upgrade_backfills_and_downgrade_round_trips(engine):
         "Node.js": "Backend",
     }
     # New profile fields are optional: existing rows keep working with NULLs / defaults.
-    assert profile["open_to_relocation"] is False
+    assert profile["work_preferences"] == [] and profile["available_immediately"] is False
     assert experience["area"] is None
 
     with engine.connect() as conn:

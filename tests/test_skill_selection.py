@@ -24,21 +24,11 @@ def test_recently_used_skills_come_first():
     ]
 
 
-def test_level_and_years_break_ties_before_alphabetical():
-    skills = [
-        profile_skill("Alpha"),
-        profile_skill("Beta", level="intermediate"),
-        profile_skill("Gamma", level="expert"),
-        profile_skill("Delta", level="intermediate", years_experience=6),
-    ]
-    assert _names(select_skills(skills)) == ["Gamma", "Delta", "Beta", "Alpha"]
-
-
-def test_recency_beats_level():
-    old = experience("Dev", "A", date(2015, 1, 1), date(2016, 1, 1), [], skills=["Java"])
-    new = experience("Dev", "B", date(2022, 1, 1), None, [], skills=["Go"])
-    skills = [profile_skill("Java", level="expert"), profile_skill("Go", level="beginner")]
-    assert _names(select_skills(skills, experiences=[old, new])) == ["Go", "Java"]
+def test_recency_beats_alphabetical():
+    old = experience("Dev", "A", date(2015, 1, 1), date(2016, 1, 1), [], skills=["Ada"])
+    new = experience("Dev", "B", date(2022, 1, 1), None, [], skills=["Zig"])
+    skills = [profile_skill("Ada"), profile_skill("Zig")]
+    assert _names(select_skills(skills, experiences=[old, new])) == ["Zig", "Ada"]
 
 
 def test_inactive_experiences_are_not_evidence():
@@ -110,3 +100,13 @@ def test_other_is_the_last_line_even_before_any_category():
     skills = [profile_skill("Excel", category="Other"), profile_skill("Swift", category="Mobile")]
     assert [line.render() for line in skill_lines(select_skills(skills))] == ["Mobile: Swift", "Other: Excel"]
     assert select_skills([profile_skill("Excel", category="Other")])[0].category is None
+
+
+def test_skills_print_in_the_users_order_inside_their_category_line():
+    skills = [
+        profile_skill("Alpha", category="Backend", position=3),
+        profile_skill("Beta", category="Backend", position=1),
+        profile_skill("Gamma", category="Backend", position=2),
+    ]
+    lines = skill_lines(select_skills(skills))
+    assert [line.names for line in lines] == [("Beta", "Gamma", "Alpha")]

@@ -7,6 +7,13 @@ class WorkMode(StrEnum):
     hybrid = "hybrid"
 
 
+class WorkPreference(StrEnum):
+    remote = "remote"
+    onsite = "onsite"
+    hybrid = "hybrid"
+    relocation = "relocation"
+
+
 class EmploymentType(StrEnum):
     full_time = "full_time"
     part_time = "part_time"
@@ -16,13 +23,6 @@ class EmploymentType(StrEnum):
     internship = "internship"
     apprenticeship = "apprenticeship"
     temporary = "temporary"
-
-
-class SkillLevel(StrEnum):
-    beginner = "beginner"
-    intermediate = "intermediate"
-    advanced = "advanced"
-    expert = "expert"
 
 
 class LinkKind(StrEnum):
