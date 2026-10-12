@@ -16,9 +16,9 @@ from aptum.common.enums import (
     EmploymentType,
     ExperienceArea,
     LinkKind,
-    SkillLevel,
     WorkAuthorization,
     WorkMode,
+    WorkPreference,
 )
 from aptum.common.types import (
     CountryCode,
@@ -101,16 +101,16 @@ ProfileLinks = Annotated[
 ]
 
 
-def _dedupe_modes(modes: list[WorkMode]) -> list[WorkMode]:
+def _dedupe_modes(modes: list[WorkPreference]) -> list[WorkPreference]:
     return list(dict.fromkeys(modes))
 
 
 WorkPreferences = Annotated[
-    list[WorkMode],
+    list[WorkPreference],
     AfterValidator(_dedupe_modes),
     Field(
         description="Work modes the user is open to. The CV prints `Open to remote`, `Open to remote or "
-        "hybrid` or `Open to hybrid`; `onsite` alone prints nothing. Repeats are dropped.",
+        "hybrid`, `Open to remote or relocation` and so on; `onsite` alone prints nothing. Repeats are dropped.",
         examples=[["remote", "hybrid"]],
     ),
 ]
@@ -281,16 +281,12 @@ class LanguageRead(LanguageCreate):
 
 class ProfileSkillCreate(BaseModel):
     skill_id: int
-    level: SkillLevel | None = None
-    years_experience: Annotated[int, Field(ge=0, le=80)] | None = None
     category_id: int | None = Field(
         default=None, description="One of the caller's CV groups (`GET /profile/me/skill-categories`). Omitted or null: `Other`."
     )
 
 
 class ProfileSkillUpdate(PartialUpdate):
-    level: SkillLevel | None = None
-    years_experience: Annotated[int, Field(ge=0, le=80)] | None = None
     category_id: int | None = Field(
         default=None, description="One of the caller's CV groups (`GET /profile/me/skill-categories`). `null` moves it to `Other`."
     )
@@ -301,8 +297,6 @@ class ProfileSkillRead(BaseModel):
 
     id: int
     skill: SkillRead
-    level: SkillLevel | None
-    years_experience: int | None
     category: SkillCategoryRef | None = Field(description="The CV group; null is `Other`.")
 
 
@@ -312,8 +306,16 @@ class ProfileSkillItem(BaseModel):
     id: int
     skill_id: int
     name: str
-    level: SkillLevel | None
-    years_experience: int | None
+
+
+class ProfileSkillOrder(BaseModel):
+    category_id: int | None = Field(
+        default=None, description="The CV group whose skills are ordered; null is `Other`."
+    )
+    ids: Annotated[
+        list[int],
+        Field(min_length=1, description="Every profile skill id of that group, in the new order."),
+    ]
 
 
 class ProfileSkillGroup(BaseModel):
@@ -410,7 +412,7 @@ class ProjectRead(BaseModel):
 
 
 class ProfileUpdate(PartialUpdate):
-    non_nullable = ("open_to_relocation", "links", "work_preferences")
+    non_nullable = ("available_immediately", "links", "work_preferences")
 
     first_name: str | None = None
     last_name: str | None = None
@@ -418,14 +420,13 @@ class ProfileUpdate(PartialUpdate):
     summary: RichText | None = None
     phone: str | None = None
     contact_email: str | None = None
-    city: str | None = None
-    country_code: CountryCode | None = None
+    based_in: CountryCode | None = None
     links: ProfileLinks | None = None
     work_authorization: WorkAuthorization | None = None
     work_authorization_country: CountryCode | None = Field(
         default=None, description="Country the authorization or relocation refers to."
     )
-    open_to_relocation: bool | None = None
+    available_immediately: bool | None = None
     work_preferences: WorkPreferences | None = None
     timezone_label: TimezoneLabel = None
 
@@ -441,13 +442,12 @@ class ProfileRead(BaseModel):
     summary: str | None
     phone: str | None
     contact_email: str | None
-    city: str | None
-    country_code: str | None
+    based_in: str | None
     links: list[ProfileLink] = []
     work_authorization: WorkAuthorization | None = None
     work_authorization_country: str | None = None
-    open_to_relocation: bool = False
-    work_preferences: list[WorkMode] = []
+    available_immediately: bool = False
+    work_preferences: list[WorkPreference] = []
     timezone_label: str | None = None
     experiences: list[ExperienceRead] = []
     educations: list[EducationRead] = []

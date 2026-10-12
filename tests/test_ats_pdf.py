@@ -59,12 +59,12 @@ def test_nothing_is_an_image_or_table_and_only_header_links_are_annotations():
 
 
 def test_header_is_name_title_availability_contact_then_links():
-    profile = _profile(open_to_relocation=True, timezone_label="EST", work_preferences=["remote"])
+    profile = _profile(timezone_label="EST", work_preferences=["remote", "relocation"])
     lines = _lines(generate_ats_cv(profile, today=TODAY).pdf)
     assert lines[: lines.index("SUMMARY")] == [
         "Alex Rivera",
         "Senior Software Engineer",
-        "Toronto, Canada (EST) | Open to remote | Authorized to work in Canada | Open to relocation",
+        "Based in Canada (EST) | Open to remote or relocation | Authorized to work in Canada",
         "+1 555 0100 | alex.rivera@example.com",
         "https://www.linkedin.com/in/example-alex | https://github.com/example-alex | https://alex.example.dev",
     ]
@@ -73,7 +73,7 @@ def test_header_is_name_title_availability_contact_then_links():
 def test_sponsorship_need_is_never_printed():
     text = pdf_text(generate_ats_cv(_profile(work_authorization="requires_sponsorship"), today=TODAY).pdf)
     assert "Authorized" not in text and "sponsorship" not in text.lower() and "visa" not in text.lower()
-    assert "Toronto, Canada\n" in text
+    assert "Based in Canada\n" in text
 
 
 def test_work_authorization_line_absent_when_not_set():

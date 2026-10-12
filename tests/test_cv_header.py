@@ -29,6 +29,11 @@ from aptum.modules.profile.schemas import ProfileUpdate
         (["remote", "onsite"], "Open to remote"),
         (["hybrid", "onsite"], "Open to hybrid"),
         (["remote", "hybrid", "onsite"], "Open to remote or hybrid"),
+        (["relocation"], "Open to relocation"),
+        (["onsite", "relocation"], "Open to relocation"),
+        (["remote", "relocation"], "Open to remote or relocation"),
+        (["hybrid", "relocation"], "Open to hybrid or relocation"),
+        (["relocation", "hybrid", "remote"], "Open to remote, hybrid or relocation"),
     ],
 )
 def test_work_preference_phrase(preferences, expected):
@@ -54,8 +59,8 @@ def test_authorization_phrase(status, country, expected):
 @pytest.mark.parametrize(
     ("location", "timezone", "expected"),
     [
-        ("Madrid, Spain", "CET", "Madrid, Spain (CET)"),
-        ("Madrid, Spain", None, "Madrid, Spain"),
+        ("Based in Spain", "CET", "Based in Spain (CET)"),
+        ("Based in Spain", None, "Based in Spain"),
         ("", "CET", None),
         (None, None, None),
     ],
@@ -66,13 +71,12 @@ def test_location_with_timezone(location, timezone, expected):
 
 def _profile(**fields):
     defaults = {
-        "city": "Madrid",
-        "country_code": "ES",
+        "based_in": "ES",
         "timezone_label": None,
         "work_preferences": [],
+        "available_immediately": False,
         "work_authorization": None,
         "work_authorization_country": None,
-        "open_to_relocation": False,
     }
     return base_profile(**{**defaults, **fields})
 
@@ -81,36 +85,41 @@ def _profile(**fields):
     ("fields", "expected"),
     [
         (
-            {"timezone_label": "CET", "work_preferences": ["remote"], "work_authorization": "authorized",
-             "work_authorization_country": "ES", "open_to_relocation": True},
-            "Madrid, Spain (CET) | Open to remote | Authorized to work in Spain | Open to relocation",
+            {"timezone_label": "CET", "work_preferences": ["remote", "relocation"], "work_authorization": "authorized",
+             "work_authorization_country": "ES"},
+            "Based in Spain (CET) | Open to remote or relocation | Authorized to work in Spain",
         ),
         (
             {"timezone_label": "CET", "work_preferences": ["remote"], "work_authorization": "authorized",
              "work_authorization_country": "ES"},
-            "Madrid, Spain (CET) | Open to remote | Authorized to work in Spain",
+            "Based in Spain (CET) | Open to remote | Authorized to work in Spain",
         ),
-        ({}, "Madrid, Spain"),
-        ({"work_authorization": "authorized"}, "Madrid, Spain | Authorized to work"),
-        ({"work_authorization": "requires_sponsorship", "work_authorization_country": "ES"}, "Madrid, Spain"),
+        ({}, "Based in Spain"),
         (
-            {"work_authorization": "requires_sponsorship", "open_to_relocation": True},
-            "Madrid, Spain | Open to relocation",
+            {"timezone_label": "CET", "available_immediately": True, "work_preferences": ["remote"]},
+            "Based in Spain (CET) | Available immediately | Open to remote",
         ),
-        ({"work_preferences": ["onsite"], "open_to_relocation": True}, "Madrid, Spain | Open to relocation"),
-        ({"work_preferences": ["hybrid", "remote"]}, "Madrid, Spain | Open to remote or hybrid"),
+        ({"based_in": None, "available_immediately": True}, "Available immediately"),
+        ({"work_authorization": "authorized"}, "Based in Spain | Authorized to work"),
+        ({"work_authorization": "requires_sponsorship", "work_authorization_country": "ES"}, "Based in Spain"),
         (
-            {"city": None, "country_code": None, "timezone_label": "CET", "work_preferences": ["hybrid"]},
+            {"work_authorization": "requires_sponsorship", "work_preferences": ["relocation"]},
+            "Based in Spain | Open to relocation",
+        ),
+        ({"work_preferences": ["onsite", "relocation"]}, "Based in Spain | Open to relocation"),
+        ({"work_preferences": ["hybrid", "remote"]}, "Based in Spain | Open to remote or hybrid"),
+        (
+            {"based_in": None, "timezone_label": "CET", "work_preferences": ["hybrid"]},
             "Open to hybrid",
         ),
         (
-            {"city": None, "country_code": None, "work_authorization": "authorized",
-             "work_authorization_country": "ES", "open_to_relocation": True},
-            "Authorized to work in Spain | Open to relocation",
+            {"based_in": None, "work_authorization": "authorized",
+             "work_authorization_country": "ES", "work_preferences": ["relocation"]},
+            "Open to relocation | Authorized to work in Spain",
         ),
-        ({"city": None, "country_code": None, "timezone_label": "CET"}, None),
-        ({"city": None, "country_code": None, "work_authorization": "requires_sponsorship"}, None),
-        ({"city": None, "country_code": None, "work_preferences": None, "open_to_relocation": None}, None),
+        ({"based_in": None, "timezone_label": "CET"}, None),
+        ({"based_in": None, "work_authorization": "requires_sponsorship"}, None),
+        ({"based_in": None, "work_preferences": None}, None),
     ],
 )
 def test_availability_line(fields, expected):

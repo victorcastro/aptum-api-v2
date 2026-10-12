@@ -144,8 +144,7 @@ def base_profile(**fields) -> Profile:
         "summary": "Engineer building backend services and LLM features.",
         "phone": "+1 555 0100",
         "contact_email": "alex.rivera@example.com",
-        "city": "Toronto",
-        "country_code": "CA",
+        "based_in": "CA",
         "links": [
             {"kind": "linkedin", "label": "LinkedIn", "url": "https://www.linkedin.com/in/example-alex", "visible": True},
             {"kind": "github", "label": "GitHub", "url": "https://github.com/example-alex", "visible": True},

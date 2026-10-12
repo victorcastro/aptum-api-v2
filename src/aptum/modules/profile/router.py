@@ -24,6 +24,7 @@ from aptum.modules.profile.schemas import (
     LanguageUpdate,
     ProfileRead,
     ProfileSkillCreate,
+    ProfileSkillOrder,
     ProfileSkillRead,
     ProfileSkillsGrouped,
     ProfileSkillUpdate,
@@ -254,6 +255,20 @@ def list_skills_grouped(
     db: Session = Depends(get_db),
 ):
     return ProfileService(db).list_skills_grouped(current_user.id)
+
+
+@router.put("/me/skills/order", response_model=ProfileSkillsGrouped)
+def reorder_skills(
+    data: ProfileSkillOrder,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Sets the print order of the skills inside one CV group (`category_id`, null is `Other`).
+    `ids` must list every profile skill of that group exactly once. Returns the grouped list.
+
+    400 ids repeated, missing or not in that group; 401 bad token; 404 no profile or unknown
+    category; 422 empty ids."""
+    return ProfileService(db).reorder_skills(current_user.id, data)
 
 
 @router.post("/me/skills", response_model=ProfileSkillRead, status_code=201)

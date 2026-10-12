@@ -3,18 +3,18 @@
 Only skills that exist in the profile can come out of here: the selection filters and
 reorders `profile.skills`, it never adds names.
 
-Order is by evidence, never by a manual position:
+Which skills make the cut is decided by evidence (at most `MAX_SKILLS`):
 1. mentioned by the job offer (name or dictionary alias), when there is one;
 2. used in the most recent experience (experience skills; a current role counts as today);
-3. higher `level`, then more `years_experience`;
-4. alphabetical.
+3. alphabetical.
+
+Inside each category line the skills print in the order the user set (`position`).
 """
 
 from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import date
 
-from aptum.common.enums import SkillLevel
 from aptum.modules.cv.ats.text import TextIndex
 from aptum.modules.profile.models import Experience, ProfileSkill
 from aptum.modules.skill_categories.models import SkillCategory, print_name, print_order
@@ -28,6 +28,7 @@ class SelectedSkill:
     name: str
     category: SkillCategory | None
     offer_relevant: bool
+    position: int = 0
 
 
 @dataclass(frozen=True)
@@ -37,9 +38,6 @@ class SkillLine:
 
     def render(self) -> str:
         return f"{self.category}: {', '.join(self.names)}"
-
-
-_LEVEL_RANK = {SkillLevel.expert: 4, SkillLevel.advanced: 3, SkillLevel.intermediate: 2, SkillLevel.beginner: 1}
 
 
 def last_used(experiences: Sequence[Experience]) -> dict[str, date]:
@@ -74,8 +72,6 @@ def select_skills(
             not relevant,
             recency is None,
             -(recency.toordinal() if recency else 0),
-            -_LEVEL_RANK.get(SkillLevel(ps.level), 0) if ps.level else 0,
-            -(ps.years_experience or 0),
             ps.skill.name.casefold(),
             ps.id or 0,
         )
@@ -86,15 +82,19 @@ def select_skills(
         key = skill_key(ps.skill.name)
         if key and key not in seen:
             seen.add(key)
-            selected.append(SelectedSkill(ps.skill.name, ps.category, not evidence(ps)[0]))
+            selected.append(SelectedSkill(ps.skill.name, ps.category, not evidence(ps)[0], ps.position or 0))
     return selected[:limit]
 
 
 def skill_lines(selected: Sequence[SelectedSkill]) -> list[SkillLine]:
-    """One line per category, categories in `position` order and `Other` last."""
-    groups: dict[int | None, tuple[SkillCategory | None, list[str]]] = {}
+    """One line per category, categories in `position` order and `Other` last; inside a line the
+    skills follow the user's order, ties keeping the evidence order of `select_skills`."""
+    groups: dict[int | None, tuple[SkillCategory | None, list[SelectedSkill]]] = {}
     for skill in selected:
         key = skill.category.id if skill.category else None
-        groups.setdefault(key, (skill.category, []))[1].append(skill.name)
+        groups.setdefault(key, (skill.category, []))[1].append(skill)
     ordered = sorted(groups.values(), key=lambda group: print_order(group[0]))
-    return [SkillLine(print_name(category), tuple(names)) for category, names in ordered]
+    return [
+        SkillLine(print_name(category), tuple(skill.name for skill in sorted(skills, key=lambda skill: skill.position)))
+        for category, skills in ordered
+    ]

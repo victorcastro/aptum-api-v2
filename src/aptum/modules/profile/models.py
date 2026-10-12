@@ -8,6 +8,7 @@ from sqlalchemy import (
     Enum,
     ForeignKey,
     Index,
+    Integer,
     SmallInteger,
     String,
     Text,
@@ -24,9 +25,9 @@ from aptum.common.constants import EMBEDDING_DIM
 from aptum.common.enums import (
     EmploymentType,
     ExperienceArea,
-    SkillLevel,
     WorkAuthorization,
     WorkMode,
+    WorkPreference,
 )
 from aptum.db.base import Base, TimestampMixin
 from aptum.db.constraints import (
@@ -49,7 +50,7 @@ class Profile(TimestampMixin, Base):
     __tablename__ = "profiles"
     __table_args__ = (
         in_values_check("work_authorization", WorkAuthorization),
-        array_values_check("work_preferences", WorkMode),
+        array_values_check("work_preferences", WorkPreference),
     )
 
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -60,8 +61,7 @@ class Profile(TimestampMixin, Base):
     summary: Mapped[str | None] = mapped_column(Text, default=None)
     phone: Mapped[str | None] = mapped_column(String(40), default=None)
     contact_email: Mapped[str | None] = mapped_column(String(255), default=None)
-    city: Mapped[str | None] = mapped_column(String(120), default=None)
-    country_code: Mapped[str | None] = mapped_column(String(2), default=None)
+    based_in: Mapped[str | None] = mapped_column(String(2), default=None)
     preferred_template: Mapped[str | None] = mapped_column(String(40), default=None)
     # Header links of the CV, in print order: [{"kind", "label", "url", "visible"}].
     # Validated by `ProfileLink` in the schemas; always written as a whole list.
@@ -69,8 +69,8 @@ class Profile(TimestampMixin, Base):
     work_authorization: Mapped[str | None] = mapped_column(String(32), default=None)
     # Country the authorization (or the relocation target) refers to; ISO 3166-1 alpha-2.
     work_authorization_country: Mapped[str | None] = mapped_column(String(2), default=None)
-    open_to_relocation: Mapped[bool] = mapped_column(Boolean, default=False, server_default=false())
-    # Work modes the user is open to (`WorkMode` values), printed on the CV availability line.
+    available_immediately: Mapped[bool] = mapped_column(Boolean, default=False, server_default=false())
+    # Work modes the user is open to (`WorkPreference` values), printed on the CV availability line.
     work_preferences: Mapped[list[str]] = mapped_column(
         ARRAY(String(16)), default=list, server_default=text("'{}'")
     )
@@ -128,14 +128,12 @@ class ProfileSkill(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     profile_id: Mapped[int] = mapped_column(ForeignKey("profiles.id", ondelete="CASCADE"))
     skill_id: Mapped[int] = mapped_column(ForeignKey("skills.id", ondelete="RESTRICT"), index=True)
-    level: Mapped[SkillLevel | None] = mapped_column(
-        Enum(SkillLevel, name="skill_level"), default=None
-    )
-    years_experience: Mapped[int | None] = mapped_column(SmallInteger, default=None)
     # One of the profile's own CV groups; null is `Other`. Deleting the category sets it to null.
     category_id: Mapped[int | None] = mapped_column(
         ForeignKey("skill_categories.id", ondelete="SET NULL"), index=True, default=None
     )
+    # Print order inside its category (1 = first), set by the user. Ties fall back to `id`.
+    position: Mapped[int] = mapped_column(Integer, default=0)
 
     profile: Mapped["Profile"] = relationship(back_populates="skills")
     skill: Mapped["Skill"] = relationship(lazy="joined")

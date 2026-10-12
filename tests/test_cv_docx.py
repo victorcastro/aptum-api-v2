@@ -63,7 +63,7 @@ def test_header_and_section_order():
     assert texts[:5] == [
         "Alex Rivera",
         "Senior Software Engineer",
-        "Toronto, Canada",
+        "Based in Canada",
         "+1 555 0100 | alex.rivera@example.com",
         "linkedin.com/in/example-alex | github.com/example-alex",
     ]
