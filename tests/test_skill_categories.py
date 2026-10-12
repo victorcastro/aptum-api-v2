@@ -4,7 +4,6 @@ from types import SimpleNamespace
 import pytest
 from factories import FakeSession
 
-from aptum.common.enums import SkillLevel
 from aptum.core.exceptions import NotFoundError
 from aptum.modules.profile.models import ProfileSkill
 from aptum.modules.profile.schemas import ProfileSkillCreate, ProfileSkillUpdate
@@ -111,5 +110,5 @@ def test_update_null_category_moves_to_other_and_omitted_keeps():
     service.update_row(1, ProfileSkill, 3, ProfileSkillUpdate(category_id=None))
     assert service.repository.saved["category_id"] is None
 
-    service.update_row(1, ProfileSkill, 3, ProfileSkillUpdate(level=SkillLevel.expert))
+    service.update_row(1, ProfileSkill, 3, ProfileSkillUpdate())
     assert "category_id" not in service.repository.saved

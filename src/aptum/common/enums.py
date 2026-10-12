@@ -25,13 +25,6 @@ class EmploymentType(StrEnum):
     temporary = "temporary"
 
 
-class SkillLevel(StrEnum):
-    beginner = "beginner"
-    intermediate = "intermediate"
-    advanced = "advanced"
-    expert = "expert"
-
-
 class LinkKind(StrEnum):
     portfolio = "portfolio"
     linkedin = "linkedin"

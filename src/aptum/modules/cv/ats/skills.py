@@ -6,15 +6,13 @@ reorders `profile.skills`, it never adds names.
 Order is by evidence, never by a manual position:
 1. mentioned by the job offer (name or dictionary alias), when there is one;
 2. used in the most recent experience (experience skills; a current role counts as today);
-3. higher `level`;
-4. alphabetical.
+3. alphabetical.
 """
 
 from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import date
 
-from aptum.common.enums import SkillLevel
 from aptum.modules.cv.ats.text import TextIndex
 from aptum.modules.profile.models import Experience, ProfileSkill
 from aptum.modules.skill_categories.models import SkillCategory, print_name, print_order
@@ -37,9 +35,6 @@ class SkillLine:
 
     def render(self) -> str:
         return f"{self.category}: {', '.join(self.names)}"
-
-
-_LEVEL_RANK = {SkillLevel.expert: 4, SkillLevel.advanced: 3, SkillLevel.intermediate: 2, SkillLevel.beginner: 1}
 
 
 def last_used(experiences: Sequence[Experience]) -> dict[str, date]:
@@ -74,7 +69,6 @@ def select_skills(
             not relevant,
             recency is None,
             -(recency.toordinal() if recency else 0),
-            -_LEVEL_RANK.get(SkillLevel(ps.level), 0) if ps.level else 0,
             ps.skill.name.casefold(),
             ps.id or 0,
         )

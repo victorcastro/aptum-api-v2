@@ -12,7 +12,7 @@ and the project follows [Semantic Versioning](https://semver.org/).
 
 ### Removed
 
-- `years_experience` on profile skills: gone from `POST`/`PATCH /profile/me/skills`, `GET /profile/me/skills` and the grouped list. The CV orders skills by job offer, recent use and `level`, then alphabetical. The migration drops `profile_skills.years_experience`.
+- `years_experience` and `level` on profile skills: gone from `POST`/`PATCH /profile/me/skills`, `GET /profile/me/skills` and the grouped list. The CV orders skills by job offer and recent use, then alphabetical. The migration drops `profile_skills.years_experience`, `profile_skills.level` and the `skill_level` enum type.
 
 ### Changed
 

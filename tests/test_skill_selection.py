@@ -24,21 +24,11 @@ def test_recently_used_skills_come_first():
     ]
 
 
-def test_level_breaks_ties_before_alphabetical():
-    skills = [
-        profile_skill("Alpha"),
-        profile_skill("Beta", level="intermediate"),
-        profile_skill("Gamma", level="expert"),
-        profile_skill("Delta", level="intermediate"),
-    ]
-    assert _names(select_skills(skills)) == ["Gamma", "Beta", "Delta", "Alpha"]
-
-
-def test_recency_beats_level():
-    old = experience("Dev", "A", date(2015, 1, 1), date(2016, 1, 1), [], skills=["Java"])
-    new = experience("Dev", "B", date(2022, 1, 1), None, [], skills=["Go"])
-    skills = [profile_skill("Java", level="expert"), profile_skill("Go", level="beginner")]
-    assert _names(select_skills(skills, experiences=[old, new])) == ["Go", "Java"]
+def test_recency_beats_alphabetical():
+    old = experience("Dev", "A", date(2015, 1, 1), date(2016, 1, 1), [], skills=["Ada"])
+    new = experience("Dev", "B", date(2022, 1, 1), None, [], skills=["Zig"])
+    skills = [profile_skill("Ada"), profile_skill("Zig")]
+    assert _names(select_skills(skills, experiences=[old, new])) == ["Zig", "Ada"]
 
 
 def test_inactive_experiences_are_not_evidence():

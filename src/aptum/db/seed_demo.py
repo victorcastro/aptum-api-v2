@@ -32,7 +32,6 @@ from sqlalchemy.orm import Session
 from aptum.common.enums import (
     EmploymentType,
     ExperienceArea,
-    SkillLevel,
     UserRole,
     WorkAuthorization,
     WorkMode,
@@ -420,15 +419,15 @@ def seed_demo_cv(db: Session, user: User, reset: bool) -> Profile | None:
         ),
     ]
     profile.skills = [
-        _profile_skill(db, profile, python, level=SkillLevel.expert),
-        _profile_skill(db, profile, fastapi, level=SkillLevel.advanced),
-        _profile_skill(db, profile, postgres, level=SkillLevel.advanced),
-        _profile_skill(db, profile, docker, level=SkillLevel.advanced),
-        _profile_skill(db, profile, aws, level=SkillLevel.intermediate),
-        _profile_skill(db, profile, java, level=SkillLevel.intermediate),
-        _profile_skill(db, profile, kafka, level=SkillLevel.intermediate),
-        _profile_skill(db, profile, redis, level=SkillLevel.advanced),
-        _profile_skill(db, profile, react, level=SkillLevel.beginner),
+        _profile_skill(db, profile, python),
+        _profile_skill(db, profile, fastapi),
+        _profile_skill(db, profile, postgres),
+        _profile_skill(db, profile, docker),
+        _profile_skill(db, profile, aws),
+        _profile_skill(db, profile, java),
+        _profile_skill(db, profile, kafka),
+        _profile_skill(db, profile, redis),
+        _profile_skill(db, profile, react),
     ]
     profile.languages = [
         ProfileLanguage(language_code="es", proficiency="Native"),
@@ -609,15 +608,15 @@ def seed_admin_cv(db: Session, user: User, reset: bool) -> Profile | None:
         ),
     ]
     profile.skills = [
-        _profile_skill(db, profile, aws, level=SkillLevel.expert),
-        _profile_skill(db, profile, terraform, level=SkillLevel.expert),
-        _profile_skill(db, profile, kubernetes, level=SkillLevel.advanced),
-        _profile_skill(db, profile, docker, level=SkillLevel.expert),
-        _profile_skill(db, profile, python, level=SkillLevel.advanced),
-        _profile_skill(db, profile, postgres, level=SkillLevel.advanced),
-        _profile_skill(db, profile, java, level=SkillLevel.intermediate),
-        _profile_skill(db, profile, fastapi, level=SkillLevel.intermediate),
-        _profile_skill(db, profile, react, level=SkillLevel.beginner),
+        _profile_skill(db, profile, aws),
+        _profile_skill(db, profile, terraform),
+        _profile_skill(db, profile, kubernetes),
+        _profile_skill(db, profile, docker),
+        _profile_skill(db, profile, python),
+        _profile_skill(db, profile, postgres),
+        _profile_skill(db, profile, java),
+        _profile_skill(db, profile, fastapi),
+        _profile_skill(db, profile, react),
     ]
     profile.languages = [
         ProfileLanguage(language_code="es", proficiency="Native"),

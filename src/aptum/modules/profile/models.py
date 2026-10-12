@@ -24,7 +24,6 @@ from aptum.common.constants import EMBEDDING_DIM
 from aptum.common.enums import (
     EmploymentType,
     ExperienceArea,
-    SkillLevel,
     WorkAuthorization,
     WorkMode,
     WorkPreference,
@@ -128,9 +127,6 @@ class ProfileSkill(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     profile_id: Mapped[int] = mapped_column(ForeignKey("profiles.id", ondelete="CASCADE"))
     skill_id: Mapped[int] = mapped_column(ForeignKey("skills.id", ondelete="RESTRICT"), index=True)
-    level: Mapped[SkillLevel | None] = mapped_column(
-        Enum(SkillLevel, name="skill_level"), default=None
-    )
     # One of the profile's own CV groups; null is `Other`. Deleting the category sets it to null.
     category_id: Mapped[int | None] = mapped_column(
         ForeignKey("skill_categories.id", ondelete="SET NULL"), index=True, default=None
