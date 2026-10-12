@@ -12,10 +12,12 @@ Create Date: 2026-10-12 12:00:00.000000
   (the allowed values in its CHECK constraint grow from remote, onsite, hybrid to include it).
   Rows that had open_to_relocation set get `relocation` appended to their work_preferences.
 - profile_skills.years_experience and profile_skills.level (with the skill_level enum type) are dropped.
-  The CV orders skills by job offer and recent use, then alphabetical; the group a skill is printed in
-  comes from its category.
+  Which skills make the CV is decided by job offer and recent use; the group a skill is printed in comes
+  from its category.
+- profile_skills.position (integer, default 0): the order of the skills inside their category. Existing
+  rows are numbered 1..n per profile and category by skill name.
 
-Downgrade restores profile_skills.years_experience and profile_skills.level empty, drops available_immediately, restores profiles.city empty and the column name country_code,
+Downgrade drops profile_skills.position and restores profile_skills.years_experience and profile_skills.level empty, drops available_immediately, restores profiles.city empty and the column name country_code,
 and turns `relocation` in work_preferences back into open_to_relocation.
 """
 from collections.abc import Sequence
@@ -40,6 +42,14 @@ def _allowed(modes: Sequence[str]) -> str:
 
 
 def upgrade() -> None:
+    op.add_column("profile_skills", sa.Column("position", sa.Integer(), server_default="0", nullable=False))
+    op.execute(
+        "UPDATE profile_skills ps SET position = ranked.pos FROM ("
+        "SELECT p.id, row_number() OVER (PARTITION BY p.profile_id, p.category_id "
+        "ORDER BY lower(s.name), p.id) AS pos "
+        "FROM profile_skills p JOIN skills s ON s.id = p.skill_id) ranked WHERE ranked.id = ps.id"
+    )
+    op.alter_column("profile_skills", "position", server_default=None)
     op.drop_column("profile_skills", "years_experience")
     op.drop_column("profile_skills", "level")
     SKILL_LEVEL.drop(op.get_bind(), checkfirst=True)
@@ -56,6 +66,7 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
+    op.drop_column("profile_skills", "position")
     SKILL_LEVEL.create(op.get_bind(), checkfirst=True)
     op.add_column("profile_skills", sa.Column("level", SKILL_LEVEL, nullable=True))
     op.add_column("profile_skills", sa.Column("years_experience", sa.SmallInteger(), nullable=True))

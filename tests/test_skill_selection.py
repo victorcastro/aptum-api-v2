@@ -100,3 +100,13 @@ def test_other_is_the_last_line_even_before_any_category():
     skills = [profile_skill("Excel", category="Other"), profile_skill("Swift", category="Mobile")]
     assert [line.render() for line in skill_lines(select_skills(skills))] == ["Mobile: Swift", "Other: Excel"]
     assert select_skills([profile_skill("Excel", category="Other")])[0].category is None
+
+
+def test_skills_print_in_the_users_order_inside_their_category_line():
+    skills = [
+        profile_skill("Alpha", category="Backend", position=3),
+        profile_skill("Beta", category="Backend", position=1),
+        profile_skill("Gamma", category="Backend", position=2),
+    ]
+    lines = skill_lines(select_skills(skills))
+    assert [line.names for line in lines] == [("Beta", "Gamma", "Alpha")]

@@ -8,6 +8,7 @@ from sqlalchemy import (
     Enum,
     ForeignKey,
     Index,
+    Integer,
     SmallInteger,
     String,
     Text,
@@ -131,6 +132,8 @@ class ProfileSkill(Base):
     category_id: Mapped[int | None] = mapped_column(
         ForeignKey("skill_categories.id", ondelete="SET NULL"), index=True, default=None
     )
+    # Print order inside its category (1 = first), set by the user. Ties fall back to `id`.
+    position: Mapped[int] = mapped_column(Integer, default=0)
 
     profile: Mapped["Profile"] = relationship(back_populates="skills")
     skill: Mapped["Skill"] = relationship(lazy="joined")

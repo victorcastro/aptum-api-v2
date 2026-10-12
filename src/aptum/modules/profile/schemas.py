@@ -308,6 +308,16 @@ class ProfileSkillItem(BaseModel):
     name: str
 
 
+class ProfileSkillOrder(BaseModel):
+    category_id: int | None = Field(
+        default=None, description="The CV group whose skills are ordered; null is `Other`."
+    )
+    ids: Annotated[
+        list[int],
+        Field(min_length=1, description="Every profile skill id of that group, in the new order."),
+    ]
+
+
 class ProfileSkillGroup(BaseModel):
     category: SkillCategoryRef | None = Field(description="The CV group; null is `Other`, always the last group.")
     skills: list[ProfileSkillItem]

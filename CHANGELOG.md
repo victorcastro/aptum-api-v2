@@ -9,6 +9,7 @@ and the project follows [Semantic Versioning](https://semver.org/).
 ### Added
 
 - `available_immediately` (boolean, default `false`) on the profile. When true, the CV header prints `Available immediately` right after the location, before the work preference: `Based in Spain (CET) | Available immediately | Open to remote`.
+- `position` on profile skills: the order of the skills inside their category, which is also the order they print in on the CV line. `PUT /profile/me/skills/order` takes `{"category_id": <id or null for Other>, "ids": [...]}` (every profile skill of that group exactly once, 400 otherwise) and returns the grouped list. `GET /profile/me/skills/grouped` returns each group in that order. A new skill goes to the end of its category, and so does a skill moved to another category. The migration numbers the existing skills of each category by name.
 
 ### Removed
 
