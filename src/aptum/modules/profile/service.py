@@ -66,7 +66,6 @@ def group_skills(rows: list[ProfileSkill]) -> ProfileSkillsGrouped:
                 skill_id=row.skill_id,
                 name=row.skill.name,
                 level=row.level,
-                years_experience=row.years_experience,
             )
         )
     groups = [

@@ -24,14 +24,14 @@ def test_recently_used_skills_come_first():
     ]
 
 
-def test_level_and_years_break_ties_before_alphabetical():
+def test_level_breaks_ties_before_alphabetical():
     skills = [
         profile_skill("Alpha"),
         profile_skill("Beta", level="intermediate"),
         profile_skill("Gamma", level="expert"),
-        profile_skill("Delta", level="intermediate", years_experience=6),
+        profile_skill("Delta", level="intermediate"),
     ]
-    assert _names(select_skills(skills)) == ["Gamma", "Delta", "Beta", "Alpha"]
+    assert _names(select_skills(skills)) == ["Gamma", "Beta", "Delta", "Alpha"]
 
 
 def test_recency_beats_level():

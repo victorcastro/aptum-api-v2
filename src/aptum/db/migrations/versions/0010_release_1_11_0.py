@@ -11,8 +11,10 @@ Create Date: 2026-10-12 12:00:00.000000
 - profiles.open_to_relocation is dropped: `relocation` is now one more value of work_preferences
   (the allowed values in its CHECK constraint grow from remote, onsite, hybrid to include it).
   Rows that had open_to_relocation set get `relocation` appended to their work_preferences.
+- profile_skills.years_experience is dropped. The CV orders skills by job offer, recent use and
+  level; the group a skill is printed in comes from its category.
 
-Downgrade drops available_immediately, restores profiles.city empty and the column name country_code,
+Downgrade restores profile_skills.years_experience empty, drops available_immediately, restores profiles.city empty and the column name country_code,
 and turns `relocation` in work_preferences back into open_to_relocation.
 """
 from collections.abc import Sequence
@@ -36,6 +38,7 @@ def _allowed(modes: Sequence[str]) -> str:
 
 
 def upgrade() -> None:
+    op.drop_column("profile_skills", "years_experience")
     op.drop_column("profiles", "city")
     op.alter_column("profiles", "country_code", new_column_name="based_in")
     op.add_column("profiles", sa.Column("available_immediately", sa.Boolean(), server_default=sa.false(), nullable=False))
@@ -49,6 +52,7 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
+    op.add_column("profile_skills", sa.Column("years_experience", sa.SmallInteger(), nullable=True))
     op.drop_constraint(CHECK, "profiles", type_="check")
     op.add_column("profiles", sa.Column("open_to_relocation", sa.Boolean(), server_default=sa.false(), nullable=False))
     op.execute("UPDATE profiles SET open_to_relocation = 'relocation' = ANY(work_preferences)")

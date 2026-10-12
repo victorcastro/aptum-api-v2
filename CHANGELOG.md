@@ -10,6 +10,10 @@ and the project follows [Semantic Versioning](https://semver.org/).
 
 - `available_immediately` (boolean, default `false`) on the profile. When true, the CV header prints `Available immediately` right after the location, before the work preference: `Based in Spain (CET) | Available immediately | Open to remote`.
 
+### Removed
+
+- `years_experience` on profile skills: gone from `POST`/`PATCH /profile/me/skills`, `GET /profile/me/skills` and the grouped list. The CV orders skills by job offer, recent use and `level`, then alphabetical. The migration drops `profile_skills.years_experience`.
+
 ### Changed
 
 - The profile location is the country only: `city` is removed from `GET /profile/me` and `PATCH /profile/me`, and `country_code` is renamed `based_in` (still an ISO 3166-1 alpha-2 code). The migration drops `profiles.city` and renames the column.

@@ -6,7 +6,7 @@ from aptum.modules.skill_categories.models import SkillCategory
 
 def test_groups_follow_cv_category_order_skip_empty_ones_and_sort_skills_by_name():
     rows = [
-        profile_skill("FastAPI", category="Backend", level="advanced", years_experience=4),
+        profile_skill("FastAPI", category="Backend", level="advanced"),
         profile_skill("LangChain", category="LLMs & AI"),
         profile_skill("Terraform", category="Cloud & DevOps"),
         profile_skill("django", category="Backend"),
@@ -38,7 +38,7 @@ def test_skills_without_a_category_are_the_last_group_with_a_null_category():
 
 
 def test_item_exposes_both_ids_and_flat_fields():
-    row = profile_skill("FastAPI", category="Backend", level="advanced", years_experience=4)
+    row = profile_skill("FastAPI", category="Backend", level="advanced")
     item = group_skills([row]).groups[0].skills[0]
 
     assert item.model_dump() == {
@@ -46,7 +46,6 @@ def test_item_exposes_both_ids_and_flat_fields():
         "skill_id": row.skill_id,
         "name": "FastAPI",
         "level": "advanced",
-        "years_experience": 4,
     }
     assert item.id != item.skill_id
 

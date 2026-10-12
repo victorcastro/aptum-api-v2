@@ -283,7 +283,6 @@ class LanguageRead(LanguageCreate):
 class ProfileSkillCreate(BaseModel):
     skill_id: int
     level: SkillLevel | None = None
-    years_experience: Annotated[int, Field(ge=0, le=80)] | None = None
     category_id: int | None = Field(
         default=None, description="One of the caller's CV groups (`GET /profile/me/skill-categories`). Omitted or null: `Other`."
     )
@@ -291,7 +290,6 @@ class ProfileSkillCreate(BaseModel):
 
 class ProfileSkillUpdate(PartialUpdate):
     level: SkillLevel | None = None
-    years_experience: Annotated[int, Field(ge=0, le=80)] | None = None
     category_id: int | None = Field(
         default=None, description="One of the caller's CV groups (`GET /profile/me/skill-categories`). `null` moves it to `Other`."
     )
@@ -303,7 +301,6 @@ class ProfileSkillRead(BaseModel):
     id: int
     skill: SkillRead
     level: SkillLevel | None
-    years_experience: int | None
     category: SkillCategoryRef | None = Field(description="The CV group; null is `Other`.")
 
 
@@ -314,7 +311,6 @@ class ProfileSkillItem(BaseModel):
     skill_id: int
     name: str
     level: SkillLevel | None
-    years_experience: int | None
 
 
 class ProfileSkillGroup(BaseModel):

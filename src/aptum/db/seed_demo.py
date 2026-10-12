@@ -420,15 +420,15 @@ def seed_demo_cv(db: Session, user: User, reset: bool) -> Profile | None:
         ),
     ]
     profile.skills = [
-        _profile_skill(db, profile, python, level=SkillLevel.expert, years_experience=8),
-        _profile_skill(db, profile, fastapi, level=SkillLevel.advanced, years_experience=4),
-        _profile_skill(db, profile, postgres, level=SkillLevel.advanced, years_experience=7),
-        _profile_skill(db, profile, docker, level=SkillLevel.advanced, years_experience=6),
-        _profile_skill(db, profile, aws, level=SkillLevel.intermediate, years_experience=4),
-        _profile_skill(db, profile, java, level=SkillLevel.intermediate, years_experience=3),
-        _profile_skill(db, profile, kafka, level=SkillLevel.intermediate, years_experience=3),
-        _profile_skill(db, profile, redis, level=SkillLevel.advanced, years_experience=4),
-        _profile_skill(db, profile, react, level=SkillLevel.beginner, years_experience=1),
+        _profile_skill(db, profile, python, level=SkillLevel.expert),
+        _profile_skill(db, profile, fastapi, level=SkillLevel.advanced),
+        _profile_skill(db, profile, postgres, level=SkillLevel.advanced),
+        _profile_skill(db, profile, docker, level=SkillLevel.advanced),
+        _profile_skill(db, profile, aws, level=SkillLevel.intermediate),
+        _profile_skill(db, profile, java, level=SkillLevel.intermediate),
+        _profile_skill(db, profile, kafka, level=SkillLevel.intermediate),
+        _profile_skill(db, profile, redis, level=SkillLevel.advanced),
+        _profile_skill(db, profile, react, level=SkillLevel.beginner),
     ]
     profile.languages = [
         ProfileLanguage(language_code="es", proficiency="Native"),
@@ -609,15 +609,15 @@ def seed_admin_cv(db: Session, user: User, reset: bool) -> Profile | None:
         ),
     ]
     profile.skills = [
-        _profile_skill(db, profile, aws, level=SkillLevel.expert, years_experience=9),
-        _profile_skill(db, profile, terraform, level=SkillLevel.expert, years_experience=6),
-        _profile_skill(db, profile, kubernetes, level=SkillLevel.advanced, years_experience=6),
-        _profile_skill(db, profile, docker, level=SkillLevel.expert, years_experience=9),
-        _profile_skill(db, profile, python, level=SkillLevel.advanced, years_experience=10),
-        _profile_skill(db, profile, postgres, level=SkillLevel.advanced, years_experience=10),
-        _profile_skill(db, profile, java, level=SkillLevel.intermediate, years_experience=5),
-        _profile_skill(db, profile, fastapi, level=SkillLevel.intermediate, years_experience=3),
-        _profile_skill(db, profile, react, level=SkillLevel.beginner, years_experience=1),
+        _profile_skill(db, profile, aws, level=SkillLevel.expert),
+        _profile_skill(db, profile, terraform, level=SkillLevel.expert),
+        _profile_skill(db, profile, kubernetes, level=SkillLevel.advanced),
+        _profile_skill(db, profile, docker, level=SkillLevel.expert),
+        _profile_skill(db, profile, python, level=SkillLevel.advanced),
+        _profile_skill(db, profile, postgres, level=SkillLevel.advanced),
+        _profile_skill(db, profile, java, level=SkillLevel.intermediate),
+        _profile_skill(db, profile, fastapi, level=SkillLevel.intermediate),
+        _profile_skill(db, profile, react, level=SkillLevel.beginner),
     ]
     profile.languages = [
         ProfileLanguage(language_code="es", proficiency="Native"),
