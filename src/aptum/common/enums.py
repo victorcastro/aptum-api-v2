@@ -7,6 +7,13 @@ class WorkMode(StrEnum):
     hybrid = "hybrid"
 
 
+class WorkPreference(StrEnum):
+    remote = "remote"
+    onsite = "onsite"
+    hybrid = "hybrid"
+    relocation = "relocation"
+
+
 class EmploymentType(StrEnum):
     full_time = "full_time"
     part_time = "part_time"

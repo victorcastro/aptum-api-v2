@@ -4,6 +4,19 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 and the project follows [Semantic Versioning](https://semver.org/).
 
+## [1.11.0] - 2026-10-12
+
+### Added
+
+- `available_immediately` (boolean, default `false`) on the profile. When true, the CV header prints `Available immediately` right after the location, before the work preference: `Based in Spain (CET) | Available immediately | Open to remote`.
+
+### Changed
+
+- The profile location is the country only: `city` is removed from `GET /profile/me` and `PATCH /profile/me`, and `country_code` is renamed `based_in` (still an ISO 3166-1 alpha-2 code). The migration drops `profiles.city` and renames the column.
+- `open_to_relocation` is removed from `GET /profile/me` and `PATCH /profile/me`: `relocation` is now one more value of `work_preferences` (`remote`, `hybrid`, `onsite`, `relocation`; a new `WorkPreference` enum, separate from the experience `work_mode`). The migration appends `relocation` to the preferences of every profile that had `open_to_relocation` on.
+- The CV header prints `relocation` in the same phrase as the work modes (`Open to remote or relocation`, `Open to remote, hybrid or relocation`, or just `Open to relocation`), so it does not repeat "Open to". It comes before the work authorization.
+- The CV header prints the location as `Based in Spain` (with the time zone, `Based in Spain (CET)`) in every template and export.
+
 ## [1.10.0] - 2026-10-11
 
 ### Added

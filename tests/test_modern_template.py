@@ -22,7 +22,7 @@ def test_header_is_name_title_availability_contact_then_links_by_kind():
     assert _lines(profile)[:5] == [
         "Alex Rivera",
         "Senior Software Engineer",
-        "Toronto, Canada | Open to hybrid | Authorized to work in Canada",
+        "Based in Canada | Open to hybrid | Authorized to work in Canada",
         "+1 555 0100 | alex.rivera@example.com",
         "linkedin.com/in/example-alex | github.com/example-alex | alex.example.dev",
     ]

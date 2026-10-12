@@ -36,6 +36,7 @@ from aptum.common.enums import (
     UserRole,
     WorkAuthorization,
     WorkMode,
+    WorkPreference,
 )
 from aptum.common.utils import normalize_name, slugify
 from aptum.db.session import SessionLocal
@@ -282,15 +283,15 @@ def seed_demo_cv(db: Session, user: User, reset: bool) -> Profile | None:
     )
     profile.phone = "+51 999 888 777"
     profile.contact_email = "ana.torres@example.com"
-    profile.city = "Lima"
-    profile.country_code = "PE"
+    profile.based_in = "PE"
     profile.links = [
         {"kind": "linkedin", "label": "LinkedIn", "url": "https://linkedin.com/in/ana-torres-demo", "visible": True},
         {"kind": "github", "label": "GitHub", "url": "https://github.com/ana-torres-demo", "visible": True},
     ]
     profile.work_authorization = WorkAuthorization.requires_sponsorship
     profile.work_authorization_country = "CA"
-    profile.open_to_relocation = True
+    profile.available_immediately = True
+    profile.work_preferences = [WorkPreference.remote, WorkPreference.relocation]
 
     profile.experiences = [
         Experience(
@@ -487,8 +488,7 @@ def seed_admin_cv(db: Session, user: User, reset: bool) -> Profile | None:
     )
     profile.phone = "+51 987 654 321"
     profile.contact_email = "lucia.vargas@example.com"
-    profile.city = "Arequipa"
-    profile.country_code = "PE"
+    profile.based_in = "PE"
     profile.links = [
         {"kind": "linkedin", "label": "LinkedIn", "url": "https://linkedin.com/in/lucia-vargas-demo", "visible": True},
         {"kind": "github", "label": "GitHub", "url": "https://github.com/lucia-vargas-demo", "visible": True},
@@ -496,7 +496,6 @@ def seed_admin_cv(db: Session, user: User, reset: bool) -> Profile | None:
     ]
     profile.work_authorization = WorkAuthorization.authorized
     profile.work_authorization_country = "PE"
-    profile.open_to_relocation = False
 
     profile.experiences = [
         Experience(
