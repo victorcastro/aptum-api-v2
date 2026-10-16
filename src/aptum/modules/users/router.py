@@ -1,8 +1,10 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, status
+from sqlalchemy.orm import Session
 
-from aptum.core.dependencies import get_current_user
+from aptum.core.dependencies import get_current_user, get_db
 from aptum.modules.users.models import User
 from aptum.modules.users.schemas import CurrentUserRead
+from aptum.modules.users.service import UserService
 
 router = APIRouter(prefix="/users", tags=["users"])
 
@@ -17,3 +19,11 @@ def read_current_user(current_user: User = Depends(get_current_user)) -> Current
         role=current_user.role_name,
         permissions=sorted(current_user.permissions),
     )
+
+
+@router.post("/me/sessions/revoke", status_code=status.HTTP_204_NO_CONTENT)
+def revoke_my_sessions(
+    current_user: User = Depends(get_current_user), db: Session = Depends(get_db)
+) -> None:
+    """Sign the caller out everywhere. Takes effect on ID tokens when FIREBASE_CHECK_REVOKED is on; otherwise once they expire (1 h)."""
+    UserService(db).revoke_sessions(current_user)

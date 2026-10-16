@@ -4,6 +4,17 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 and the project follows [Semantic Versioning](https://semver.org/).
 
+## [1.12.0] - 2026-10-16
+
+### Added
+
+- `X-Aptum-Account` request header (optional, not in the OpenAPI schema): the id of the user the client expects to be signed in as, the `id` of `GET /users/me`. When present and it does not match the user of the bearer token, every authenticated endpoint answers `409 {"detail": "Account mismatch"}` before doing anything. The web sends it so a tab opened with one account can never read or write another account's CV after the active account changed in a different tab. Without the header nothing changes.
+- `POST /users/me/sessions/revoke` (204): revokes the caller's Firebase refresh tokens, signing them out of every device, and records a `user.sessions_revoke` audit entry. Existing ID tokens keep working until they expire (1 h) unless `FIREBASE_CHECK_REVOKED` is on.
+
+### Changed
+
+- `.env.example` documents `FIREBASE_CHECK_REVOKED`; it should be `true` in production so a revocation takes effect at once.
+
 ## [1.11.0] - 2026-10-12
 
 ### Added
