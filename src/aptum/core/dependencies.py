@@ -1,7 +1,7 @@
 import logging
 from collections.abc import Generator
 
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.orm import Session
 
@@ -15,6 +15,17 @@ from aptum.modules.users.service import UserService
 bearer_scheme = HTTPBearer()
 logger = logging.getLogger(__name__)
 
+ACCOUNT_HEADER = "X-Aptum-Account"
+ACCOUNT_MISMATCH_DETAIL = "Account mismatch"
+
+
+def check_expected_account(user_id: int, expected: str | None) -> None:
+    if expected is None:
+        return
+    if expected.strip() != str(user_id):
+        logger.warning("Account mismatch: token user %s, expected %r", user_id, expected[:32])
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=ACCOUNT_MISMATCH_DETAIL)
+
 
 def get_db() -> Generator[Session, None, None]:
     db = SessionLocal()
@@ -25,6 +36,7 @@ def get_db() -> Generator[Session, None, None]:
 
 
 def get_current_user(
+    request: Request,
     credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme),
     db: Session = Depends(get_db),
 ) -> User:
@@ -46,6 +58,7 @@ def get_current_user(
     user = UserService(db).get_or_create_from_firebase(claims["uid"], email)
     if not user.is_active:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Inactive user")
+    check_expected_account(user.id, request.headers.get(ACCOUNT_HEADER))
     return user
 
 

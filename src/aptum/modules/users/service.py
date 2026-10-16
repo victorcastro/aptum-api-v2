@@ -1,7 +1,9 @@
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from aptum.common.enums import UserRole
+from aptum.common.enums import AuditAction, AuditEntity, UserRole
+from aptum.core.firebase import revoke_refresh_tokens
+from aptum.modules.audit.service import AuditService
 from aptum.modules.profile.repository import ProfileRepository
 from aptum.modules.roles.models import Role
 from aptum.modules.roles.repository import RoleRepository
@@ -48,3 +50,10 @@ class UserService:
             return user
         self.db.refresh(user)
         return user
+
+    def revoke_sessions(self, user: User) -> None:
+        """Sign the user out of every device: Firebase refresh tokens issued so far stop working."""
+        if user.firebase_uid:
+            revoke_refresh_tokens(user.firebase_uid)
+        AuditService(self.db).record(user.id, AuditAction.user_sessions_revoke, AuditEntity.user, user.id, {})
+        self.db.commit()

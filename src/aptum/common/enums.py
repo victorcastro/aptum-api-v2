@@ -74,6 +74,7 @@ class AuditAction(StrEnum):
     user_role_change = "user.role_change"
     user_activate = "user.activate"
     user_deactivate = "user.deactivate"
+    user_sessions_revoke = "user.sessions_revoke"
     role_create = "role.create"
     role_update = "role.update"
     role_delete = "role.delete"
