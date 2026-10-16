@@ -28,3 +28,8 @@ def verify_id_token(token: str) -> dict:
     """Return the decoded claims of a Firebase ID token. Raises ValueError-family errors if invalid."""
     _ensure_initialized()
     return auth.verify_id_token(token, check_revoked=get_settings().firebase_check_revoked)
+
+
+def revoke_refresh_tokens(firebase_uid: str) -> None:
+    _ensure_initialized()
+    auth.revoke_refresh_tokens(firebase_uid)
