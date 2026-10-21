@@ -26,6 +26,7 @@ class Permission(StrEnum):
     company_merge = "company:merge"
     skill_update_any = "skill:update_any"
     industry_manage = "industry:manage"
+    degree_manage = "degree:manage"
     user_list_read = "user:list_read"
     user_manage_roles = "user:manage_roles"
     user_deactivate = "user:deactivate"
@@ -41,6 +42,7 @@ PERMISSION_DESCRIPTIONS: dict[Permission, str] = {
     Permission.company_merge: "Merge duplicate companies",
     Permission.skill_update_any: "Rename skills in the shared catalog",
     Permission.industry_manage: "Create and rename industries",
+    Permission.degree_manage: "Create, edit and delete degrees",
     Permission.user_list_read: "List users",
     Permission.user_manage_roles: "Change a user's role",
     Permission.user_deactivate: "Activate and deactivate users",
@@ -55,6 +57,7 @@ _MODERATOR = frozenset(
         Permission.company_delete,
         Permission.skill_update_any,
         Permission.industry_manage,
+        Permission.degree_manage,
         Permission.user_list_read,
         Permission.role_read,
     }

@@ -46,6 +46,7 @@ def test_me_for_a_moderator_lists_permissions_sorted(client_as):
     assert body["permissions"] == [
         "company:delete",
         "company:update_any",
+        "degree:manage",
         "industry:manage",
         "role:read",
         "skill:update_any",

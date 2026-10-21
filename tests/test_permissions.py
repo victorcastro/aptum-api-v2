@@ -25,6 +25,7 @@ EXPECTED = {
         P.company_delete,
         P.skill_update_any,
         P.industry_manage,
+        P.degree_manage,
         P.user_list_read,
         P.role_read,
     },

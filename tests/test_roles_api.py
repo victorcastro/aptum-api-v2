@@ -127,7 +127,7 @@ def test_admin_edits_a_system_role_and_the_diff_is_audited(world):
     assert entry.changes == {
         "permissions": {
             "added": ["audit:read"],
-            "removed": ["company:delete", "company:update_any", "industry:manage", "role:read", "user:list_read"],
+            "removed": ["company:delete", "company:update_any", "degree:manage", "industry:manage", "role:read", "user:list_read"],
         }
     }
 
