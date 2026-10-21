@@ -4,6 +4,17 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 and the project follows [Semantic Versioning](https://semver.org/).
 
+## [1.13.0] - 2026-10-21
+
+### Added
+
+- Degree catalog management, for roles holding the new permission `degree:manage`: `POST /commons/degrees` (`{"name", "level"}`, 201), `PATCH /commons/degrees/{id}` (`name` and/or `level`) and `DELETE /commons/degrees/{id}` (204). All return the degree as `{id, name, level, rank}` (except delete) and are audited (`degree.create`, `degree.update`, `degree.delete`). A new degree goes to the end of its level; a level that does not exist yet is added after the last one, and a level written with another case or accents reuses the existing spelling. Changing `level` moves the degree to the end of that level. Errors: 400 name or level without letters or digits, 403 missing permission, 404 unknown degree, 409 another degree has the same normalized name, or (delete) an education uses it.
+- `GET /commons/degrees` is unchanged (any signed-in client, grouped by level, in catalog order).
+
+### Changed
+
+- The `moderator` role gains `degree:manage` (migration `0011`); `admin` gets it from `roles.sync`. Custom roles can be granted it through the roles API.
+
 ## [1.12.0] - 2026-10-16
 
 ### Added
