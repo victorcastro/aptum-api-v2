@@ -1,4 +1,6 @@
-from pydantic import BaseModel, ConfigDict
+from typing import Annotated
+
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class CountryRead(BaseModel):
@@ -16,6 +18,23 @@ class DegreeRead(BaseModel):
 class DegreeGroupRead(BaseModel):
     heading: str
     options: list[DegreeRead]
+
+
+class DegreeDetailRead(DegreeRead):
+    level: str
+    rank: int
+
+
+class DegreeCreate(BaseModel):
+    name: Annotated[str, Field(min_length=1, max_length=120)]
+    level: Annotated[str, Field(min_length=1, max_length=40)]
+
+
+class DegreeUpdate(BaseModel):
+    """Only the fields sent change. A new `level` moves the degree to the end of that level."""
+
+    name: Annotated[str, Field(min_length=1, max_length=120)] | None = None
+    level: Annotated[str, Field(min_length=1, max_length=40)] | None = None
 
 
 class LanguageOption(BaseModel):
