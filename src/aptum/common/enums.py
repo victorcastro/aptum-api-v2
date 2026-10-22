@@ -51,7 +51,9 @@ class ExperienceArea(StrEnum):
     """Used to compute per-area years of experience."""
 
     backend = "backend"
-    mobile = "mobile"
+    frontend_web = "frontend_web"
+    frontend_mobile = "frontend_mobile"
+    fullstack = "fullstack"
     ai = "ai"
     other = "other"
 

@@ -39,7 +39,7 @@ def test_true_years_claim_is_left_alone():
 def test_area_claim_uses_per_area_figure():
     profile = base_profile(summary="5+ years in mobile development and 2 years in AI.")
     profile.experiences[0].area = "ai"
-    profile.experiences[2].area = "mobile"
+    profile.experiences[2].area = "frontend_mobile"
     result = generate_ats_cv(profile, today=TODAY)
     assert result.document.summary == "3+ years in mobile development and 2 years in AI."
 

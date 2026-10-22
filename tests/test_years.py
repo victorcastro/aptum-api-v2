@@ -32,12 +32,19 @@ def test_nested_and_adjacent_periods():
 
 def test_profile_total_and_per_area_with_current_role():
     profile = base_profile()
-    for exp, area in zip(profile.experiences, ["ai", "backend", "mobile", None], strict=True):
+    for exp, area in zip(profile.experiences, ["ai", "backend", "frontend_mobile", None], strict=True):
         exp.area = area
     years = years_of_experience(profile.experiences, TODAY)
     # 2012-01..2015-12 (48) + 2016-02..2019-05 (40) + 2019-06..2026-10 merged (89) = 177 months
     assert years.total_months == 177 and years.total == 14
-    assert years.by_area == {"backend": 3, "mobile": 3, "ai": 3}
+    assert years.by_area == {"backend": 3, "frontend_mobile": 3, "ai": 3}
+
+
+def test_fullstack_counts_for_backend_and_frontend_web():
+    fullstack = experience("Dev", "A", date(2020, 1, 1), date(2021, 12, 1), [], area="fullstack")
+    backend = experience("Dev", "B", date(2022, 1, 1), date(2022, 12, 1), [], area="backend")
+    years = years_of_experience([fullstack, backend], TODAY)
+    assert years.by_area == {"backend": 3, "frontend_web": 2, "fullstack": 2}
 
 
 def test_inactive_experiences_are_ignored():

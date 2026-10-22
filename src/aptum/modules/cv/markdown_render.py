@@ -52,7 +52,8 @@ def render_cv_markdown(doc: CVDocument) -> str:
     if doc.experiences:
         blocks.append("## Experience")
         for exp in doc.experiences:
-            blocks.append(f"### {_esc(exp.title)}" + (f"\n*{exp.dates}*" if exp.dates else ""))
+            when_where = " | ".join(part for part in (exp.dates, _esc(exp.place)) if part)
+            blocks.append(f"### {_esc(exp.title)}" + (f"\n*{when_where}*" if when_where else ""))
             if exp.description:
                 blocks.append(exp.description.strip())
             if exp.bullets:

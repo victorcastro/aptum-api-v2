@@ -131,7 +131,7 @@ Deterministic configuration (no LLM involved), easy to extend:
 | `PATCH /profile/me` | `work_authorization` | `authorized`, `requires_sponsorship` |
 | `PATCH /profile/me` | `work_authorization_country` | ISO 3166-1 alpha-2 (e.g. `CA`) |
 | `PATCH /profile/me` | `open_to_relocation` | boolean (default `false`, not nullable) |
-| `POST/PATCH /profile/me/experiences` | `area` | `backend`, `mobile`, `ai`, `other` |
+| `POST/PATCH /profile/me/experiences` | `area` | `backend`, `frontend_web`, `frontend_mobile`, `fullstack`, `ai`, `other` |
 | `POST/PATCH /profile/me/educations` | `start_year`, `end_year` | 1900-2100, end >= start |
 | `POST/PATCH /profile/me/skills` | `category` | one of the six categories; omitted = dictionary |
 | `POST/PATCH /profile/me/languages` | `language_code`, `proficiency` | codes from `GET /commons/languages` and `GET /commons/language-levels` (`A1`-`C2`, `Native`) |

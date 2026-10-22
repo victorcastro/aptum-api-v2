@@ -49,6 +49,14 @@ class YearsOfExperience:
         return {self.total, *self.by_area.values()}
 
 
+# A fullstack role also counts as experience in each area it covers.
+_COVERED_AREAS = {ExperienceArea.fullstack.value: (ExperienceArea.backend.value, ExperienceArea.frontend_web.value)}
+
+
+def _counts_for(tagged: str | None, area: ExperienceArea) -> bool:
+    return tagged == area.value or area.value in _COVERED_AREAS.get(tagged, ())
+
+
 def years_of_experience(experiences: Sequence[Experience], today: date) -> YearsOfExperience:
     """Active experiences only; a current role runs until `today`'s month."""
     periods: list[tuple[date, date, str | None]] = [
@@ -57,14 +65,16 @@ def years_of_experience(experiences: Sequence[Experience], today: date) -> Years
     by_area = {
         area.value: months
         for area in ExperienceArea
-        if (months := merged_months((s, e) for s, e, a in periods if a == area.value))
+        if (months := merged_months((s, e) for s, e, a in periods if _counts_for(a, area)))
     }
     return YearsOfExperience(merged_months((s, e) for s, e, _ in periods), by_area)
 
 
 _AREA_WORDS = {
     ExperienceArea.ai.value: ("ai", "artificial intelligence", "machine learning", "ml", "llm", "llms", "genai"),
-    ExperienceArea.mobile.value: ("mobile", "ios", "android"),
+    ExperienceArea.frontend_mobile.value: ("mobile", "ios", "android"),
+    ExperienceArea.fullstack.value: ("fullstack", "full stack", "full-stack"),
+    ExperienceArea.frontend_web.value: ("frontend", "front end", "front-end"),
     ExperienceArea.backend.value: ("backend", "back end", "back-end", "server side", "server-side", "api"),
 }
 YEARS_CLAIM = re.compile(r"\b(\d{1,2})\s*\+?\s*(?:years?|yrs?)\b", re.IGNORECASE)
