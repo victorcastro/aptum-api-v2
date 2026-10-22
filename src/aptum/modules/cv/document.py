@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 
+from aptum.common.countries import country_name
 from aptum.modules.cv.ats.builder import (
     education_dates,
     education_location,
@@ -8,7 +9,7 @@ from aptum.modules.cv.ats.builder import (
 from aptum.modules.cv.ats.document import format_range
 from aptum.modules.cv.header import availability_line
 from aptum.modules.cv.links import LinkEntry, header_links
-from aptum.modules.profile.models import Profile
+from aptum.modules.profile.models import Experience, Profile
 from aptum.modules.skill_categories.models import SkillCategory, print_name, print_order
 
 
@@ -19,6 +20,7 @@ class ExperienceEntry:
     description: str | None
     bullets: tuple[str, ...]
     skills_line: str | None
+    place: str = ""
 
 
 @dataclass(frozen=True)
@@ -86,6 +88,13 @@ def _group_skills(profile: Profile) -> tuple[SkillGroup, ...]:
     return tuple(SkillGroup(print_name(category), tuple(names)) for category, names in ordered)
 
 
+def experience_place(exp: Experience) -> str:
+    """`Lima, Peru | Hybrid`: the city and country name plus the work mode, whichever are set."""
+    location = ", ".join(part for part in (exp.location_city, country_name(exp.location_country_code)) if part)
+    mode = exp.work_mode.value.capitalize() if exp.work_mode else ""
+    return " | ".join(part for part in (location, mode) if part)
+
+
 def build_cv_data(profile: Profile) -> CVDocument:
     full_name = " ".join(part for part in (profile.first_name, profile.last_name) if part)
 
@@ -97,6 +106,7 @@ def build_cv_data(profile: Profile) -> CVDocument:
             description=exp.description or None,
             bullets=tuple(function.description for function in exp.functions if function.description.strip()),
             skills_line=", ".join(s.name for s in exp.skills) if exp.skills else None,
+            place=experience_place(exp),
         )
         for exp in profile.experiences
         if exp.is_active

@@ -4,6 +4,17 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 and the project follows [Semantic Versioning](https://semver.org/).
 
+## [1.14.0] - 2026-10-22
+
+### Added
+
+- Experience `area` accepts `frontend_web` and `fullstack`. A `fullstack` role counts for the years of `backend` and `frontend_web` too (and has its own figure in `years_of_experience.by_area`). A years claim in the summary naming frontend or fullstack is checked against these figures.
+
+### Changed
+
+- Experience `area` `mobile` is now `frontend_mobile` (migration `0012` updates existing rows and the allowed-values check). Clients sending `mobile` get a 422.
+- The Markdown export (`GET /cv/export/markdown`) now prints each experience's location and work mode next to its dates, e.g. `*Jan 2023 - Present | Lima, Peru | Hybrid*`. Whichever of city, country and work mode are set are printed; nothing changes when none is set. PDF and Word layouts are unchanged.
+
 ## [1.13.0] - 2026-10-21
 
 ### Added

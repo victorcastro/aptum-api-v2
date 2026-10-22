@@ -1,5 +1,6 @@
 from factories import base_profile
 
+from aptum.common.enums import WorkMode
 from aptum.modules.cv.document import build_cv_data
 from aptum.modules.cv.markdown_render import render_cv_markdown
 
@@ -39,6 +40,20 @@ def test_experience_has_title_dates_bullets_and_technologies():
     assert "### AI Engineer - Northwind Labs\n*Jan 2023 - Present*" in text
     assert "- Built a RAG assistant" in text
     assert "**Technologies:** Python, OpenAI API, RAG" in text
+
+
+def test_experience_shows_location_and_work_mode_next_to_dates():
+    profile = base_profile()
+    profile.experiences[0].location_city = "Lima"
+    profile.experiences[0].location_country_code = "PE"
+    profile.experiences[0].work_mode = WorkMode.hybrid
+    assert "### AI Engineer - Northwind Labs\n*Jan 2023 - Present | Lima, Peru | Hybrid*" in _md(profile)
+
+
+def test_experience_with_only_work_mode_shows_just_the_mode():
+    profile = base_profile()
+    profile.experiences[0].work_mode = WorkMode.remote
+    assert "*Jan 2023 - Present | Remote*" in _md(profile)
 
 
 def test_skills_are_one_bold_line_per_category():
